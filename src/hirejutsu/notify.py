@@ -94,7 +94,7 @@ def send_all(config: Config, client, message: Message, only: str | None = None) 
     """Send to every enabled channel. Returns (channel, error) pairs, the error is empty when it was sent."""
     results = []
     for name, send in SENDERS.items():
-        settings = deep_merge(NOTIFY_DEFAULTS[name], config.section("notify").get(name) or {})
+        settings = channel_settings(config, name)
         if not settings["enabled"] or (only and only != name):
             continue
         try:
@@ -105,6 +105,13 @@ def send_all(config: Config, client, message: Message, only: str | None = None) 
         else:
             results.append((name, ""))
     return results
+
+
+def channel_settings(config: Config, name: str) -> dict:
+    user = config.section("notify").get(name)
+    if isinstance(user, bool):
+        user = {"enabled": user}
+    return deep_merge(NOTIFY_DEFAULTS[name], user or {})
 
 
 def describe(exc: Exception) -> str:
