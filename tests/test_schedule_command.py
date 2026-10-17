@@ -4,6 +4,13 @@ from fakes import FakeRun
 from hirejutsu import schedule
 from hirejutsu.cli import main
 
+MISSING = (1, "", "ERROR: The system cannot find the file specified.\n")
+LISTING = """\
+Next Run Time:                        18-10-2026 09:00:00
+Last Run Time:                        17-10-2026 09:00:04
+Last Result:                          0
+"""
+
 
 @pytest.fixture
 def run(monkeypatch):
@@ -49,3 +56,30 @@ def test_show_prints_the_task_without_registering_it(tmp_path, run, capsys):
     assert main(["--home", str(tmp_path), "schedule", "show", "--wake"]) == 0
     assert "<WakeToRun>true</WakeToRun>" in capsys.readouterr().out
     assert run.calls == []
+
+
+def test_status_shows_the_next_and_last_run(tmp_path, run, capsys):
+    run.replies["schtasks /Query"] = (0, LISTING, "")
+    assert main(["--home", str(tmp_path), "schedule", "status"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert "18-10-2026 09:00:00" in next(line for line in lines if line.startswith("Next run"))
+    assert "17-10-2026 09:00:04" in next(line for line in lines if line.startswith("Last run"))
+    assert "0" in next(line for line in lines if line.startswith("Last result"))
+
+
+def test_status_when_not_installed(tmp_path, run, capsys):
+    run.replies["schtasks /Query"] = MISSING
+    assert main(["--home", str(tmp_path), "schedule", "status"]) == 1
+    assert "not scheduled" in capsys.readouterr().out
+
+
+def test_remove(tmp_path, run, capsys):
+    assert main(["--home", str(tmp_path), "schedule", "remove"]) == 0
+    assert run.calls[-1][:2] == ["schtasks", "/Delete"]
+    assert "no longer" in capsys.readouterr().out
+
+
+def test_remove_when_not_installed(tmp_path, run, capsys):
+    run.replies["schtasks /Query"] = MISSING
+    assert main(["--home", str(tmp_path), "schedule", "remove"]) == 0
+    assert "not scheduled" in capsys.readouterr().out
