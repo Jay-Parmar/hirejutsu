@@ -72,7 +72,7 @@ def row(**fields):
     return {**base, **fields}
 
 
-@pytest.mark.parametrize("name", ["indeed", "naukri"])
+@pytest.mark.parametrize("name", ["indeed", "naukri", "linkedin"])
 def test_boards_are_registered_and_off_by_default(tmp_path, name):
     source = board(available()[name], tmp_path)
     assert source.name == name
@@ -261,3 +261,33 @@ def test_naukri_rows_become_jobs(tmp_path):
 
 def test_naukri_says_which_jobs_are_remote(tmp_path):
     assert board(boards.Naukri, tmp_path).to_job(row(work_from_home_type="Remote")).remote is True
+
+
+def test_linkedin_searches_cities_only_and_skips_descriptions(tmp_path, jobspy, sleeps):
+    board(boards.LinkedIn, tmp_path, keywords=["python", "django"], locations=["remote", "Bengaluru"]).fetch()
+    first, second = jobspy.searches
+    assert (first["site_name"], first["location"], first["is_remote"]) == ("linkedin", "Bengaluru", False)
+    assert (first["results_wanted"], first["fetch_description"]) == (25, False)
+    assert second["search_term"] == "django"
+    assert sleeps == [30]
+
+
+def test_linkedin_cannot_search_remote_jobs_only(tmp_path, jobspy):
+    with pytest.raises(HirejutsuError, match="Add a city"):
+        board(boards.LinkedIn, tmp_path, locations=["remote"]).fetch()
+    assert jobspy.searches == []
+
+
+def test_linkedin_rows_become_jobs(tmp_path):
+    linkedin = board(boards.LinkedIn, tmp_path)
+    rows = fixture("jobspy_linkedin.json")
+    plain, junk = linkedin.to_job(rows[0]), linkedin.to_job(rows[1])
+    assert (plain.source, plain.external_id) == ("linkedin", "li-4477707910")
+    assert plain.url == "https://www.linkedin.com/jobs/view/4477707910"
+    assert (plain.location, plain.description) == ("Bengaluru, Karnataka, India", "")
+    assert junk.description.startswith("Job Description\nSenior Backend Engineer (Python) - Bengaluru")
+
+
+def test_class_junk_is_removed_from_html_descriptions(tmp_path):
+    html = '<div>\n svg]:w-[18px] [&amp;&gt;svg]:shrink-0"&gt;\n <p>We build tools.</p>\n</div>'
+    assert board(boards.LinkedIn, tmp_path).to_job(row(description=html)).description == "We build tools."
