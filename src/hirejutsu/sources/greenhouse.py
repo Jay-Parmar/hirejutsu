@@ -4,7 +4,7 @@ from ..companies import Company
 from ..models import Job
 from ..text import clean, html_to_text, parse_date
 from . import register
-from .ats import DetailSource, remote_from
+from .ats import DetailSource, remote_from, tags
 
 API = "https://boards-api.greenhouse.io/v1/boards"
 
@@ -41,7 +41,7 @@ class Greenhouse(DetailSource):
             posted_at=parse_date(item.get("first_published") or item.get("updated_at")),
             employment_type=clean(str(fields.get("employment type") or "")),
             department=departments[0] if departments else "",
-            tags=departments + offices,
+            tags=tags(*departments, *offices),
         )
         ranges = item.get("pay_input_ranges") or []
         if ranges:
