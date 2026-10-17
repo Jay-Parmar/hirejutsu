@@ -7,6 +7,7 @@ from ..ranking import RANKING_DEFAULTS, rank
 from ..report import print_picks, report_settings, write_reports
 from ..resume import load_profile
 from .fetch import fetch_jobs, print_results
+from .notify import send_picks
 from .report import show_saved
 
 
@@ -14,6 +15,7 @@ def register(sub) -> None:
     parser = sub.add_parser("run", help="fetch jobs and pick today's best matches")
     parser.add_argument("--no-fetch", action="store_true", help="rank the jobs already saved")
     parser.add_argument("--open", action="store_true", help="open the HTML report in your browser")
+    parser.add_argument("--no-notify", action="store_true", help="do not send the picks to your notify channels")
     parser.set_defaults(func=run)
 
     parser = sub.add_parser("today", help="show the jobs picked today")
@@ -36,7 +38,10 @@ def run(app, args) -> int:
         app.console.print("No matching jobs today. Add sources or skills and try again.")
         return 0
     print_picks(app.console, matches, title=f"Picks for {now.date()}")
-    show_saved(app, write_reports(matches, app.config, now.date()), args.open or reports["open"])
+    files = write_reports(matches, app.config, now.date())
+    show_saved(app, files, args.open or reports["open"])
+    if not args.no_notify:
+        send_picks(app, matches, now.date(), files)
     return 0
 
 
