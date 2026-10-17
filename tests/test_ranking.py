@@ -434,3 +434,17 @@ def test_text_similarity_ignores_stopwords():
     ]
     assert breakdown(jobs[0], jobs, profile, settings()).parts["text"] == 0.0
     assert breakdown(jobs[1], jobs, profile, settings()).parts["text"] > 0.5
+
+
+def test_skills_count_when_the_job_uses_another_spelling():
+    jobs = [job("1", "Engineer", description="We run Postgres and k8s")]
+    match = rank(jobs, Profile(skills=["PostgreSQL", "Kubernetes"]), settings())[0]
+    assert match.reasons == ["Skills: PostgreSQL, Kubernetes (2 of 2)"]
+
+
+def test_plain_word_skills_need_their_exact_case_in_jobs():
+    jobs = [
+        job("1", "Engineer", company="A", description="Own our go-to-market tooling"),
+        job("2", "Engineer", company="B", description="Services in Go and Golang"),
+    ]
+    assert [match.job.external_id for match in rank(jobs, Profile(skills=["Go"]), settings())] == ["2"]
