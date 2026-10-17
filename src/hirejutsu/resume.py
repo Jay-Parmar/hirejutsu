@@ -37,6 +37,7 @@ TITLE_WORDS = re.compile(
     re.IGNORECASE,
 )
 TITLE_SEPARATORS = re.compile(r"\s+(?:at|[-\u2013\u2014])\s+|[|,;()@\t]|\s{3,}")
+ENTRY_LEVEL = re.compile(r"\b(?:intern|internship|trainee|apprentice)\b", re.IGNORECASE)
 EDUCATION = re.compile(
     r"\b(?:education|university|college|school|institute|academy|degree|diploma|bachelor\w*"
     r"|master(?:'|\u2019)?s|master of|b\.?\s?tech|m\.?\s?tech|b\.?\s?sc|m\.?\s?sc|b\.?\s?com|m\.?\s?com"
@@ -231,14 +232,21 @@ def load_profile(config: Config) -> Profile:
     """The profile from the resume, where anything set in the config wins."""
     settings = config.section("profile", PROFILE_DEFAULTS)
     text = read_text(resume_path(config))
-    years = settings["years"]
+    years = find_years(text, date.today()) if settings["years"] is None else settings["years"]
     return Profile(
         text=text,
         skills=_merge_skills(settings["skills"], find_skills(text)),
-        titles=list(settings["titles"]) or find_titles(text),
-        years=find_years(text, date.today()) if years is None else years,
+        titles=list(settings["titles"]) or _wanted_titles(find_titles(text), years),
+        years=years,
         locations=list(settings["locations"]),
     )
+
+
+def _wanted_titles(titles: list[str], years: float | None) -> list[str]:
+    """Titles worth searching for. An internship from years ago is not a role you want again."""
+    if years and years >= 2:
+        return [title for title in titles if not ENTRY_LEVEL.search(title)]
+    return titles
 
 
 def _merge_skills(configured: list[str], found: list[str]) -> list[str]:

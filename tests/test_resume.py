@@ -53,7 +53,7 @@ def test_load_profile_finds_titles_and_years_unless_configured(tmp_path):
 def test_load_profile_from_a_sample_resume(tmp_path):
     (tmp_path / "resume.txt").write_text(fixture("resume_sample.txt"), encoding="utf-8")
     profile = load_profile(Config({"resume": "resume.txt"}, tmp_path))
-    assert profile.titles == ["Senior Software Engineer", "Software Engineer", "Software Engineering Intern"]
+    assert profile.titles == ["Senior Software Engineer", "Software Engineer"]
     assert {"Python", "Go", "AWS", "PostgreSQL", "Django", "Docker", "Kubernetes"} <= set(profile.skills)
     assert profile.years >= 9.6
 
@@ -258,3 +258,8 @@ def test_spellings_of_a_skill_by_any_name():
 
 def test_spellings_of_an_unknown_skill():
     assert spellings("Frobnicate") == [("Frobnicate", False)]
+
+
+def test_intern_titles_stay_for_someone_new(tmp_path):
+    (tmp_path / "resume.txt").write_text("Software Engineering Intern, Acme, Jan 2026 - Present", encoding="utf-8")
+    assert load_profile(Config({"resume": "resume.txt"}, tmp_path)).titles == ["Software Engineering Intern"]
