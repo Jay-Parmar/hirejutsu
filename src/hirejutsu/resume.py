@@ -2,6 +2,7 @@
 
 import re
 import unicodedata
+from datetime import date
 from functools import cache
 from importlib import resources
 from pathlib import Path
@@ -11,6 +12,21 @@ from .errors import HirejutsuError
 from .models import Profile
 
 PROFILE_DEFAULTS = {"titles": [], "skills": [], "locations": ["remote"], "years": None}
+
+MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+MONTH = (
+    r"jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?"
+    r"|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?"
+)
+DATE = rf"(?:\b(?:{MONTH})\.?,?\s*|\b(?:\d{{1,2}}[/.-])?(?:0?[1-9]|1[0-2])[/.-])?(?<!\d)(?:19|20)\d\d(?!\d)"
+UNTIL_NOW = r"(?:till\s+|to\s+)?(?:present|current(?:ly)?|now|today|date|ongoing)\b"
+DATE_RANGE = re.compile(rf"({DATE})\s*(?:[-\u2010-\u2015]+|to|till|until)\s*({DATE}|{UNTIL_NOW})", re.IGNORECASE)
+EDUCATION = re.compile(
+    r"\b(?:education|university|college|school|institute|academy|degree|diploma|bachelor\w*"
+    r"|master(?:'|\u2019)?s|master of|b\.?\s?tech|m\.?\s?tech|b\.?\s?sc|m\.?\s?sc|b\.?\s?com|m\.?\s?com"
+    r"|b\.e|m\.e|bba|bca|mca|mba|ph\.?d|llb|cgpa|gpa|hsc|ssc|cbse|icse)\b",
+    re.IGNORECASE,
+)
 
 
 def read_text(path: Path) -> str:
@@ -95,6 +111,57 @@ def _term_pattern(term: str, exact: bool) -> re.Pattern:
         # either: that rules out C-suite, R&D, Go-live, C++ and initials like R.
         return re.compile(rf"(?<![\w&.+#-]){re.escape(term)}(?![\w&.+#-])")
     return re.compile(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", re.IGNORECASE)
+
+
+def find_years(text: str, today: date) -> float | None:
+    """Years of work covered by the date ranges in the resume, to one decimal."""
+    months = _work_months(text, today)
+    return round(months / 12, 1) if months else None
+
+
+def _work_months(text: str, today: date) -> int:
+    """Months covered by date ranges outside education, counting overlapping jobs once."""
+    now = today.year * 12 + today.month
+    lines = [line for line in text.splitlines() if line.strip()]
+    spans = []
+    for index, line in enumerate(lines):
+        for match in DATE_RANGE.finditer(line):
+            start = _month_count(match.group(1), today, end=False)
+            end = min(_month_count(match.group(2), today, end=True), now)
+            if start < end and not _is_education(lines, index):
+                spans.append((start, end))
+    total = reach = 0
+    for start, end in sorted(spans):
+        if end > reach:
+            total += end - max(start, reach)
+            reach = end
+    return total
+
+
+def _month_count(value: str, today: date, end: bool) -> int:
+    """Months from year 0 to where a date starts, or to where it ends for an end date."""
+    year = re.search(r"(?:19|20)\d\d", value)
+    if not year:
+        return today.year * 12 + today.month
+    named = re.match(r"[a-z]{3}", value, re.IGNORECASE)
+    numbered = re.search(r"(\d{1,2})[/.-](?:19|20)\d\d", value)
+    if named:
+        month = MONTHS.index(named.group().lower()) + 1
+    elif numbered:
+        month = int(numbered.group(1))
+    else:
+        # A bare year counts from January, so 2018 - 2021 is three years.
+        return int(year.group()) * 12
+    return int(year.group()) * 12 + month - (0 if end else 1)
+
+
+def _is_education(lines: list[str], index: int) -> bool:
+    """True if the date range on this line belongs to a degree or a school."""
+    nearby = lines[index]
+    # The line above often names the school, unless it has dates of its own.
+    if index and not DATE_RANGE.search(lines[index - 1]):
+        nearby += "\n" + lines[index - 1]
+    return EDUCATION.search(nearby) is not None
 
 
 def load_profile(config: Config) -> Profile:
