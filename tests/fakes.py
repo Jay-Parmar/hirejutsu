@@ -5,6 +5,9 @@ import subprocess
 from pathlib import Path
 
 import requests
+import yaml
+
+from hirejutsu.config import Config
 
 FIXTURES = Path(__file__).parent / "fixtures"
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -15,6 +18,12 @@ def fixture(name: str):
     path = FIXTURES / name
     text = path.read_text(encoding="utf-8")
     return json.loads(text) if path.suffix == ".json" else text
+
+
+def board_config(home: Path, ats: str, boards, **data) -> Config:
+    """A config whose only companies are the given boards of one ATS, with any other settings in data."""
+    (home / "companies.yaml").write_text(yaml.safe_dump({ats: boards}), encoding="utf-8")
+    return Config({"companies": {"builtin": False}, **data}, home)
 
 
 class FakeClient:
