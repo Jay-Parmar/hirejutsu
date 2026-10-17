@@ -76,7 +76,7 @@ def row(**fields):
     return {**base, **fields}
 
 
-@pytest.mark.parametrize("name", ["indeed", "naukri", "linkedin"])
+@pytest.mark.parametrize("name", ["indeed", "naukri", "linkedin", "glassdoor", "ziprecruiter"])
 def test_boards_are_registered_and_off_by_default(tmp_path, name):
     source = board(available()[name], tmp_path)
     assert source.name == name
@@ -303,3 +303,22 @@ def test_linkedin_rows_become_jobs(tmp_path):
 def test_class_junk_is_removed_from_html_descriptions(tmp_path):
     html = '<div>\n svg]:w-[18px] [&amp;&gt;svg]:shrink-0"&gt;\n <p>We build tools.</p>\n</div>'
     assert board(boards.LinkedIn, tmp_path).to_job(row(description=html)).description == "We build tools."
+
+
+def test_glassdoor_searches_in_the_country(tmp_path, jobspy):
+    board(boards.Glassdoor, tmp_path, glassdoor={"country": "UK"}).fetch()
+    [search] = jobspy.searches
+    assert (search["site_name"], search["country_indeed"], search["results_wanted"]) == ("glassdoor", "UK", 30)
+    assert search["fetch_description"] is True
+
+
+def test_ziprecruiter_search_and_hourly_pay(tmp_path, jobspy):
+    jobspy.answers = [fixture("jobspy_zip_recruiter.json")]
+    job = board(boards.ZipRecruiter, tmp_path, locations=["San Francisco, CA"]).fetch()[0]
+    [search] = jobspy.searches
+    assert (search["site_name"], search["location"], search["results_wanted"]) == (
+        "zip_recruiter", "San Francisco, CA", 20,
+    )
+    assert "country_indeed" not in search
+    assert (job.source, job.external_id) == ("ziprecruiter", "zr-PtcufjKDFxrTJkmmBOz7fQ")
+    assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (52.5, 69.25, "USD", "hour")
