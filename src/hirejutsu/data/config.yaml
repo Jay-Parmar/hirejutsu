@@ -20,8 +20,23 @@ search:
   # Ignore jobs posted more than this many days ago.
   max_age_days: 14
 
-# Turn sources on or off. Run "hirejutsu sources" to see them all.
+# Turn sources on or off and change their settings. Run "hirejutsu sources"
+# to see them all. Uncomment a line to use it.
 sources:
+  # remoteok: false
+  # arbeitnow:            # off by default, mostly onsite jobs in Germany
+  #   enabled: true
+  #   max_pages: 3        # up to 300 jobs a page
+  # himalayas:
+  #   max_pages: 3        # 20 jobs a page, for each search keyword
+  # jobicy:
+  #   max_pages: 5        # 200 jobs a page
+  # fourdayweek:
+  #   max_pages: 3        # 100 jobs a page
+  # weworkremotely:
+  #   categories: [remote-full-stack-programming-jobs, remote-back-end-programming-jobs]
+  # hackernews:
+  #   months: 1           # how many monthly "Who is hiring?" threads to read
   # Big job boards. Their terms forbid scraping, so they stay off unless you turn them on.
   # They need: pip install -e ".[jobspy]"
   # indeed: {enabled: true, country: India, results: 50}
