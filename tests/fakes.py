@@ -20,6 +20,13 @@ def fixture(name: str):
     return json.loads(text) if path.suffix == ".json" else text
 
 
+def http_error(status: int, url: str = "") -> requests.HTTPError:
+    """The error http.Client raises for an HTTP error status."""
+    response = requests.Response()
+    response.status_code = status
+    return requests.HTTPError(f"{status} Client Error for url: {url}", response=response)
+
+
 def board_config(home: Path, ats: str, boards, **data) -> Config:
     """A config whose only companies are the given boards of one ATS, with any other settings in data."""
     (home / "companies.yaml").write_text(yaml.safe_dump({ats: boards}), encoding="utf-8")
@@ -36,7 +43,7 @@ class FakeClient:
     def _answer(self, method, url, params=None, payload=None):
         self.calls.append((method, url, params, payload))
         if url not in self.routes:
-            raise requests.HTTPError(f"404 Not Found: {url}")
+            raise http_error(404, url)
         answer = self.routes[url]
         if isinstance(answer, Exception):
             raise answer

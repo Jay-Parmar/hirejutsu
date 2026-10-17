@@ -9,7 +9,7 @@ from hirejutsu.companies import Company
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job
-from hirejutsu.sources.ats import AtsSource, DetailSource, likely_match, remote_from, title_words
+from hirejutsu.sources.ats import AtsSource, DetailSource, likely_match, pay_period, remote_from, tags, title_words
 from hirejutsu.store import Store
 
 NOW = datetime.now(timezone.utc)
@@ -82,6 +82,15 @@ def test_title_filter_matches_longer_forms():
 ])
 def test_remote_from(text, expected):
     assert remote_from(text) is expected
+
+
+def test_pay_period():
+    values = ("per-year-salary", "1 MONTH", "per-hour-wage", "yearly", "daily", "NONE", None)
+    assert [pay_period(value) for value in values] == ["year", "month", "hour", "year", "day", "", ""]
+
+
+def test_tags_drop_blanks_and_repeats():
+    assert tags("Data", None, "", " Data ", "remote") == ["Data", "remote"]
 
 
 def test_fetch_keeps_jobs_titled_like_the_keywords(tmp_path):
