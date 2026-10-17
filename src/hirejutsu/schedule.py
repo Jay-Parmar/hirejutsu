@@ -11,6 +11,7 @@ from xml.sax.saxutils import escape
 from .errors import HirejutsuError
 
 TASK_NAME = "hirejutsu"
+NOT_RUN_YET = "267011"
 
 TASK_XML = """\
 <?xml version="1.0" encoding="UTF-16"?>
@@ -100,6 +101,30 @@ def install(home: Path, at: time, weekdays: bool = False, wake: bool = False) ->
         path = Path(folder) / "hirejutsu.xml"
         path.write_text(task_xml(home, at, weekdays, wake), encoding="utf-16")
         _schtasks("/Create", "/TN", TASK_NAME, "/XML", str(path), "/F")
+
+
+def remove() -> bool:
+    """Unregister the daily run. False when there was none."""
+    if _schtasks("/Query", "/TN", TASK_NAME, check=False).returncode:
+        return False
+    _schtasks("/Delete", "/TN", TASK_NAME, "/F")
+    return True
+
+
+def status() -> list[tuple[str, str]] | None:
+    """Next and last run of the daily run, or None when it is not installed."""
+    result = _schtasks("/Query", "/TN", TASK_NAME, "/V", "/FO", "LIST", check=False)
+    if result.returncode:
+        return None
+    fields = {}
+    for line in result.stdout.splitlines():
+        key, _, value = line.partition(":")
+        fields[key.strip()] = value.strip()
+    rows = [("Next run", fields.get("Next Run Time", "?"))]
+    # Before the first run Windows reports a last run in 1999.
+    if fields.get("Last Result") == NOT_RUN_YET:
+        return rows + [("Last run", "never")]
+    return rows + [("Last run", fields.get("Last Run Time", "?")), ("Last result", fields.get("Last Result", "?"))]
 
 
 def _schtasks(*args: str, check: bool = True) -> subprocess.CompletedProcess:

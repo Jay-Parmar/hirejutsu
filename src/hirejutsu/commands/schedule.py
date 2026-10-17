@@ -3,6 +3,8 @@
 import argparse
 from datetime import datetime, time
 
+from rich.text import Text
+
 from .. import schedule
 
 
@@ -26,6 +28,8 @@ def register(sub) -> None:
         action.add_argument("--weekdays", action="store_true", help="run Monday to Friday only")
         action.add_argument("--wake", action="store_true", help="wake the PC from sleep to run (Windows only)")
         action.set_defaults(func=func)
+    actions.add_parser("status", help="show the next and last run").set_defaults(func=status)
+    actions.add_parser("remove", help="stop running every morning").set_defaults(func=remove)
 
 
 def install(app, args) -> int:
@@ -37,4 +41,22 @@ def install(app, args) -> int:
 
 def show(app, args) -> int:
     app.console.print(schedule.task_xml(app.home, args.time, args.weekdays, args.wake), markup=False, highlight=False)
+    return 0
+
+
+def status(app, args) -> int:
+    rows = schedule.status()
+    if rows is None:
+        app.console.print("hirejutsu is not scheduled. Set it up with 'hirejutsu schedule install'.")
+        return 1
+    for label, value in rows:
+        app.console.print(Text(f"{label:<12}{value}"))
+    return 0
+
+
+def remove(app, args) -> int:
+    if schedule.remove():
+        app.console.print("Removed. hirejutsu will no longer run by itself.")
+    else:
+        app.console.print("hirejutsu is not scheduled, nothing to remove.")
     return 0

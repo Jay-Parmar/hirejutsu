@@ -11,6 +11,22 @@ from hirejutsu.errors import HirejutsuError
 
 NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 MORNING = datetime(2026, 10, 17, 8, 0)
+MISSING = (1, "", "ERROR: The system cannot find the file specified.\n")
+
+
+def listing(last_run: str, last_result: str) -> str:
+    """The start of schtasks /Query /V /FO LIST output."""
+    return rf"""
+Folder: \
+HostName:                             PC
+TaskName:                             \hirejutsu
+Next Run Time:                        18-10-2026 09:00:00
+Status:                               Ready
+Logon Mode:                           Interactive only
+Last Run Time:                        {last_run}
+Last Result:                          {last_result}
+Author:                               PC\jay
+"""
 
 
 @pytest.fixture
@@ -111,3 +127,34 @@ def test_install_reports_schtasks_errors(python, tmp_path, run):
     run.replies["schtasks /Create"] = (1, "", "ERROR: Access is denied.\n")
     with pytest.raises(HirejutsuError, match="Access is denied"):
         schedule.install(tmp_path, time(9, 0))
+
+
+def test_status_reads_the_task(run):
+    run.replies["schtasks /Query"] = (0, listing("17-10-2026 09:00:04", "0"), "")
+    assert schedule.status() == [
+        ("Next run", "18-10-2026 09:00:00"),
+        ("Last run", "17-10-2026 09:00:04"),
+        ("Last result", "0"),
+    ]
+    assert run.calls == [["schtasks", "/Query", "/TN", "hirejutsu", "/V", "/FO", "LIST"]]
+
+
+def test_status_before_the_first_run(run):
+    run.replies["schtasks /Query"] = (0, listing("30-11-1999 00:00:00", "267011"), "")
+    assert schedule.status() == [("Next run", "18-10-2026 09:00:00"), ("Last run", "never")]
+
+
+def test_status_when_not_installed(run):
+    run.replies["schtasks /Query"] = MISSING
+    assert schedule.status() is None
+
+
+def test_remove_deletes_the_task(run):
+    assert schedule.remove() is True
+    assert run.calls[-1] == ["schtasks", "/Delete", "/TN", "hirejutsu", "/F"]
+
+
+def test_remove_when_not_installed(run):
+    run.replies["schtasks /Query"] = MISSING
+    assert schedule.remove() is False
+    assert [call for call in run.calls if "/Delete" in call] == []
