@@ -1,7 +1,7 @@
 import logging
 import logging.handlers
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from fakes import FakeClient, fixture
@@ -72,7 +72,7 @@ def row(**fields):
     return {**base, **fields}
 
 
-@pytest.mark.parametrize("name", ["indeed"])
+@pytest.mark.parametrize("name", ["indeed", "naukri"])
 def test_boards_are_registered_and_off_by_default(tmp_path, name):
     source = board(available()[name], tmp_path)
     assert source.name == name
@@ -225,3 +225,39 @@ def test_jobspy_handlers_are_muted_during_a_search_and_put_back(tmp_path, jobspy
 def test_rows_without_title_or_url_are_dropped(tmp_path, jobspy):
     jobspy.answers = [[row(id="in-1", title=None), row(id="in-2", job_url=None), row(id="in-3")]]
     assert [job.external_id for job in board(boards.Indeed, tmp_path).fetch()] == ["in-3"]
+
+
+def test_naukri_searches_a_bare_city_without_an_age_limit(tmp_path, jobspy):
+    board(boards.Naukri, tmp_path, locations=["Bengaluru, India", "remote"]).fetch()
+    city, remote = jobspy.searches
+    assert (city["site_name"], city["location"], city["hours_old"], city["results_wanted"]) == (
+        "naukri", "Bengaluru", None, 20,
+    )
+    assert "country_indeed" not in city
+    assert (remote["location"], remote["is_remote"]) == (None, True)
+
+
+def test_naukri_drops_jobs_older_than_max_age(tmp_path, jobspy):
+    today = datetime.now(timezone.utc).date()
+    jobspy.answers = [[
+        row(id="nk-1"),
+        row(id="nk-2", date_posted=today - timedelta(days=14)),
+        row(id="nk-3", date_posted=today - timedelta(days=15)),
+        row(id="nk-4", date_posted=None),
+    ]]
+    assert [job.external_id for job in board(boards.Naukri, tmp_path).fetch()] == ["nk-1", "nk-2", "nk-4"]
+
+
+def test_naukri_rows_become_jobs(tmp_path):
+    naukri = board(boards.Naukri, tmp_path)
+    office, hybrid, cities = (naukri.to_job(fixture("jobspy_naukri.json")[n]) for n in (0, 2, 3))
+    assert (office.source, office.external_id, office.title) == ("naukri", "nk-171026015301", "Walk-in || Software Developer")
+    assert office.tags == ["HTML", "Boot", "Fullstack Development", "Spring", "Spring Boot", "Python", "Angular", "React.js"]
+    assert office.department == "Engineering - Software & QA"
+    assert (office.salary_min, office.salary_max, office.salary_period) == (400000.0, 500000.0, "year")
+    assert (office.remote, hybrid.remote) == (False, False)
+    assert cities.location == "Bengaluru, Hyderabad, Pune, India"
+
+
+def test_naukri_says_which_jobs_are_remote(tmp_path):
+    assert board(boards.Naukri, tmp_path).to_job(row(work_from_home_type="Remote")).remote is True
