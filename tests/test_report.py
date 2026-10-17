@@ -182,6 +182,35 @@ def test_json_report_has_one_object_per_pick(tmp_path):
     assert (data[1]["rank"], data[1]["id"], data[1]["remote"], data[1]["posted_at"]) == (2, 8, None, None)
 
 
+def make_files(folder, *names):
+    folder.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        (folder / name).write_text("x", encoding="utf-8")
+    return [folder / name for name in names]
+
+
+def test_write_reports_deletes_reports_older_than_keep_days(tmp_path):
+    folder = tmp_path / "reports"
+    old = make_files(folder, "2026-08-17.md", "2026-08-17.html", "2026-01-02.csv", "2026-01-02.json")
+    kept = make_files(folder, "2026-08-18.md", "notes.txt", "2026-01-02.txt", "2026-01-02 copy.md")
+    write_reports([Match(job("a", id=1), 0.5)], Config({"report": {"keep_days": 60}}, tmp_path), DAY)
+    assert [path.name for path in old if path.exists()] == []
+    assert [path.name for path in kept if not path.exists()] == []
+
+
+def test_keep_days_zero_keeps_every_report(tmp_path):
+    old = make_files(tmp_path / "reports", "2020-01-01.md")
+    write_reports([Match(job("a", id=1), 0.5)], Config({"report": {"keep_days": 0}}, tmp_path), DAY)
+    assert old[0].exists()
+
+
+def test_rebuilding_an_old_day_keeps_its_files_and_newer_ones(tmp_path):
+    newer = make_files(tmp_path / "reports", "2026-10-16.md")
+    config = Config({"report": {"keep_days": 60}}, tmp_path)
+    paths = write_reports([Match(job("a", id=1), 0.5)], config, date(2026, 1, 1))
+    assert all(path.exists() for path in paths + newer)
+
+
 def test_unknown_report_format_is_an_error(tmp_path):
     config = Config({"report": {"formats": ["md", "pdf"]}}, tmp_path)
     with pytest.raises(HirejutsuError, match="pdf"):
