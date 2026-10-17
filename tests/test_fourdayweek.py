@@ -50,6 +50,18 @@ def test_job_without_salary(tmp_path):
     assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (None, None, "", "")
 
 
+def test_continent_only_locations(tmp_path):
+    page = last_page()
+    page["data"][1]["locations"] += [{"continent": "Europe", "work_arrangement": "remote"}, {"work_arrangement": "remote"}]
+    assert source(tmp_path, page).fetch()[1].location == "Canada; Europe"
+
+
+def test_job_without_a_company(tmp_path):
+    page = last_page()
+    del page["data"][0]["company"]
+    assert source(tmp_path, page).fetch()[0].company == ""
+
+
 def test_plain_text_drops_markdown_marks():
     assert plain_text("#### About\n\n**Location**: Remote\n\n- Python\n") == "About\nLocation: Remote\n- Python"
 
