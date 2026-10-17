@@ -55,6 +55,9 @@ class FakeClient:
     def get_text(self, url, params=None, headers=None):
         return self._answer("GET", url, params=params)
 
+    def get_bytes(self, url, params=None, headers=None):
+        return self._answer("GET", url, params=params)
+
     def post_json(self, url, payload, headers=None):
         return self._answer("POST", url, payload=payload)
 

@@ -53,6 +53,10 @@ class Client:
     def get_text(self, url: str, params: dict | None = None, headers: dict | None = None) -> str:
         return self._send("GET", url, params=params, headers=headers).text
 
+    def get_bytes(self, url: str, params: dict | None = None, headers: dict | None = None) -> bytes:
+        """The body as sent, for feeds whose text encoding is only declared inside them."""
+        return self._send("GET", url, params=params, headers=headers).content
+
     def post_json(self, url: str, payload, headers: dict | None = None):
         return self._send("POST", url, json=payload, headers=headers).json()
 
