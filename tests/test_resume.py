@@ -35,6 +35,29 @@ def test_load_profile_uses_config_values(tmp_path):
     assert profile.years == 4
 
 
+def test_load_profile_adds_found_skills_after_configured_ones(tmp_path):
+    (tmp_path / "resume.txt").write_text("Python, Django and Kafka", encoding="utf-8")
+    config = Config({"resume": "resume.txt", "profile": {"skills": ["kafka", "Rust"]}}, tmp_path)
+    assert load_profile(config).skills == ["kafka", "Rust", "Python", "Django"]
+
+
+def test_load_profile_finds_titles_and_years_unless_configured(tmp_path):
+    (tmp_path / "resume.txt").write_text("Data Analyst, Acme, 2015 - 2020", encoding="utf-8")
+    found = load_profile(Config({"resume": "resume.txt"}, tmp_path))
+    assert (found.titles, found.years) == (["Data Analyst"], 5.0)
+    profile = {"titles": ["BI Developer"], "years": 3}
+    configured = load_profile(Config({"resume": "resume.txt", "profile": profile}, tmp_path))
+    assert (configured.titles, configured.years) == (["BI Developer"], 3)
+
+
+def test_load_profile_from_a_sample_resume(tmp_path):
+    (tmp_path / "resume.txt").write_text(fixture("resume_sample.txt"), encoding="utf-8")
+    profile = load_profile(Config({"resume": "resume.txt"}, tmp_path))
+    assert profile.titles == ["Senior Software Engineer", "Software Engineer", "Software Engineering Intern"]
+    assert {"Python", "Go", "AWS", "PostgreSQL", "Django", "Docker", "Kubernetes"} <= set(profile.skills)
+    assert profile.years >= 9.6
+
+
 def test_missing_resume(tmp_path):
     with pytest.raises(HirejutsuError, match="not found"):
         load_profile(Config({"resume": "nope.txt"}, tmp_path))

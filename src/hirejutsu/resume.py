@@ -211,14 +211,29 @@ def _title_in(line: str) -> str | None:
 
 
 def load_profile(config: Config) -> Profile:
+    """The profile from the resume, where anything set in the config wins."""
     settings = config.section("profile", PROFILE_DEFAULTS)
     path = config.path(config.get("resume", "resume.pdf"))
     if not path.exists():
         raise HirejutsuError(f"Resume not found at {path}. Set 'resume' in the config.")
+    text = read_text(path)
+    years = settings["years"]
     return Profile(
-        text=read_text(path),
-        skills=list(settings["skills"]),
-        titles=list(settings["titles"]),
-        years=settings["years"],
+        text=text,
+        skills=_merge_skills(settings["skills"], find_skills(text)),
+        titles=list(settings["titles"]) or find_titles(text),
+        years=find_years(text, date.today()) if years is None else years,
         locations=list(settings["locations"]),
     )
+
+
+def _merge_skills(configured: list[str], found: list[str]) -> list[str]:
+    """Configured skills first, then found ones, keeping each skill once however it is spelled."""
+    names = {term.lower(): name.lower() for term, name, _ in skill_terms()}
+    merged, seen = [], set()
+    for skill in [*configured, *found]:
+        key = names.get(skill.lower(), skill.lower())
+        if key not in seen:
+            seen.add(key)
+            merged.append(skill)
+    return merged
