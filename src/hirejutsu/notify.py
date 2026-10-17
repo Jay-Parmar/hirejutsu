@@ -1,9 +1,14 @@
 """Sending the daily picks by email, Telegram, Discord, Slack and ntfy."""
 
 import logging
+import mimetypes
 import os
+import smtplib
+import ssl
 from dataclasses import dataclass, field
 from datetime import date
+from email.message import EmailMessage
+from email.utils import formatdate
 from html import escape
 from pathlib import Path
 
@@ -19,8 +24,14 @@ log = logging.getLogger(__name__)
 
 TELEGRAM_LIMIT = 4096
 DISCORD_LIMIT = 2000
+SMTP_PORTS = {"starttls": 587, "ssl": 465, "none": 25}
+SMTP_TIMEOUT = 30
 
 NOTIFY_DEFAULTS = {
+    "email": {
+        "enabled": False, "host": "", "port": None, "security": "starttls", "username": "",
+        "password_env": "HIREJUTSU_SMTP_PASSWORD", "password": "", "from": "", "to": [], "attach": False,
+    },
     "telegram": {"enabled": False, "bot_token_env": "HIREJUTSU_TELEGRAM_TOKEN", "bot_token": "", "chat_id": ""},
     "discord": {"enabled": False, "webhook_url_env": "HIREJUTSU_DISCORD_WEBHOOK", "webhook_url": ""},
     "slack": {"enabled": False, "webhook_url_env": "HIREJUTSU_SLACK_WEBHOOK", "webhook_url": ""},
@@ -118,7 +129,7 @@ def secret(settings: dict, key: str, channel: str) -> str:
 def require(settings: dict, channel: str, *keys: str) -> None:
     missing = [key for key in keys if not settings[key]]
     if missing:
-        raise HirejutsuError(f"notify.{channel} needs {' and '.join(missing)} in config.yaml")
+        raise HirejutsuError(f"notify.{channel} needs {', '.join(missing)} in config.yaml")
 
 
 def split_text(text: str, limit: int) -> list[str]:
@@ -130,6 +141,44 @@ def split_text(text: str, limit: int) -> list[str]:
         else:
             pieces += [block[start:start + limit] for start in range(0, len(block), limit)]
     return pieces
+
+
+def send_email(settings: dict, client, message: Message) -> None:
+    settings = {**settings, "from": settings["from"] or settings["username"]}
+    require(settings, "email", "host", "from", "to")
+    security = settings["security"]
+    if security not in SMTP_PORTS:
+        raise HirejutsuError("notify.email.security must be starttls, ssl or none")
+    password = secret(settings, "password", "email") if settings["username"] else ""
+    mail = email_message(settings, message)
+    port = settings["port"] or SMTP_PORTS[security]
+    context = ssl.create_default_context()
+    if security == "ssl":
+        smtp = smtplib.SMTP_SSL(settings["host"], port, timeout=SMTP_TIMEOUT, context=context)
+    else:
+        smtp = smtplib.SMTP(settings["host"], port, timeout=SMTP_TIMEOUT)
+    with smtp:
+        if security == "starttls":
+            smtp.starttls(context=context)
+        if settings["username"]:
+            smtp.login(settings["username"], password)
+        smtp.send_message(mail)
+
+
+def email_message(settings: dict, message: Message) -> EmailMessage:
+    to = settings["to"]
+    mail = EmailMessage()
+    mail["Subject"] = message.subject
+    mail["From"] = settings["from"]
+    mail["To"] = to if isinstance(to, str) else ", ".join(to)
+    mail["Date"] = formatdate(localtime=True)
+    mail.set_content(message.text)
+    mail.add_alternative(message.html, subtype="html")
+    if settings["attach"]:
+        for path in message.files:
+            maintype, subtype = (mimetypes.guess_type(path.name)[0] or "application/octet-stream").split("/")
+            mail.add_attachment(path.read_bytes(), maintype=maintype, subtype=subtype, filename=path.name)
+    return mail
 
 
 def send_telegram(settings: dict, client, message: Message) -> None:
@@ -165,4 +214,10 @@ def send_ntfy(settings: dict, client, message: Message) -> None:
     client.post(url, data=message.text.encode("utf-8"), headers=headers)
 
 
-SENDERS = {"telegram": send_telegram, "discord": send_discord, "slack": send_slack, "ntfy": send_ntfy}
+SENDERS = {
+    "email": send_email,
+    "telegram": send_telegram,
+    "discord": send_discord,
+    "slack": send_slack,
+    "ntfy": send_ntfy,
+}

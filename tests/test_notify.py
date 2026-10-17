@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 import requests
 
+from hirejutsu import notify
 from hirejutsu.config import Config
 from hirejutsu.models import Job, Match
 from hirejutsu.notify import Message, picks_message, send_all, split_text
@@ -14,6 +15,7 @@ MESSAGE = Message("hirejutsu: test", "hello", "<p>hello</p>")
 TELEGRAM = {"enabled": True, "chat_id": 42}
 DISCORD_URL = "https://discord.com/api/webhooks/1/abc"
 SLACK_URL = "https://hooks.slack.com/services/T1/B1/abc"
+GMAIL = {"enabled": True, "host": "smtp.gmail.com", "username": "me@gmail.com", "to": ["me@gmail.com"]}
 
 
 class Recorder:
@@ -28,6 +30,32 @@ class Recorder:
         if self.error:
             raise self.error
         return ""
+
+
+class FakeSMTP:
+    """Stands in for an SMTP connection and remembers what it was asked to do."""
+
+    def __init__(self, host, port, secure):
+        self.address = (host, port)
+        self.secure = secure
+        self.steps = []
+        self.sent = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.steps.append("quit")
+
+    def starttls(self, context=None):
+        self.steps.append("starttls")
+
+    def login(self, username, password):
+        self.steps.append(f"login {username} {password}")
+
+    def send_message(self, mail):
+        self.steps.append("send")
+        self.sent.append(mail)
 
 
 def match(external_id, score=0.5, **kwargs):
@@ -58,6 +86,23 @@ def token(monkeypatch):
 def webhooks(monkeypatch):
     monkeypatch.setenv("HIREJUTSU_DISCORD_WEBHOOK", DISCORD_URL)
     monkeypatch.setenv("HIREJUTSU_SLACK_WEBHOOK", SLACK_URL)
+
+
+@pytest.fixture
+def smtp(monkeypatch):
+    """Replace smtplib connections with fakes. Returns the connections that get opened."""
+    monkeypatch.setenv("HIREJUTSU_SMTP_PASSWORD", "app-password")
+    opened = []
+
+    def opener(secure):
+        def connect(host, port, **kwargs):
+            opened.append(FakeSMTP(host, port, secure))
+            return opened[-1]
+        return connect
+
+    monkeypatch.setattr(notify.smtplib, "SMTP", opener(False))
+    monkeypatch.setattr(notify.smtplib, "SMTP_SSL", opener(True))
+    return opened
 
 
 def test_picks_message_lists_jobs_and_report():
@@ -200,6 +245,62 @@ def test_ntfy_uses_own_server_and_token(tmp_path, monkeypatch):
 def test_ntfy_needs_a_topic(tmp_path):
     results = send_all(config(tmp_path, ntfy={"enabled": True}), Recorder(), MESSAGE)
     assert results == [("ntfy", "notify.ntfy needs topic in config.yaml")]
+
+
+def test_gmail_uses_starttls_and_the_app_password(tmp_path, smtp):
+    assert send_all(config(tmp_path, email=GMAIL), Recorder(), MESSAGE) == [("email", "")]
+    [server] = smtp
+    assert server.address == ("smtp.gmail.com", 587)
+    assert not server.secure
+    assert server.steps == ["starttls", "login me@gmail.com app-password", "send", "quit"]
+    mail = server.sent[0]
+    assert (mail["Subject"], mail["From"], mail["To"]) == ("hirejutsu: test", "me@gmail.com", "me@gmail.com")
+    assert mail.get_body(("plain",)).get_content().strip() == "hello"
+    assert mail.get_body(("html",)).get_content().strip() == "<p>hello</p>"
+
+
+def test_email_over_ssl_defaults_to_port_465(tmp_path, smtp):
+    send_all(config(tmp_path, email={**GMAIL, "security": "ssl"}), Recorder(), MESSAGE)
+    [server] = smtp
+    assert server.secure
+    assert server.address == ("smtp.gmail.com", 465)
+    assert server.steps == ["login me@gmail.com app-password", "send", "quit"]
+
+
+def test_email_without_username_skips_login(tmp_path, smtp, monkeypatch):
+    monkeypatch.delenv("HIREJUTSU_SMTP_PASSWORD")
+    settings = {"enabled": True, "host": "localhost", "port": 1025, "security": "none",
+                "from": "hirejutsu@localhost", "to": "me@localhost"}
+    assert send_all(config(tmp_path, email=settings), Recorder(), MESSAGE) == [("email", "")]
+    [server] = smtp
+    assert server.address == ("localhost", 1025)
+    assert server.steps == ["send", "quit"]
+    assert server.sent[0]["To"] == "me@localhost"
+
+
+def test_email_attaches_reports_only_when_asked(tmp_path, smtp):
+    report = tmp_path / "2026-10-17.md"
+    report.write_text("# Job picks", encoding="utf-8")
+    message = Message("subject", "text", "<p>text</p>", files=[report])
+    send_all(config(tmp_path, email=GMAIL), Recorder(), message)
+    send_all(config(tmp_path, email={**GMAIL, "attach": True}), Recorder(), message)
+    assert list(smtp[0].sent[0].iter_attachments()) == []
+    [attachment] = smtp[1].sent[0].iter_attachments()
+    assert attachment.get_filename() == "2026-10-17.md"
+    assert attachment.get_payload(decode=True) == b"# Job picks"
+
+
+def test_email_needs_host_sender_and_recipients(tmp_path, smtp):
+    assert send_all(config(tmp_path, email={"enabled": True}), Recorder(), MESSAGE) == [
+        ("email", "notify.email needs host, from, to in config.yaml"),
+    ]
+    assert smtp == []
+
+
+def test_email_rejects_unknown_security(tmp_path, smtp):
+    [(name, error)] = send_all(config(tmp_path, email={**GMAIL, "security": "tls"}), Recorder(), MESSAGE)
+    assert "starttls, ssl or none" in error
+    assert smtp == []
 
 
 def test_a_failing_channel_does_not_stop_the_others(tmp_path, webhooks):
