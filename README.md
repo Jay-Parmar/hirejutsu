@@ -132,6 +132,33 @@ hirejutsu explain 42
 
 The id is shown by `run`, `today` and `top`.
 
+## Tracking applications
+
+Apply on the company's site, then record it here. A typical morning:
+
+```
+hirejutsu run              # fetch and pick today's jobs
+hirejutsu review           # go through the picks: applied, skip, later or open
+hirejutsu applied -t 1 3 7 # or mark picks #1, #3 and #7 as applied in one go
+hirejutsu stats            # statuses, applications per week, response rate
+```
+
+Commands take job ids from the ID column, or today's pick numbers (the # column) with `-t`.
+
+```
+hirejutsu skip 12 15       # not for you
+hirejutsu save -t 4        # apply later
+hirejutsu status 12 interview --note "call on Tuesday"
+hirejutsu note 12 recruiter called back
+hirejutsu show 12          # details, notes, history and the description
+hirejutsu open -t 2        # open the job link in your browser
+hirejutsu list --status applied --since 7
+hirejutsu export           # CSV of tracked jobs in the data folder
+```
+
+`status` takes new, saved, applied, interview, offer, rejected or skipped. Jobs you mark are left
+out of later picks.
+
 ## Development
 
 ```
