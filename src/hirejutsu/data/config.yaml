@@ -65,6 +65,29 @@ ranking:
   # Currency of min_salary, like INR or USD. Salaries in other currencies are kept.
   salary_currency: ""
 
+# AI second opinion, off by default. When on, your resume and the job details go to the provider.
+ai:
+  enabled: false
+  # anthropic, or openai for any OpenAI compatible API: OpenAI, Ollama, LM Studio, OpenRouter, Groq.
+  provider: anthropic
+  # Empty means the provider default: claude-haiku-5-5 or gpt-5-mini.
+  model: ""
+  # Empty means the provider default. Ollama runs at http://localhost:11434/v1
+  base_url: ""
+  # Environment variable holding the API key. Empty means ANTHROPIC_API_KEY or OPENAI_API_KEY.
+  api_key_env: ""
+  # How many of the best matches to send each day.
+  candidates: 30
+  # How many jobs go in one request.
+  batch_size: 10
+  # How much the AI score counts in the final score, from 0 to 1.
+  weight: 0.5
+  # Longest resume and job description to send, in characters.
+  max_resume_chars: 8000
+  max_description_chars: 3000
+  # Seconds to wait for an answer. Raise it for slow local models.
+  timeout: 120
+
 # Where daily reports are written.
 reports_dir: reports
 
