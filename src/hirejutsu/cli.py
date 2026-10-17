@@ -38,6 +38,8 @@ def main(argv: list[str] | None = None) -> int:
         level=logging.DEBUG if args.verbose else logging.WARNING,
         format="%(levelname)s %(name)s: %(message)s",
     )
+    # urllib3 warns about each retry with the URL path, and for some notify channels the path holds a token.
+    logging.getLogger("urllib3").setLevel(logging.DEBUG if args.verbose else logging.ERROR)
     app = App(resolve_home(args.home))
     try:
         return args.func(app, args)

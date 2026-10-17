@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime, timezone
 
 import pytest
@@ -135,3 +136,18 @@ def test_notify_failure_sets_exit_code(tmp_path, posts, monkeypatch, capsys):
     monkeypatch.delenv("HIREJUTSU_DISCORD_WEBHOOK", raising=False)
     assert main(["--home", make_home(tmp_path, DISCORD), "notify", "--test"]) == 1
     assert "discord: failed" in capsys.readouterr().out
+
+
+@pytest.fixture
+def urllib3_log():
+    log = logging.getLogger("urllib3")
+    level = log.level
+    yield log
+    log.setLevel(level)
+
+
+def test_retry_warnings_with_urls_stay_hidden_unless_verbose(tmp_path, urllib3_log):
+    main(["--home", str(tmp_path), "config"])
+    assert not urllib3_log.isEnabledFor(logging.WARNING)
+    main(["--home", str(tmp_path), "-v", "config"])
+    assert urllib3_log.isEnabledFor(logging.WARNING)
