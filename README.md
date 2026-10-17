@@ -43,6 +43,20 @@ Copy your resume into the data folder and open the config:
 hirejutsu config --edit
 ```
 
+## Resume
+
+hirejutsu reads `.pdf`, `.docx`, `.txt` and `.md` resumes. A scanned PDF has no text to read, so
+export a text PDF from your editor or use a `.docx` or `.txt` file instead.
+
+```
+hirejutsu resume           # show the skills, titles and years of experience found
+hirejutsu resume --text    # show the text that was read
+```
+
+Skills are matched against a built-in list of common skills, technical and non-technical.
+Anything you set under `profile` in the config wins: `skills` are added to the ones found,
+while `titles` and `years` replace the ones detected.
+
 ## Fetching jobs
 
 ```
