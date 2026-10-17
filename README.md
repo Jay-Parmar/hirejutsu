@@ -68,6 +68,32 @@ hirejutsu fetch -s lever   # just one source
 Jobs are saved in `hirejutsu.db` inside the data folder, so each fetch only adds what is new.
 A source that fails is reported and skipped, the others still run.
 
+## Company career pages
+
+hirejutsu reads jobs straight from company career pages on Greenhouse, Lever, Ashby,
+SmartRecruiters, Recruitee, Workable, Workday, Personio, Breezy HR, BambooHR and Teamtailor.
+Each of these is a source of its own, and 448 companies come built in.
+
+```
+hirejutsu companies                                 # companies per ATS, and the list
+hirejutsu companies list --ats lever --search ai
+hirejutsu companies add https://jobs.lever.co/acme  # any careers page or job link
+hirejutsu companies add greenhouse:acme --name "Acme Inc"
+hirejutsu companies remove greenhouse:stripe
+hirejutsu companies check                           # find closed boards, --prune drops them
+hirejutsu companies discover                        # add boards linked from jobs you have
+```
+
+Your changes go to `companies.yaml` in the data folder. Set `builtin: false` under `companies`
+in the config to read only your own companies.
+
+To keep the daily fetch to about two minutes, these sources keep only jobs posted within
+`search.max_age_days` and, when you have keywords or target titles, jobs whose title shares a
+word with them ("Backend Engineer" also keeps "Engineering Manager"). Set `title_filter: false`
+for a source to keep every job. Greenhouse, SmartRecruiters, Workday and BambooHR need one more
+request per job for its description. They read up to `max_details` (300) new jobs per fetch,
+newest first, and the rest on the next fetch.
+
 ## Remote job boards
 
 These sources read public job feeds and need no account or key. All are on except Arbeitnow.
