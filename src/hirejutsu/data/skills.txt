@@ -45,6 +45,7 @@ PowerShell
 !Groovy
 Solidity
 !Apex | Salesforce Apex
+Visualforce
 ABAP | SAP ABAP
 PL/SQL | PLSQL
 T-SQL | TSQL | Transact-SQL
@@ -104,6 +105,21 @@ JSON
 XML
 YAML
 Server-Side Rendering | SSR
+
+# Websites and online stores
+WordPress
+Drupal
+Joomla
+Magento | Adobe Commerce
+Shopify
+WooCommerce
+BigCommerce
+Strapi
+Contentful
+Headless CMS
+Webflow
+Wix
+Squarespace
 
 # Backend
 Node.js | NodeJS | Node JS | !Node
