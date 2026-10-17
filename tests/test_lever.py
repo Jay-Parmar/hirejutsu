@@ -7,8 +7,8 @@ from fakes import FakeClient, board_config, fixture, http_error
 from hirejutsu.companies import Company
 from hirejutsu.sources.lever import Lever
 
-US = "https://api.lever.co/v0/postings/zoox"
-EU = "https://api.eu.lever.co/v0/postings/zoox"
+US = "https://jobs.lever.co/v0/postings/zoox"
+EU = "https://jobs.eu.lever.co/v0/postings/zoox"
 ZOOX = Company("lever", "zoox", "Zoox")
 
 

@@ -163,7 +163,7 @@ def detect(text: str) -> tuple[str, str] | None:
     elif host == "boards-api.greenhouse.io":
         found = "greenhouse", _after(path, "boards")
     elif host in ("jobs.lever.co", "jobs.eu.lever.co"):
-        found = "lever", first
+        found = "lever", _after(path, "postings") if first == "v0" else first
     elif host in ("api.lever.co", "api.eu.lever.co"):
         found = "lever", _after(path, "postings")
     elif host == "jobs.ashbyhq.com":
