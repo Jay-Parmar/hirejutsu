@@ -21,6 +21,8 @@ EXPORT_COLUMNS = [
     "id", "title", "company", "location", "status", "changed", "applied", "posted",
     "first_seen", "last_seen", "url", "notes",
 ]
+REVIEW_PROMPT = "[a]pplied [s]kip [l]ater [o]pen [n]ext [q]uit "
+REVIEW_STATUSES = {"a": "applied", "s": "skipped", "l": "saved"}
 
 
 def register(sub) -> None:
@@ -68,6 +70,9 @@ def register(sub) -> None:
     parser.add_argument("-o", "--output", type=Path, metavar="PATH",
                         help="file to write (default: tracked-jobs-<date>.csv in the data folder)")
     parser.set_defaults(func=export)
+
+    parser = sub.add_parser("review", help="go through today's picks one at a time")
+    parser.set_defaults(func=review)
 
 
 def add_ids(parser, nargs="+") -> None:
@@ -135,6 +140,7 @@ def note(app, args) -> int:
 
 
 def local(value: datetime | None, fmt: str = "%Y-%m-%d") -> str:
+    """A stored time as text in the local time zone, or "" when it is unknown."""
     return value.astimezone().strftime(fmt) if value else ""
 
 
@@ -298,3 +304,57 @@ def export(app, args) -> int:
         raise HirejutsuError(f"Cannot write {path}: {exc.strerror}") from exc
     app.console.print(Text(f"Saved {len(rows)} jobs to {path}"))
     return 0
+
+
+def review(app, args) -> int:
+    return review_picks(app, todays_picks(app.store), input)
+
+
+def review_picks(app, picks: list[Match], ask) -> int:
+    """Ask what to do with each pick that is still new. ask(prompt) returns the reply, like input()."""
+    console = app.console
+    todo = [(number, match) for number, match in enumerate(picks, start=1) if match.job.status == "new"]
+    if not todo:
+        console.print("All of today's picks have a status already. See 'hirejutsu list'.")
+        return 0
+    done = Counter()
+    for number, match in todo:
+        print_pick(console, number, len(picks), match)
+        choice = ask_choice(console, ask)
+        while choice == "o":
+            open_url(match.job.url)
+            console.print("Opened in your browser.")
+            choice = ask_choice(console, ask)
+        if choice == "q":
+            break
+        if choice in REVIEW_STATUSES:
+            status = REVIEW_STATUSES[choice]
+            app.store.set_status(match.job.id, status)
+            console.print(f"Marked as {status}.")
+            done[status] += 1
+    summary = ", ".join(f"{count} {status}" for status, count in done.items())
+    console.print(f"Done: {summary}." if summary else "Done, nothing marked.")
+    return 0
+
+
+def ask_choice(console, ask) -> str:
+    """The first letter of the reply, asking again until it is a known one. End of input means quit."""
+    while True:
+        try:
+            choice = ask(REVIEW_PROMPT).strip().lower()[:1]
+        except EOFError:
+            return "q"
+        if choice in ("a", "s", "l", "o", "n", "q"):
+            return choice
+        console.print("Type a, s, l, o, n or q.")
+
+
+def print_pick(console, number: int, total: int, match: Match) -> None:
+    job = match.job
+    console.print()
+    console.print(Text(f"Pick {number} of {total}: {job.title}", style="bold"))
+    facts = [part for part in (job.company, place(job), f"score {match.score:.2f}") if part]
+    console.print(Text(" | ".join(facts)))
+    for reason in match.reasons:
+        console.print(Text(f"- {reason}"))
+    console.print(Text(job.url, style=Style(link=job.url)))
