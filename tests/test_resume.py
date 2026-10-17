@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 from docx import Document
 from fakes import FIXTURES
@@ -5,7 +7,9 @@ from pypdf import PdfWriter
 
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
-from hirejutsu.resume import find_skills, load_profile, read_text, skill_terms
+from hirejutsu.resume import find_skills, find_years, load_profile, read_text, skill_terms
+
+TODAY = date(2026, 10, 17)
 
 
 def test_load_profile_reads_text_resume(tmp_path):
@@ -136,3 +140,38 @@ def test_find_skills_beyond_software():
     assert find_skills(text) == [
         "Tally", "GST", "Excel", "Google Ads", "SEO", "Figma", "Agile", "Scrum", "Product Management",
     ]
+
+
+@pytest.mark.parametrize(
+    ("text", "years"),
+    [
+        ("Acme | Jan 2019 - Present", 7.8),
+        ("Acme 2018 - 2021", 3.0),
+        ("Acme, 03/2020 to 06/2022", 2.3),
+        ("Acme, 15/03/2020 - 30/06/2021", 1.3),
+        ("Acme Sept. 2021 \u2013 Current", 5.2),
+        ("Acme, January 2024 till date", 2.8),
+        ("Acme, 2025 - 2030", 1.8),
+    ],
+)
+def test_find_years_from_date_ranges(text, years):
+    assert find_years(text, TODAY) == years
+
+
+def test_find_years_counts_overlaps_once_and_skips_gaps():
+    assert find_years("Acme, Jan 2020 - Dec 2021\nFreelance, Jun 2021 - Jun 2022", TODAY) == 2.5
+    assert find_years("Acme 2015 - 2016\nGlobex 2018 - 2019", TODAY) == 2.0
+
+
+def test_find_years_skips_education():
+    text = (
+        "Bachelor of Engineering\n"
+        "2014 - 2018\n"
+        "Pune University, 2012 - 2014\n"
+        "Software Engineer, Acme, 2018 - 2020\n"
+    )
+    assert find_years(text, TODAY) == 2.0
+
+
+def test_find_years_without_dates():
+    assert find_years("Python developer", TODAY) is None
