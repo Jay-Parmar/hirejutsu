@@ -7,6 +7,7 @@ from pathlib import Path
 import requests
 
 FIXTURES = Path(__file__).parent / "fixtures"
+CLAUDE_URL = "https://api.anthropic.com/v1/messages"
 
 
 def fixture(name: str):
@@ -60,3 +61,8 @@ class FakeRun:
         if isinstance(reply, Exception):
             raise reply
         return subprocess.CompletedProcess(args, *reply)
+
+
+def claude_reply(text: str) -> dict:
+    """What the Anthropic Messages API returns for a plain text answer."""
+    return {"content": [{"type": "text", "text": text}], "stop_reason": "end_turn"}
