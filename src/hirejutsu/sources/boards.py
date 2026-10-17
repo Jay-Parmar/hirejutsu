@@ -3,6 +3,8 @@
 These sites forbid scraping in their terms, so every board here is off until the user turns it on.
 """
 
+import time
+
 from ..errors import HirejutsuError
 from ..models import Job
 from ..text import clean, html_to_text, parse_date
@@ -40,11 +42,13 @@ class Board(Source):
     """A job board searched once per keyword and place. Subclasses set site to jobspy's name for it."""
 
     site = ""
-    defaults = {"enabled": False, "results": 25, "descriptions": True}
+    defaults = {"enabled": False, "results": 25, "max_searches": 3, "delay_seconds": 15, "descriptions": True}
 
     def fetch(self) -> list[Job]:
         jobs: list[Job] = []
-        for search in self.searches():
+        for number, search in enumerate(self.searches()):
+            if number:
+                time.sleep(self.settings["delay_seconds"])
             jobs += [job for job in map(self.to_job, _scrape(**search)) if job]
         return jobs
 
@@ -52,7 +56,8 @@ class Board(Source):
         if not self.query.keywords:
             raise HirejutsuError("No search keywords. Set search.keywords or profile.titles in the config.")
         places = self.places()
-        return [self.search(keyword, place) for keyword in self.query.keywords for place in places]
+        found = [self.search(keyword, place) for keyword in self.query.keywords for place in places]
+        return found[: self.settings["max_searches"]]
 
     def places(self) -> list[str]:
         """Cities and "remote" from the profile. No locations means anywhere."""

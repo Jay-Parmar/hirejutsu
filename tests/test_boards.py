@@ -28,6 +28,13 @@ def jobspy(monkeypatch):
     return fake
 
 
+@pytest.fixture(autouse=True)
+def sleeps(monkeypatch):
+    calls = []
+    monkeypatch.setattr("time.sleep", calls.append)
+    return calls
+
+
 def board(cls, tmp_path, keywords=("python developer",), locations=("Bengaluru",), **sources):
     data = {"search": {"keywords": list(keywords)}, "profile": {"locations": list(locations)}, "sources": sources}
     return cls(Config(data, tmp_path), FakeClient())
@@ -82,6 +89,21 @@ def test_one_search_per_keyword_and_place(tmp_path, jobspy):
         ("python", "Pune"),
         ("django", "Pune"),
     ]
+
+
+def test_at_most_three_searches_by_default(tmp_path, jobspy):
+    board(boards.Indeed, tmp_path, keywords=["python", "django"], locations=["Pune", "Delhi"]).fetch()
+    assert [(search["search_term"], search["location"]) for search in jobspy.searches] == [
+        ("python", "Pune"),
+        ("python", "Delhi"),
+        ("django", "Pune"),
+    ]
+
+
+def test_pause_between_searches(tmp_path, jobspy, sleeps):
+    board(boards.Indeed, tmp_path, keywords=["python", "django"], indeed={"delay_seconds": 7}).fetch()
+    assert len(jobspy.searches) == 2
+    assert sleeps == [7]
 
 
 def test_no_locations_searches_anywhere(tmp_path, jobspy):
