@@ -88,6 +88,10 @@ def test_template_is_valid_yaml():
     assert "resume" in data
 
 
+def test_template_leaves_years_to_the_resume():
+    assert yaml.safe_load(template())["profile"]["years"] is None
+
+
 def test_init_home_creates_files(tmp_path):
     home = tmp_path / "home"
     created = init_home(home)
