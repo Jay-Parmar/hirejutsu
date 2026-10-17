@@ -1,8 +1,17 @@
 """Command line interface."""
 
 import argparse
+import logging
+
+from rich.markup import escape
 
 from . import __version__
+from .app import App
+from .commands import setup
+from .config import HOME_ENV, resolve_home
+from .errors import HirejutsuError
+
+COMMANDS = [setup]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -11,7 +20,11 @@ def build_parser() -> argparse.ArgumentParser:
         description="Daily job picks matched to your resume.",
     )
     parser.add_argument("--version", action="version", version=f"hirejutsu {__version__}")
-    parser.add_subparsers(dest="command", metavar="command")
+    parser.add_argument("--home", help=f"data folder (default: ${HOME_ENV} or ~/.hirejutsu)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="show debug logs")
+    sub = parser.add_subparsers(dest="command", metavar="command")
+    for module in COMMANDS:
+        module.register(sub)
     return parser
 
 
@@ -21,4 +34,15 @@ def main(argv: list[str] | None = None) -> int:
     if not args.command:
         parser.print_help()
         return 1
-    return args.func(args)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING,
+        format="%(levelname)s %(name)s: %(message)s",
+    )
+    app = App(resolve_home(args.home))
+    try:
+        return args.func(app, args)
+    except HirejutsuError as exc:
+        app.console.print(f"[red]error:[/red] {escape(str(exc))}")
+        return 2
+    except KeyboardInterrupt:
+        return 130
