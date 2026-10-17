@@ -1,5 +1,6 @@
 """Base class for job sources."""
 
+import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
@@ -55,3 +56,8 @@ class Source:
 
     def fetch(self) -> list[Job]:
         raise NotImplementedError
+
+
+def url_id(url: str) -> str:
+    """A short stable id for jobs on boards that give them no id of their own."""
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]

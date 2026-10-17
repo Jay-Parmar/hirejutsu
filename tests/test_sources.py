@@ -7,6 +7,7 @@ from hirejutsu import sources
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.sources import Query, Source, load_sources
+from hirejutsu.sources.base import url_id
 
 
 class Alpha(Source):
@@ -56,6 +57,13 @@ def test_query_is_recent_uses_max_age():
 
 def test_query_is_recent_keeps_undated_jobs():
     assert Query(max_age_days=7).is_recent(None)
+
+
+def test_url_id_is_short_and_stable():
+    first = url_id("https://example.com/jobs/1")
+    assert first == url_id("https://example.com/jobs/1")
+    assert first != url_id("https://example.com/jobs/2")
+    assert len(first) == 16
 
 
 def test_source_settings_merge_defaults(tmp_path):
