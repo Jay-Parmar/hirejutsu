@@ -1,8 +1,9 @@
 from datetime import date
 
 import pytest
+from fakes import CLAUDE_URL, FakeClient, claude_scorer
 
-from hirejutsu import sources
+from hirejutsu import ai, sources
 from hirejutsu.cli import main
 from hirejutsu.commands import report as report_command
 from hirejutsu.models import Job
@@ -75,6 +76,16 @@ def test_run_with_bad_report_format_fails_before_fetching(home, tmp_path, capsys
     assert "Unknown report format: pdf" in capsys.readouterr().out
     with Store(tmp_path / "hirejutsu.db") as store:
         assert store.find_jobs() == []
+
+
+def test_run_adds_the_ai_opinion_when_enabled(home, tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    config = tmp_path / "config.yaml"
+    config.write_text(config.read_text(encoding="utf-8") + "ai:\n  enabled: true\n", encoding="utf-8")
+    client = FakeClient({CLAUDE_URL: claude_scorer({1: 9, 2: 9, 3: 9})})
+    monkeypatch.setattr(ai, "make_client", lambda settings: client)
+    assert main(["--home", home, "run"]) == 0
+    assert "- AI: Fit 9" in next((tmp_path / "reports").glob("*.md")).read_text(encoding="utf-8")
 
 
 def test_today_shows_saved_picks(home, capsys):
