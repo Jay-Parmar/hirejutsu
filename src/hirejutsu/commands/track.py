@@ -27,9 +27,14 @@ def register(sub) -> None:
     parser.add_argument("--note", metavar="TEXT", help="a note to keep with the change")
     parser.set_defaults(func=mark)
 
+    parser = sub.add_parser("note", help="add a note to a job without changing its status")
+    add_ids(parser, nargs=1)
+    parser.add_argument("text", nargs="+", metavar="TEXT", help="the note, quotes are optional")
+    parser.set_defaults(func=note)
 
-def add_ids(parser) -> None:
-    parser.add_argument("ids", nargs="+", type=int, metavar="ID", help="job ids, or pick numbers with -t")
+
+def add_ids(parser, nargs="+") -> None:
+    parser.add_argument("ids", nargs=nargs, type=int, metavar="ID", help="job id, or pick number with -t")
     parser.add_argument("-t", "--today", action="store_true", help="numbers refer to today's picks (the # column)")
 
 
@@ -75,3 +80,11 @@ def mark(app, args) -> int:
         app.store.set_status(job.id, args.status, args.note)
         app.console.print(Text(f"Marked job {job.id} as {args.status}: {job.title} at {job.company}"))
     return 0 if len(jobs) == len(args.ids) else 1
+
+
+def note(app, args) -> int:
+    jobs = named_jobs(app, args)
+    for job in jobs:
+        app.store.add_note(job.id, " ".join(args.text))
+        app.console.print(Text(f"Added a note to job {job.id}: {job.title} at {job.company}"))
+    return 0 if jobs else 1
