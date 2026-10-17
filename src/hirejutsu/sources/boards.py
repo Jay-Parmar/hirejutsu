@@ -21,6 +21,17 @@ def _scrape(**search) -> list[dict]:
     return scrape_jobs(**search).to_dict(orient="records")
 
 
+def _value(row: dict, key: str):
+    """A cell, or None when it is empty."""
+    value = row.get(key)
+    # pandas fills empty cells with NaN or NaT, which are never equal to themselves.
+    return None if value is None or value != value else value
+
+
+def _text(row: dict, key: str) -> str:
+    return clean(_value(row, key))
+
+
 def _is_remote(place: str) -> bool:
     return place.strip().lower() == "remote"
 
@@ -64,30 +75,30 @@ class Board(Source):
         return search
 
     def to_job(self, row: dict) -> Job | None:
-        title, url = clean(row.get("title")), clean(row.get("job_url"))
+        title, url = _text(row, "title"), _text(row, "job_url")
         if not title or not url:
             return None
         return Job(
             source=self.name,
             external_id=str(row["id"]),
             title=title,
-            company=clean(row.get("company")),
+            company=_text(row, "company"),
             url=url,
-            location=clean(row.get("location")),
+            location=_text(row, "location"),
             remote=self.remote(row),
-            description=html_to_text(row.get("description")),
-            posted_at=parse_date(row.get("date_posted")),
-            salary_min=row.get("min_amount"),
-            salary_max=row.get("max_amount"),
-            salary_currency=clean(row.get("currency")),
-            salary_period=PERIODS.get(row.get("interval"), ""),
-            employment_type=clean(row.get("job_type")),
-            department=clean(row.get("job_function")),
+            description=html_to_text(_value(row, "description")),
+            posted_at=parse_date(_value(row, "date_posted")),
+            salary_min=_value(row, "min_amount"),
+            salary_max=_value(row, "max_amount"),
+            salary_currency=_text(row, "currency"),
+            salary_period=PERIODS.get(_value(row, "interval"), ""),
+            employment_type=_text(row, "job_type"),
+            department=_text(row, "job_function"),
         )
 
     def remote(self, row: dict) -> bool | None:
         # jobspy says False when a job is not flagged as remote, which does not mean on site.
-        return True if row.get("is_remote") else None
+        return True if _value(row, "is_remote") else None
 
 
 @register
