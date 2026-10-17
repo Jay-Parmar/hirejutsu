@@ -6,12 +6,13 @@ import re
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
+import yaml
 from rich.console import Console
 
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job, Match
-from hirejutsu.report import age, html_page, markdown, print_picks, salary, write_reports
+from hirejutsu.report import REPORT_DEFAULTS, age, html_page, markdown, print_picks, salary, write_reports
 
 DAY = date(2026, 10, 17)
 
@@ -215,3 +216,7 @@ def test_unknown_report_format_is_an_error(tmp_path):
     config = Config({"report": {"formats": ["md", "pdf"]}}, tmp_path)
     with pytest.raises(HirejutsuError, match="pdf"):
         write_reports([Match(job("a", id=1), 0.5)], config, DAY)
+
+
+def test_starter_config_has_the_report_defaults():
+    assert yaml.safe_load(template())["report"] == REPORT_DEFAULTS
