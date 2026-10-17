@@ -5,7 +5,7 @@ import logging
 
 from rich.markup import escape
 
-from . import __version__
+from . import __version__, runlog
 from .app import App
 from .commands import daily, explain, fetch, notify, report, resume, setup, track
 from .config import HOME_ENV, resolve_home
@@ -34,13 +34,17 @@ def main(argv: list[str] | None = None) -> int:
     if not args.command:
         parser.print_help()
         return 1
+    home = resolve_home(args.home)
+    if getattr(args, "log", False):
+        # Before logging is set up and the config is read, so both end up in the log.
+        runlog.start(home / "logs")
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.WARNING,
         format="%(levelname)s %(name)s: %(message)s",
     )
     # urllib3 warns about each retry with the URL path, and for some notify channels the path holds a token.
     logging.getLogger("urllib3").setLevel(logging.DEBUG if args.verbose else logging.ERROR)
-    app = App(resolve_home(args.home))
+    app = App(home)
     try:
         return args.func(app, args)
     except HirejutsuError as exc:
