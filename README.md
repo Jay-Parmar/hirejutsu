@@ -68,6 +68,28 @@ hirejutsu fetch -s lever   # just one source
 Jobs are saved in `hirejutsu.db` inside the data folder, so each fetch only adds what is new.
 A source that fails is reported and skipped, the others still run.
 
+## Remote job boards
+
+These sources read public job feeds and need no account or key. All are on except Arbeitnow.
+Jobs posted more than `search.max_age_days` ago are skipped. Settings go under `sources:` in the
+config, see the examples there.
+
+| Source | Good for | Limits |
+|---|---|---|
+| `remoteok` | Remote OK: the newest 100 or so remote jobs, mostly tech | Few salaries |
+| `remotive` | Remotive: a short list of hand-picked remote jobs | About 15 jobs, shown a day late. One call per run, Remotive allows 4 a day |
+| `weworkremotely` | We Work Remotely: remote jobs in every field | Reads all 11 category feeds unless you set `categories` |
+| `himalayas` | Himalayas: remote jobs that match your search keywords | 20 jobs a page, `max_pages` (3) for each keyword |
+| `jobicy` | Jobicy: remote jobs of the last 7 days, many with salaries | 200 jobs a page, `max_pages` (5) |
+| `workingnomads` | Working Nomads: about 50 recent remote jobs | No search |
+| `hackernews` | Hacker News "Who is hiring?": startups posting their own jobs | Reads the newest monthly thread (`months`). Title and location come from the first line of each post, so they can be rough |
+| `fourdayweek` | 4dayweek.io: jobs with a 4 day week or other good hours | Only remote jobs when your locations include `remote`. 100 jobs a page, `max_pages` (3) |
+| `arbeitnow` | Arbeitnow: jobs in Germany and the rest of Europe | Off by default, as most jobs are onsite and many are in German. Up to 300 jobs a page, `max_pages` (3) |
+
+The boards share their jobs on the condition that you credit them, link back to them and do not
+republish the jobs. Every job keeps its link on the board (for Himalayas, the apply link it requires)
+and everything stays on your computer, so keep your picks to yourself.
+
 ## LinkedIn, Indeed, Naukri and other big sites (optional)
 
 hirejutsu can also search Indeed, Naukri, LinkedIn, Glassdoor and ZipRecruiter through
