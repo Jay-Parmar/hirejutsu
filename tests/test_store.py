@@ -102,6 +102,14 @@ def test_set_status_keeps_note(store):
     assert store.get_job(job_id).note == "referred by Sam"
 
 
+def test_set_status_remembers_when(store):
+    store.upsert_jobs([make_job()], NOW)
+    job_id = store.find_jobs()[0].id
+    assert store.get_job(job_id).status_at is None
+    store.set_status(job_id, "saved", at=NOW)
+    assert store.get_job(job_id).status_at == NOW
+
+
 def test_set_status_records_history(store):
     store.upsert_jobs([make_job()], NOW)
     job_id = store.find_jobs()[0].id
