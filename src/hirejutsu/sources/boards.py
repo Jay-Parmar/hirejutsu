@@ -4,6 +4,7 @@ These sites forbid scraping in their terms, so every board here is off until the
 """
 
 import logging
+import re
 import time
 
 from ..errors import HirejutsuError
@@ -15,6 +16,8 @@ from .base import Source
 log = logging.getLogger(__name__)
 
 PERIODS = {"yearly": "year", "monthly": "month", "weekly": "week", "daily": "day", "hourly": "hour"}
+# What jobspy logs when a board refuses us for a while: HTTP 429, a captcha or a block page.
+BLOCKED = re.compile(r"\b429\b|recaptcha|rate limited|blocked", re.IGNORECASE)
 
 
 class _Recorder(logging.Handler):
@@ -67,6 +70,8 @@ class Board(Source):
             rows, records = self.run(search)
             jobs += [job for job in map(self.to_job, rows) if job]
             errors += [record.getMessage() for record in records if record.levelno >= logging.ERROR]
+            if any(BLOCKED.search(record.getMessage()) for record in records):
+                break
         errors = list(dict.fromkeys(errors))
         if errors and not jobs:
             raise HirejutsuError("; ".join(errors))

@@ -193,6 +193,25 @@ def test_board_error_after_some_jobs_is_a_warning(tmp_path, jobspy, caplog):
     assert warnings == ["Some indeed searches failed: Indeed: timed out"]
 
 
+@pytest.mark.parametrize("message, level", [
+    ("LinkedIn response status code 429", logging.ERROR),
+    ("LinkedIn response status code 429 for job 4477707910", logging.WARNING),
+    ("LinkedIn: unexpected page with no jobs (blocked?)", logging.ERROR),
+    ("Naukri response status code 406 (recaptcha required): the address is rate limited", logging.ERROR),
+    ("Naukri response status code 406 for job 171026015301: rate limited", logging.WARNING),
+])
+def test_a_block_stops_the_other_searches(tmp_path, jobspy, message, level):
+    jobspy.answers = [logs(message, level, rows=[row()])]
+    board(boards.Indeed, tmp_path, keywords=["python", "django"]).fetch()
+    assert len(jobspy.searches) == 1
+
+
+def test_other_errors_do_not_stop_the_other_searches(tmp_path, jobspy):
+    jobspy.answers = [logs("Indeed: Read timed out"), [row()]]
+    assert len(board(boards.Indeed, tmp_path, keywords=["python", "django"]).fetch()) == 1
+    assert len(jobspy.searches) == 2
+
+
 def test_jobspy_handlers_are_muted_during_a_search_and_put_back(tmp_path, jobspy, monkeypatch):
     logger = logging.getLogger("JobSpy:Indeed")
     printer = logging.handlers.BufferingHandler(100)
