@@ -15,7 +15,7 @@ from hirejutsu.companies import (
     read_user,
     save_companies,
 )
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.errors import HirejutsuError
 
 
@@ -59,6 +59,12 @@ def test_load_companies_merges_user_file(tmp_path):
     assert companies["workday:bigcorp.wd3/external"].slug == "bigcorp.wd3/External"
     assert "lever:gotogroup" not in companies
     assert len(companies) == 448 + 2 - 1
+
+
+def test_starter_config_uses_the_builtin_list(tmp_path):
+    data = yaml.safe_load(template())
+    assert data["companies"] == {"builtin": True}
+    assert len(load_companies(Config(data, tmp_path))) == 448
 
 
 def test_builtin_list_can_be_turned_off(tmp_path):

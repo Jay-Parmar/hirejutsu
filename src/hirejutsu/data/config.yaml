@@ -23,6 +23,23 @@ search:
 # Turn sources on or off and change their settings. Run "hirejutsu sources"
 # to see them all. Uncomment a line to use it.
 sources:
+  # Company career pages have one source per ATS: greenhouse, lever, ashby, smartrecruiters,
+  # recruitee, workable, workday, personio, breezy, bamboohr and teamtailor.
+  # They all take these settings, shown here with their defaults:
+  # greenhouse:
+  #   enabled: true
+  #   # How many boards to read at the same time.
+  #   workers: 4
+  #   # Keep only jobs whose title has a word from your keywords, so "Backend Engineer"
+  #   # also keeps "Engineering Manager". Without keywords every job is kept.
+  #   title_filter: true
+  #   # Greenhouse, SmartRecruiters, Workday and BambooHR need one more request per job
+  #   # for its description. This caps them per fetch, newest jobs first, and the rest
+  #   # get theirs on the next fetch.
+  #   max_details: 300
+  # workday:
+  #   # Workday lists 20 jobs a page, newest first. Pages to read per company.
+  #   max_pages: 10
   # remoteok: false
   # arbeitnow:            # off by default, mostly onsite jobs in Germany
   #   enabled: true
@@ -45,6 +62,11 @@ sources:
   # glassdoor: {enabled: true, country: India, results: 30}
   # ziprecruiter: {enabled: true, results: 20}   # US and Canada only
   # Each board makes at most max_searches searches a run (3), delay_seconds apart (15).
+
+# The companies whose career pages are read. See "hirejutsu companies".
+companies:
+  # Use the built-in list. Set to false to read only the companies you add.
+  builtin: true
 
 ranking:
   # How many jobs to pick each day.
