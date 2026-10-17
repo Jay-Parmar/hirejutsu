@@ -116,5 +116,5 @@ def test_details_complete_the_job(tmp_path):
 
 def test_probe_reads_the_total(tmp_path):
     client = FakeClient({f"{API}/jobs": fixture("workday.json")})
-    assert source(tmp_path, client).probe(Company("workday", NVIDIA.slug)) == (3, "nvidia")
+    assert source(tmp_path, client).probe(Company("workday", NVIDIA.slug)) == (3, "")
     assert client.calls[0][3]["limit"] == 1

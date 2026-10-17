@@ -83,7 +83,8 @@ class Workday(DetailSource):
         )
 
     def probe(self, board: Company) -> tuple[int, str]:
-        return self.search(board, 0, limit=1).get("total") or 0, tenant(board)
+        # Workday only gives the legal entity, not the company name people know.
+        return self.search(board, 0, limit=1).get("total") or 0, ""
 
     def to_job(self, board: Company, item: dict) -> Job:
         path = item["externalPath"]

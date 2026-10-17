@@ -1,8 +1,12 @@
 import pytest
-from fakes import FakeClient
+import yaml
+from fakes import FakeClient, fixture
 
 from hirejutsu.app import App
 from hirejutsu.cli import main
+
+LEVER = "https://api.lever.co/v0/postings"
+GREENHOUSE = "https://boards-api.greenhouse.io/v1/boards"
 
 
 @pytest.fixture
@@ -14,6 +18,10 @@ def client(monkeypatch):
 
 def run(home, *args):
     return main(["--home", str(home), "companies", *args])
+
+
+def user_file(home):
+    return yaml.safe_load((home / "companies.yaml").read_text(encoding="utf-8"))
 
 
 def test_list_counts_companies_per_ats(tmp_path, client, capsys):
@@ -38,3 +46,59 @@ def test_list_shows_companies_added_by_the_user(tmp_path, client, capsys):
     out = capsys.readouterr().out
     assert "1 company" in out
     assert "tado GmbH" in out and "Stripe" not in out
+
+
+def test_add_from_a_job_url(tmp_path, client, capsys):
+    client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
+    assert run(tmp_path, "add", "https://jobs.lever.co/zoox/e8a190f0-7a89-4c11-a6a0-452ff6234749", "--name", "Zoox") == 0
+    assert "Added Zoox (lever:zoox) with 3 open jobs" in capsys.readouterr().out
+    assert user_file(tmp_path)["lever"] == {"zoox": "Zoox"}
+
+
+def test_add_takes_the_name_from_the_board(tmp_path, client):
+    client.routes[f"{GREENHOUSE}/acme/jobs"] = fixture("greenhouse_jobs.json")
+    assert run(tmp_path, "add", "greenhouse:acme") == 0
+    assert user_file(tmp_path)["greenhouse"] == {"acme": "Stripe"}
+
+
+def test_add_without_a_name_uses_the_board(tmp_path, client):
+    client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
+    assert run(tmp_path, "add", "jobs.lever.co/zoox") == 0
+    assert user_file(tmp_path)["lever"] == {"zoox": "zoox"}
+
+
+def test_add_workday_board_is_named_after_its_tenant(tmp_path, client):
+    client.routes["https://acme.wd3.myworkdayjobs.com/wday/cxs/acme/External/jobs"] = fixture("workday.json")
+    assert run(tmp_path, "add", "https://acme.wd3.myworkdayjobs.com/en-US/External/job/x_R1") == 0
+    assert user_file(tmp_path)["workday"] == [{"name": "acme", "url": "https://acme.wd3.myworkdayjobs.com/External"}]
+
+
+def test_add_refuses_a_dead_board(tmp_path, client, capsys):
+    assert run(tmp_path, "add", "https://jobs.lever.co/nobody") == 2
+    assert "lever:nobody is not a live job board" in capsys.readouterr().out
+    assert not (tmp_path / "companies.yaml").exists()
+
+
+def test_add_needs_a_board(tmp_path, client, capsys):
+    assert run(tmp_path, "add", "https://example.com/careers") == 2
+    assert "greenhouse:stripe" in capsys.readouterr().out
+
+
+def test_remove_a_builtin_company(tmp_path, client, capsys):
+    assert run(tmp_path, "remove", "https://job-boards.greenhouse.io/stripe") == 0
+    assert "Removed Stripe (greenhouse:stripe)" in capsys.readouterr().out
+    assert user_file(tmp_path)["removed"] == ["greenhouse:stripe"]
+    run(tmp_path, "list", "--search", "stripe")
+    assert "Stripe" not in capsys.readouterr().out
+
+
+def test_remove_an_added_company(tmp_path, client):
+    client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
+    run(tmp_path, "add", "lever:zoox")
+    assert run(tmp_path, "remove", "lever:ZOOX") == 0
+    assert user_file(tmp_path) == {"removed": ["lever:zoox"]}
+
+
+def test_remove_unknown_company(tmp_path, client, capsys):
+    assert run(tmp_path, "remove", "greenhouse:nobody") == 2
+    assert "not in the list" in capsys.readouterr().out
