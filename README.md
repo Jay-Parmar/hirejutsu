@@ -266,8 +266,9 @@ hirejutsu ai explain 42    # ask how well saved job 42 fits you
 ```
 
 To keep the cost down, only the top `candidates` matches (30) are sent, `batch_size` (10) per
-request, and each score is cached per job, model and resume, so no job is paid for twice.
-A new resume or model scores them again. If a request fails, those jobs keep their normal score.
+request, and each score is cached per job, model and resume, so a scored job is not paid for
+again. A new resume or model scores them again. If a request fails, those jobs keep their normal
+score.
 
 Ollama example, free and fully local. Small local models do better with fewer jobs per request:
 
