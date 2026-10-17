@@ -212,17 +212,21 @@ def render(fmt: str, matches: list[Match], day: date) -> str:
 
 
 def write_reports(matches: list[Match], config: Config, day: date) -> list[Path]:
-    """Save the day's picks in each configured format and delete old reports. Returns the files written."""
-    settings = report_settings(config)
+    """Save the day's picks in each configured format. Returns the files written."""
+    return save_reports(matches, config, day, report_settings(config)["formats"])
+
+
+def save_reports(matches: list[Match], config: Config, day: date, formats: list[str]) -> list[Path]:
+    """Save the day's picks in the given formats and delete old reports. Returns the files written."""
     folder = config.reports_dir
     folder.mkdir(parents=True, exist_ok=True)
     paths = []
-    for fmt in settings["formats"]:
+    for fmt in formats:
         path = folder / f"{day.isoformat()}.{fmt}"
         # Excel only reads a CSV file as UTF-8 when it starts with a byte order mark.
         path.write_text(render(fmt, matches, day), encoding="utf-8-sig" if fmt == "csv" else "utf-8")
         paths.append(path)
-    prune_reports(folder, day, settings["keep_days"])
+    prune_reports(folder, day, report_settings(config)["keep_days"])
     return paths
 
 
