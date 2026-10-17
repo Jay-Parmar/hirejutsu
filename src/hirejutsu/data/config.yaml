@@ -67,3 +67,11 @@ ranking:
 
 # Where daily reports are written.
 reports_dir: reports
+
+report:
+  # Files to write each day: md, html, csv or json.
+  formats: [md, html]
+  # Open the HTML report in your browser after "hirejutsu run".
+  open: false
+  # Delete reports older than this many days. 0 keeps them all.
+  keep_days: 60
