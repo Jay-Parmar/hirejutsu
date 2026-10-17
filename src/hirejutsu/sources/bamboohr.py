@@ -31,7 +31,11 @@ class BambooHR(DetailSource):
         if not place.get("city"):
             # Remote openings leave the office empty and name the area they hire in instead.
             place = item.get("atsLocation") or {}
-        parts = [place.get("city"), place.get("state") or place.get("province"), place.get("addressCountry") or place.get("country")]
+        parts = [
+            place.get("city"),
+            place.get("state") or place.get("province"),
+            place.get("addressCountry") or place.get("country"),
+        ]
         names = [clean(part) for part in parts if part]
         description = html_to_text(item.get("description"))
         if item.get("compensation"):
