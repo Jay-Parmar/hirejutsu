@@ -234,6 +234,53 @@ A scheduled run writes everything to `logs/run-YYYY-MM-DD.log` in the data folde
 30 logs are kept. It uses the Python you installed it with, so run `install` again if you move or
 recreate your virtual environment.
 
+## AI second opinion (optional)
+
+hirejutsu can ask an AI model to score its best matches against your resume. The AI score is
+mixed into the normal score (`weight`, 0.5 by default) and its reason comes first in the report,
+as `AI: ...`. It is off by default.
+
+**Privacy:** when this is on, your resume text and the job details are sent to the provider you
+choose. For full privacy use a local model with Ollama (below), so nothing leaves your computer.
+
+Providers, set with `ai.provider`:
+
+- `anthropic` (default): Claude, model `claude-haiku-5-5`, key in `ANTHROPIC_API_KEY`.
+- `openai`: any OpenAI compatible chat completions API. For OpenAI itself the model is
+  `gpt-5-mini` and the key is in `OPENAI_API_KEY`. For Ollama, LM Studio, OpenRouter or Groq set
+  `base_url`, `model` and, if the service needs a key, `api_key_env` (the variable's name).
+
+Save your key on Windows, then open a new terminal:
+
+```
+setx ANTHROPIC_API_KEY "your-key"
+```
+
+On macOS or Linux add `export ANTHROPIC_API_KEY="your-key"` to your shell profile.
+
+Set `enabled: true` in the `ai` section of the config, then check it:
+
+```
+hirejutsu ai test          # check the config with one tiny request
+hirejutsu ai explain 42    # ask how well saved job 42 fits you
+```
+
+To keep the cost down, only the top `candidates` matches (30) are sent, `batch_size` (10) per
+request, and each score is cached per job, model and resume, so no job is paid for twice.
+A new resume or model scores them again. If a request fails, those jobs keep their normal score.
+
+Ollama example, free and fully local. Small local models do better with fewer jobs per request:
+
+```yaml
+ai:
+  enabled: true
+  provider: openai
+  base_url: http://localhost:11434/v1
+  model: llama3.1
+  batch_size: 3
+  timeout: 300
+```
+
 ## Development
 
 ```
