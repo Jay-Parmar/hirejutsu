@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from fakes import CLAUDE_URL, FakeClient, claude_scorer
@@ -113,3 +113,15 @@ def test_top_does_not_record_picks(home, tmp_path, capsys):
     assert "Python Engineer" in capsys.readouterr().out
     with Store(tmp_path / "hirejutsu.db") as store:
         assert store.picked_job_ids() == set()
+
+
+def test_top_skips_jobs_older_than_the_search_limit(home, tmp_path, capsys):
+    old = datetime.now(timezone.utc) - timedelta(days=30)
+    with Store(tmp_path / "hirejutsu.db") as store:
+        store.upsert_jobs([Job("demo", "old", "Python Engineer Old", "Old Co", "https://x/old",
+                               description="python", posted_at=old)], datetime.now(timezone.utc))
+    main(["--home", home, "fetch"])
+    assert main(["--home", home, "top"]) == 0
+    out = capsys.readouterr().out
+    assert "https://x/0" in out
+    assert "https://x/old" not in out

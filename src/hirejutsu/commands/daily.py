@@ -2,8 +2,8 @@
 
 from datetime import date, datetime
 
-from ..daily import candidates, pick_today
-from ..ranking import RANKING_DEFAULTS, rank
+from ..daily import candidates, pick_today, ranking_settings
+from ..ranking import rank
 from ..report import print_picks, report_settings, write_reports
 from ..resume import load_profile
 from .fetch import fetch_jobs, print_results
@@ -58,7 +58,7 @@ def today(app, args) -> int:
 
 def top(app, args) -> int:
     profile = load_profile(app.config)
-    settings = {**app.config.section("ranking", RANKING_DEFAULTS), "top": args.n}
-    matches = rank(candidates(app.store, datetime.now().astimezone()), profile, settings)
+    now = datetime.now().astimezone()
+    matches = rank(candidates(app.store, now), profile, {**ranking_settings(app.config), "top": args.n}, now)
     print_picks(app.console, matches)
     return 0
