@@ -43,3 +43,15 @@ def test_pick_today_records_picks(store, tmp_path):
     matches = pick_today(store, Config({}, tmp_path), Profile(skills=["python"]), NOW)
     assert [match.job.external_id for match in matches] == ["a"]
     assert [match.job.external_id for match in store.picks(NOW.date())] == ["a"]
+
+
+def test_pick_today_skips_jobs_older_than_the_search_limit(store, tmp_path):
+    store.upsert_jobs([job("new", posted_at=NOW - timedelta(days=2)), job("old", posted_at=NOW - timedelta(days=20))], NOW)
+    matches = pick_today(store, Config({}, tmp_path), Profile(skills=["python"]), NOW)
+    assert [match.job.external_id for match in matches] == ["new"]
+
+
+def test_ranking_age_limit_wins_over_the_search_one(store, tmp_path):
+    store.upsert_jobs([job("a", posted_at=NOW - timedelta(days=20))], NOW)
+    config = Config({"search": {"max_age_days": 14}, "ranking": {"max_age_days": 30}}, tmp_path)
+    assert len(pick_today(store, config, Profile(skills=["python"]), NOW)) == 1
