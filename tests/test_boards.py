@@ -33,6 +33,13 @@ def board(cls, tmp_path, keywords=("python developer",), locations=("Bengaluru",
     return cls(Config(data, tmp_path), FakeClient())
 
 
+class FakeNaT(datetime):
+    """Like pandas.NaT, the empty date: a datetime that is not equal to itself."""
+
+    def __ne__(self, other):
+        return True
+
+
 def row(**fields):
     """A small jobspy row posted today."""
     base = {
@@ -121,6 +128,20 @@ def test_description_html_becomes_text(tmp_path, jobspy):
 def test_remote_flag_true_is_kept_and_false_means_unknown(tmp_path, jobspy):
     jobspy.answers = [[row(id="in-1", is_remote=True), row(id="in-2", is_remote=False)]]
     assert [job.remote for job in board(boards.Indeed, tmp_path).fetch()] == [True, None]
+
+
+def test_nan_and_nat_cells_count_as_empty(tmp_path, jobspy):
+    nan = float("nan")
+    jobspy.answers = [[
+        row(id="in-1", title=nan),
+        row(id="in-2", company=nan, location=nan, description=nan, date_posted=FakeNaT(2026, 1, 1), is_remote=nan,
+            min_amount=nan, max_amount=nan, currency=nan, interval=nan, job_type=nan, job_function=nan),
+    ]]
+    [job] = board(boards.Indeed, tmp_path).fetch()
+    assert job.external_id == "in-2"
+    assert (job.company, job.location, job.description, job.employment_type, job.department) == ("", "", "", "", "")
+    assert (job.posted_at, job.remote) == (None, None)
+    assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (None, None, "", "")
 
 
 def test_rows_without_title_or_url_are_dropped(tmp_path, jobspy):
