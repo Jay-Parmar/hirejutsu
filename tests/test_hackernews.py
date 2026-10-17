@@ -116,6 +116,7 @@ def test_read_header_remote_flag():
     assert read_header("OpenRent | London, UK | ONSITE+PART REMOTE")["remote"] is False
     assert read_header("Diffusion | All | SF Bay (Redwood City) | On site (office!), full-time")["remote"] is False
     assert read_header("Reactor | https://reactor.inc | San Francisco, CA, USA | Full Time")["remote"] is None
+    assert read_header("Acme | Engineer | Berlin | https://acme.example/jobs/remote-first")["remote"] is None
 
 
 def test_read_header_skips_chat():

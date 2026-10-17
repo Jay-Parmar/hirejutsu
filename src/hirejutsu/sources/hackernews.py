@@ -78,10 +78,10 @@ def to_job(comment: dict) -> Job | None:
 def read_header(header: str) -> dict | None:
     """Job fields from a first line like "Acme | Engineer | REMOTE (EU) | $150k", or None for chat."""
     parts = header.split("|") if "|" in header else DASHES.split(header)
-    parts = [clean(part) for part in parts if clean(part)]
+    parts = [part for part in map(clean, parts) if part]
     if len(parts) < 2:
         return None
-    fields = {"company": strip_links(re.sub(r"\([^)]*\)", "", parts[0])), "remote": is_remote(header)}
+    fields = {"company": strip_links(re.sub(r"\([^)]*\)", "", parts[0])), "remote": is_remote(strip_links(header))}
     title, places = "", []
     for part in parts[1:]:
         if not title and ROLE.search(part):
