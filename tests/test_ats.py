@@ -6,10 +6,11 @@ import requests
 from fakes import FakeClient
 
 from hirejutsu.companies import Company
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job
 from hirejutsu.sources.ats import AtsSource, DetailSource, likely_match, pay_period, remote_from, tags, title_words
+from hirejutsu.sources.workday import Workday
 from hirejutsu.store import Store
 
 NOW = datetime.now(timezone.utc)
@@ -47,6 +48,12 @@ class Detailed(Listing, DetailSource):
 def config(tmp_path, name, keywords=(), max_age_days=14, **settings):
     data = {"search": {"keywords": list(keywords), "max_age_days": max_age_days}, "sources": {name: settings}}
     return Config(data, tmp_path)
+
+
+def test_starter_config_explains_every_setting():
+    text = template()
+    for setting in Workday.defaults:
+        assert f"#   {setting}: " in text, setting
 
 
 def test_title_words_skip_common_words():
