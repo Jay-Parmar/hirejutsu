@@ -16,12 +16,13 @@ from rich.text import Text
 from .config import Config
 from .errors import HirejutsuError
 from .models import Job, Match
+from .sources import available
 
 REPORT_DEFAULTS = {"formats": ["md", "html"], "open": False, "keep_days": 60}
 FORMATS = ("md", "html", "csv", "json")
 EXPORT_FIELDS = [
     "rank", "id", "score", "title", "company", "location", "remote",
-    "salary_min", "salary_max", "salary_currency", "salary_period", "posted_at", "url", "reasons",
+    "salary_min", "salary_max", "salary_currency", "salary_period", "posted_at", "url", "source", "reasons",
 ]
 
 
@@ -32,6 +33,12 @@ def report_settings(config: Config) -> dict:
     if unknown:
         raise HirejutsuError(f"Unknown report format: {', '.join(unknown)}. Use one of: {', '.join(FORMATS)}")
     return settings
+
+
+def source_label(name: str) -> str:
+    """The name of the site a job came from, as the site writes it."""
+    cls = available().get(name)
+    return cls.label if cls and cls.label else name
 
 
 def where(match: Match) -> str:
@@ -96,7 +103,7 @@ def print_picks(console, matches: list[Match], title: str | None = None) -> None
         )
     console.print(table)
     for number, match in enumerate(matches, start=1):
-        console.print(Text(f"{number}. {match.job.url}"))
+        console.print(Text(f"{number}. {match.job.url} via {source_label(match.job.source)}"))
 
 
 def markdown(matches: list[Match], day: date) -> str:
@@ -105,7 +112,7 @@ def markdown(matches: list[Match], day: date) -> str:
         job = match.job
         since = age(job, day)
         facts = [where(match), salary(job), f"posted {since}" if since else "",
-                 f"score {match.score:.2f}", f"id {job.id}"]
+                 f"via {source_label(job.source)}", f"score {match.score:.2f}", f"id {job.id}"]
         lines.append(f"## {number}. {job.title} at {job.company}")
         lines.append(" | ".join(fact for fact in facts if fact))
         lines.append("")
@@ -157,6 +164,7 @@ def _facts_html(job: Job, day: date) -> str:
     since = age(job, day)
     if since:
         facts.append(f"<span>posted {since}</span>")
+    facts.append(f"<span>via {escape(source_label(job.source))}</span>")
     return "".join(facts)
 
 
@@ -182,6 +190,7 @@ def export_row(rank: int, match: Match) -> dict:
         "salary_period": job.salary_period,
         "posted_at": job.posted_at.isoformat() if job.posted_at else None,
         "url": job.url,
+        "source": source_label(job.source),
         "reasons": match.reasons,
     }
 
