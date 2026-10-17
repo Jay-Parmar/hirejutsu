@@ -1,5 +1,8 @@
 """Showing and saving the daily picks."""
 
+import csv
+import io
+import json
 from datetime import date
 from html import escape
 from importlib import resources
@@ -15,7 +18,11 @@ from .errors import HirejutsuError
 from .models import Job, Match
 
 REPORT_DEFAULTS = {"formats": ["md", "html"]}
-FORMATS = ("md", "html")
+FORMATS = ("md", "html", "csv", "json")
+EXPORT_FIELDS = [
+    "rank", "id", "score", "title", "company", "location", "remote",
+    "salary_min", "salary_max", "salary_currency", "salary_period", "posted_at", "url", "reasons",
+]
 
 
 def report_settings(config: Config) -> dict:
@@ -158,9 +165,49 @@ def _web_link(url: str) -> str:
     return url if url.lower().startswith(("http://", "https://")) else "#"
 
 
+def export_row(rank: int, match: Match) -> dict:
+    """One pick as plain values, for the CSV and JSON files."""
+    job = match.job
+    return {
+        "rank": rank,
+        "id": job.id,
+        "score": match.score,
+        "title": job.title,
+        "company": job.company,
+        "location": job.location,
+        "remote": job.remote,
+        "salary_min": job.salary_min,
+        "salary_max": job.salary_max,
+        "salary_currency": job.salary_currency,
+        "salary_period": job.salary_period,
+        "posted_at": job.posted_at.isoformat() if job.posted_at else None,
+        "url": job.url,
+        "reasons": match.reasons,
+    }
+
+
+def csv_text(matches: list[Match]) -> str:
+    out = io.StringIO()
+    writer = csv.DictWriter(out, fieldnames=EXPORT_FIELDS, lineterminator="\n")
+    writer.writeheader()
+    for rank, match in enumerate(matches, start=1):
+        row = export_row(rank, match)
+        writer.writerow({**row, "reasons": "; ".join(row["reasons"])})
+    return out.getvalue()
+
+
+def json_text(matches: list[Match]) -> str:
+    rows = [export_row(rank, match) for rank, match in enumerate(matches, start=1)]
+    return json.dumps(rows, indent=2, ensure_ascii=False) + "\n"
+
+
 def render(fmt: str, matches: list[Match], day: date) -> str:
     if fmt == "html":
         return html_page(matches, day)
+    if fmt == "csv":
+        return csv_text(matches)
+    if fmt == "json":
+        return json_text(matches)
     return markdown(matches, day)
 
 
@@ -171,6 +218,7 @@ def write_reports(matches: list[Match], config: Config, day: date) -> list[Path]
     paths = []
     for fmt in report_settings(config)["formats"]:
         path = folder / f"{day.isoformat()}.{fmt}"
-        path.write_text(render(fmt, matches, day), encoding="utf-8")
+        # Excel only reads a CSV file as UTF-8 when it starts with a byte order mark.
+        path.write_text(render(fmt, matches, day), encoding="utf-8-sig" if fmt == "csv" else "utf-8")
         paths.append(path)
     return paths
