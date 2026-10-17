@@ -448,3 +448,25 @@ def test_plain_word_skills_need_their_exact_case_in_jobs():
         job("2", "Engineer", company="B", description="Services in Go and Golang"),
     ]
     assert [match.job.external_id for match in rank(jobs, Profile(skills=["Go"]), settings())] == ["2"]
+
+
+@pytest.mark.parametrize("where, kept", [
+    ("Remote", True),
+    ("", True),
+    ("Anywhere in the World", True),
+    ("Worldwide", True),
+    ("Remote, India", True),
+    ("APAC", True),
+    ("Remote (USA)", False),
+    ("Bulgaria, Hungary", False),
+    ("LATAM", False),
+])
+def test_remote_jobs_limited_to_other_places_are_dropped(where, kept):
+    jobs = [job("1", "Engineer", description="python", location=where, remote=True)]
+    profile = Profile(skills=["python"], locations=["remote"])
+    assert bool(rank(jobs, profile, settings(remote_from=["India", "APAC"]))) is kept
+
+
+def test_remote_from_empty_keeps_every_remote_job():
+    jobs = [job("1", "Engineer", description="python", location="Remote (USA)", remote=True)]
+    assert rank(jobs, Profile(skills=["python"], locations=["remote"]), settings())

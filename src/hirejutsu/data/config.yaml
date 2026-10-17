@@ -93,6 +93,9 @@ ranking:
   seniority_tolerance: 2
   # "filter" skips jobs outside your locations, "score" ranks them lower instead.
   location_mode: filter
+  # Remote jobs often say who may apply, like "Remote (USA)". List the places that include you,
+  # such as [India, APAC, Asia], to skip remote jobs open only to other places. Empty keeps them all.
+  remote_from: []
   # Skip jobs that mention any of these words.
   exclude_keywords: []
   # Skip jobs with any of these words in the title, like intern or sales.
