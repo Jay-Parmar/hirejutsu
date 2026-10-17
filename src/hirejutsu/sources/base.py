@@ -1,6 +1,7 @@
 """Base class for job sources."""
 
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 
 from ..config import Config, deep_merge
 from ..http import Client
@@ -30,6 +31,10 @@ class Query:
     @property
     def wants_remote(self) -> bool:
         return any(location.strip().lower() == "remote" for location in self.locations)
+
+    def is_recent(self, posted_at: datetime | None) -> bool:
+        """False for jobs posted more than max_age_days ago. Undated jobs count as recent."""
+        return posted_at is None or posted_at >= datetime.now(timezone.utc) - timedelta(days=self.max_age_days)
 
 
 class Source:
