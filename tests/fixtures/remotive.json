@@ -1,0 +1,93 @@
+{
+  "00-warning": "Remotive main domain moved to remotive.com ! Please make your API calls on remotive.com/api/remote-jobs instead of remotive.io now ;) Legacy endpoint remotive.io/api/remote-jobs will be terminated in June 2022. Thank you!",
+  "0-legal-notice": "Legal warning - Hey, thanks for using Remotive's API, we appreciate it! Please note that API documentation and access is granted so that developers can share our jobs further. Please do not submit Remotive jobs to third Party websites, including but not limited to: Jooble, Neuvoo, Google Jobs, LinkedIn Jobs. Please link back to the URL found on Remotive AND mention Remotive as a source in order to Remotive to get traffic from your listing. If you don't do that, we'll terminate your API access, sorry! Jobs displayed are delayed by 24 hours, the goal being that jobs are attributed to Remotive on various platforms. Displaying our jobs in order to collect signups/email addresses to show a listing constitutes a breach of our terms of services. We offer a private, paid-for API, please email us at hello(at)remotive(dot)io for more information (starting budget is $5k/mo). Please find out terms of services on https://remotive.com/api-documentation. Please note that there is absolutely no need to request Remotive Job data too frequently. Typically, you only need to GET Remotive job data through this API a couple of times a day (we advise max. 4 times a day). Our data is not changing much faster than that anyway. Note that excessive requests will be blocked. Many thanks (Rodolphe & the Remotive team!)",
+  "job-count": 13,
+  "total-job-count": 13,
+  "jobs": [
+    {
+      "id": 2069746,
+      "url": "https://remotive.com/remote-jobs/software-development/tech-lead-full-stack-rails-engineer-2069746",
+      "title": "Tech Lead Full-Stack Rails Engineer",
+      "company_name": "Mitre Media",
+      "company_logo": "https://remotive.com/job/2069746/logo",
+      "category": "Software Development",
+      "tags": [
+        "api",
+        "CSS",
+        "docker",
+        "elasticsearch",
+        "fullstack",
+        "html",
+        "javascript",
+        "kubernetes",
+        "postgresql",
+        "react",
+        "ror",
+        "ruby/rails",
+        "AI/ML",
+        "CAD",
+        "advertising",
+        "Redis",
+        "ES6",
+        "web applications",
+        "MySQL",
+        "NLP",
+        "fintech",
+        "Micro services",
+        "github",
+        "system architecture"
+      ],
+      "job_type": "full_time",
+      "publication_date": "2026-10-14T20:33:44",
+      "candidate_required_location": "USA, Canada, USA timezones",
+      "salary": "$170k - $200k",
+      "description": "<p class=\"h1\" dir=\"ltr\" style=\"line-height: 1.38; background-color: #ffffff; margin-top: 24pt; margin-bottom: 0pt; padding: 0pt 0pt 6pt 0pt;\"><span style=\"color: #000000; font-weight: bold; white-space-collapse: preserve;\">About Mitre Media</span></p>\n<p dir=\"ltr\" style=\"line-height: 1.38; background-color: #ffffff; margin-top: 0pt; margin-bottom: 0pt; padding: 0pt 0pt 18pt 0pt;\"> [...]",
+      "company_logo_url": "https://remotive.com/job/2069746/logo"
+    },
+    {
+      "id": 1185979,
+      "url": "https://remotive.com/remote-jobs/writing/freelance-writer-1185979",
+      "title": "Freelance Writer",
+      "company_name": "IAPWE",
+      "company_logo": "https://remotive.com/job/1185979/logo",
+      "category": "Writing",
+      "tags": [
+        "REST"
+      ],
+      "job_type": "freelance",
+      "publication_date": "2026-10-04T16:53:34",
+      "candidate_required_location": "Worldwide",
+      "salary": "$50-$75 /hour",
+      "description": "<p class=\"p1\" style=\"font-variant-numeric: normal; font-variant-east-asian: normal; font-stretch: normal; line-height: normal; color: #000000;\">Our organization is seeking content writers to create articles and blog posts on a variety of topics.</p>\n<p class=\"p1\" style=\"font-variant-numeric: normal; font-variant-east-asian: normal; font-stretch: normal; line-height: normal; color: #000000;\">\u00a0</p>\n [...]",
+      "company_logo_url": "https://remotive.com/job/1185979/logo"
+    },
+    {
+      "id": 2091045,
+      "url": "https://remotive.com/remote-jobs/information-technology/tier-iii-service-desk-engineer-2091045",
+      "title": "Tier III Service Desk Engineer",
+      "company_name": "Unio Digital",
+      "company_logo": "https://remotive.com/job/2091045/logo",
+      "category": "Information Technology",
+      "tags": [
+        "azure",
+        "cisco",
+        "security",
+        "video",
+        "documentation",
+        "hardware",
+        "helpdesk",
+        "onboarding",
+        "MSP",
+        "ticketing",
+        "Microsoft 365",
+        "IT systems"
+      ],
+      "job_type": "full_time",
+      "publication_date": "2026-10-07T01:11:09",
+      "candidate_required_location": "Worldwide",
+      "salary": "",
+      "description": "<p class=\"MsoNormal\" style=\"margin: 0in 0in 8pt; line-height: 15.6933px; color: #000000;\">Uni\u00f3 Digital is an Arizona-based managed service provider (MSP) delivering Managed IT Services, Low Voltage Cabling, Access Control, Video Surveillance, and Intrusion Services. We believe technology should be intuitive, not intimidating.</p>\n<p>\u00a0</p>\n [...]",
+      "company_logo_url": "https://remotive.com/job/2091045/logo"
+    }
+  ]
+}
