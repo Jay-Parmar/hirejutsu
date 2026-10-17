@@ -77,5 +77,18 @@ def test_logging_set_up_after_start_writes_to_the_log(tmp_path, headless):
     assert "Traceback" in text
 
 
+def test_start_keeps_the_newest_30_logs(tmp_path, headless):
+    for day in range(1, 32):
+        (tmp_path / f"run-2000-01-{day:02d}.log").write_text("old\n", encoding="utf-8")
+    (tmp_path / "notes.txt").write_text("mine\n", encoding="utf-8")
+    runlog.start(tmp_path)
+    sys.stdout.close()
+    names = sorted(path.name for path in tmp_path.glob("run-*.log"))
+    assert len(names) == 30
+    assert names[0] == "run-2000-01-03.log"
+    assert names[-1] == todays_log(tmp_path).name
+    assert (tmp_path / "notes.txt").exists()
+
+
 def test_run_without_console_or_log(home, headless):
     assert main(["--home", str(home), "run"]) == 0
