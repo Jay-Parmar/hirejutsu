@@ -1,9 +1,13 @@
+from datetime import datetime, timezone
+
 import pytest
 import yaml
 from fakes import FakeClient, fixture, http_error
 
 from hirejutsu.app import App
 from hirejutsu.cli import main
+from hirejutsu.models import Job
+from hirejutsu.store import Store
 
 LEVER = "https://api.lever.co/v0/postings"
 GREENHOUSE = "https://boards-api.greenhouse.io/v1/boards"
@@ -143,3 +147,36 @@ def test_check_with_every_board_live(tmp_path, client, capsys):
     client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
     assert run(tmp_path, "check") == 0
     assert "1 live, 0 dead, 0 could not be checked" in capsys.readouterr().out
+
+
+def save_jobs(home, *jobs):
+    with Store(home / "hirejutsu.db") as store:
+        store.upsert_jobs(jobs, datetime(2026, 10, 17, tzinfo=timezone.utc))
+
+
+def test_discover_adds_live_boards_linked_from_saved_jobs(tmp_path, client, capsys):
+    save_jobs(
+        tmp_path,
+        Job("remoteok", "1", "Engineer", "Zoox", "https://jobs.lever.co/zoox/e8a190f0-7a89-4c11-a6a0-452ff6234749"),
+        Job("remoteok", "2", "Engineer", "Ghost", "https://example.com/2",
+            description="Apply at https://jobs.lever.co/ghost/123 or https://job-boards.greenhouse.io/stripe."),
+        Job("remoteok", "3", "Engineer", "Acme", "https://example.com/3", description="See https://jobs.lever.co/gone"),
+    )
+    (tmp_path / "companies.yaml").write_text("removed:\n  - lever:gone\n", encoding="utf-8")
+    client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
+    assert run(tmp_path, "discover") == 0
+    out = capsys.readouterr().out
+    assert "Added 1 company" in out
+    assert "Zoox (lever:zoox), 3 open jobs" in out
+    assert "Skipped lever:ghost" in out
+    assert user_file(tmp_path) == {"lever": {"zoox": "Zoox"}, "removed": ["lever:gone"]}
+    assert sorted(call[1] for call in client.calls) == [
+        "https://api.eu.lever.co/v0/postings/ghost", f"{LEVER}/ghost", f"{LEVER}/zoox",
+    ]
+
+
+def test_discover_without_new_boards(tmp_path, client, capsys):
+    save_jobs(tmp_path, Job("greenhouse", "1", "Engineer", "Stripe", "https://job-boards.greenhouse.io/stripe/jobs/1"))
+    assert run(tmp_path, "discover") == 0
+    assert "No new company boards" in capsys.readouterr().out
+    assert client.calls == []

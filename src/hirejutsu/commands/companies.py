@@ -8,7 +8,16 @@ import requests
 from rich.table import Table
 from rich.text import Text
 
-from ..companies import ATSES, Company, detect, drop_companies, load_companies, save_companies
+from ..companies import (
+    ATSES,
+    Company,
+    detect,
+    drop_companies,
+    find_boards,
+    load_companies,
+    read_user,
+    save_companies,
+)
 from ..errors import HirejutsuError
 from ..sources import available
 
@@ -40,6 +49,9 @@ def register(sub) -> None:
     action.add_argument("--ats", choices=ATSES, help="only boards on this ATS")
     action.add_argument("--prune", action="store_true", help="stop fetching the dead boards")
     action.set_defaults(func=check)
+
+    action = actions.add_parser("discover", help="add the companies whose boards are linked from saved jobs")
+    action.set_defaults(func=discover)
 
 
 def companies_text(count: int) -> str:
@@ -107,6 +119,34 @@ def check(app, args) -> int:
     elif dead:
         app.console.print("Run 'hirejutsu companies check --prune' to stop fetching the dead ones.")
         return 1
+    return 0
+
+
+def discover(app, args) -> int:
+    known = {company.key for company in load_companies(app.config)} | set(read_user(app.home)[1])
+    found: dict[str, tuple[Company, str]] = {}
+    for job in app.store.find_jobs():
+        for ats, slug in find_boards(f"{job.url}\n{job.description}"):
+            board = Company(ats, slug)
+            if board.key not in known:
+                found.setdefault(board.key, (board, job.company))
+    if not found:
+        app.console.print("No new company boards in the saved jobs.")
+        return 0
+    boards = [board for board, _ in found.values()]
+    with app.console.status(f"Checking {len(boards)} new boards..."):
+        states = check_boards(app, boards)
+    added = []
+    for (board, seen_as), (state, jobs, note) in zip(found.values(), states):
+        if state == "live":
+            added.append((Company(board.ats, board.slug, note or seen_as or plain_name(board)), jobs))
+        else:
+            app.console.print(Text(f"Skipped {board.key}, not a live board: {note}"))
+    if added:
+        path = save_companies(app.home, [company for company, _ in added])
+        app.console.print(Text(f"Added {companies_text(len(added))} to {path}:"))
+        for company, jobs in added:
+            app.console.print(Text(f"  {company.name} ({company.key}), {jobs} open jobs"))
     return 0
 
 
