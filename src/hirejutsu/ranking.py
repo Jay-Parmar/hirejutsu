@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from .models import Job, Match, Profile
+from .resume import spellings, term_pattern
 
 RANKING_DEFAULTS = {
     "top": 10,
@@ -42,6 +43,7 @@ MAX_REASONS = 4
 
 WORD_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789")
 WORD = re.compile(r"[a-z0-9+#]+")
+ALNUM = re.compile(r"[a-z0-9]+")
 COMPOUND = re.compile(r"\b(back|front|full)[ -](end|stack)\b")
 YEARS = re.compile(r"(\d{1,2})\s*(\+|plus)?\s*(?:(?:-|\N{EN DASH}|to)\s*(\d{1,2})\s*\+?\s*)?(?:years?|yrs?)\b")
 # Experience right after the years, as in "5 years of relevant experience" or "4 yrs exp".
@@ -96,6 +98,7 @@ class _Entry:
     job: Job
     found: list[str]
     words: list[str]
+    titled: set[str] = field(default_factory=set)
     asked: tuple[int, int | None] | None = None
     parts: dict[str, float] = field(default_factory=dict)
     score: float = 0.0
@@ -109,6 +112,7 @@ class _Run:
     settings: dict
     now: datetime
     skills: list[str] = field(init=False)
+    spellings: dict[str, list[tuple[str, bool]]] = field(init=False)
     titles: list[tuple[str, list[str]]] = field(init=False)
     places: dict[str, str] = field(init=False)
     wants_remote: bool = field(init=False)
@@ -121,7 +125,8 @@ class _Run:
     resume: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self):
-        self.skills = list(dict.fromkeys(skill.strip().lower() for skill in self.profile.skills if skill.strip()))
+        self.skills = _unique(skill.strip() for skill in self.profile.skills if skill.strip())
+        self.spellings = {skill: spellings(skill) for skill in self.skills}
         self.titles = [(title, _role_words(_title_words(title))) for title in self.profile.titles]
         self.places = _places(self.profile.locations)
         self.wants_remote = any(location.strip().lower() == "remote" for location in self.profile.locations)
@@ -267,8 +272,35 @@ def _yearly_salary(job: Job, currency: str) -> float | None:
 
 
 def _entry(job: Job, text: str, run: _Run) -> _Entry:
-    found = [skill for skill in run.skills if has_term(text, skill)]
-    return _Entry(job, found, _title_words(job.title))
+    found = _skills_in(f"{job.title}\n{job.description}", text, run.skills, run)
+    titled = set(_skills_in(job.title, job.title.lower(), found, run))
+    return _Entry(job, found, _title_words(job.title), titled)
+
+
+def _skills_in(raw: str, text: str, skills: list[str], run: _Run) -> list[str]:
+    """The skills that raw names in any of their spellings. text is raw in lower case."""
+    words = set(ALNUM.findall(text))
+    return [skill for skill in skills if _mentions(raw, text, words, run.spellings[skill])]
+
+
+def _mentions(raw: str, text: str, words: set[str], spellings: list[tuple[str, bool]]) -> bool:
+    for spelling, exact in spellings:
+        term = spelling.lower()
+        if exact:
+            # Names like Go or R only count in their own case, as in the resume.
+            if spelling in raw and term in words and term_pattern(spelling, True).search(raw):
+                return True
+        elif term in words if term.isalnum() else has_term(text, term):
+            return True
+    return False
+
+
+def _unique(names) -> list[str]:
+    """Names in order, dropping later ones that differ only in case."""
+    seen = {}
+    for name in names:
+        seen.setdefault(name.lower(), name)
+    return list(seen.values())
 
 
 def _learn(pool: list[_Entry], run: _Run) -> None:
@@ -330,7 +362,7 @@ def _skills_score(entry: _Entry, run: _Run) -> float:
 
 def _skill_weight(skill: str, entry: _Entry, run: _Run) -> float:
     weight = run.skill_weights[skill]
-    return weight * TITLE_BONUS if has_term(entry.job.title.lower(), skill) else weight
+    return weight * TITLE_BONUS if skill in entry.titled else weight
 
 
 def _title_words(title: str) -> list[str]:
