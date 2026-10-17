@@ -10,9 +10,32 @@ PROFILE_DEFAULTS = {"titles": [], "skills": [], "locations": ["remote"], "years"
 
 
 def read_text(path: Path) -> str:
-    if path.suffix.lower() in (".txt", ".md"):
+    suffix = path.suffix.lower()
+    if suffix in (".txt", ".md"):
         return path.read_text(encoding="utf-8", errors="replace")
-    raise HirejutsuError(f"Can't read {path.suffix} resumes. Use a .txt or .md file.")
+    if suffix == ".docx":
+        return read_docx(path)
+    raise HirejutsuError(f"Can't read {path.suffix} resumes. Use a .docx, .txt or .md file.")
+
+
+def read_docx(path: Path) -> str:
+    # Imported here so that commands which never read the resume start faster.
+    from docx import Document
+    from docx.opc.exceptions import PackageNotFoundError
+    from docx.table import Table
+
+    try:
+        document = Document(str(path))
+    except PackageNotFoundError as exc:
+        raise HirejutsuError(f"Cannot read {path}: it is not a valid .docx file.") from exc
+    lines = []
+    for block in document.iter_inner_content():
+        if isinstance(block, Table):
+            # A merged cell is listed once for every column it spans.
+            lines += [" | ".join(cell.text for cell in dict.fromkeys(row.cells)) for row in block.rows]
+        else:
+            lines.append(block.text)
+    return "\n".join(lines)
 
 
 def load_profile(config: Config) -> Profile:
