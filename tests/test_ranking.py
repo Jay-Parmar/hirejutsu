@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from hirejutsu.models import Job, Profile
-from hirejutsu.ranking import RANKING_DEFAULTS, has_term, rank
+from hirejutsu.ranking import RANKING_DEFAULTS, breakdown, has_term, rank
 
 NOW = datetime(2026, 10, 17, 9, 0, tzinfo=timezone.utc)
 
@@ -398,3 +398,39 @@ def test_min_score_drops_weak_matches():
         job("2", "Analyst", company="B", description="python"),
     ]
     assert [match.job.external_id for match in rank(jobs, PROFILE, settings(min_score=0.5))] == ["1"]
+
+
+def test_breakdown_agrees_with_rank():
+    jobs = [
+        job("1", "Backend Engineer", company="A", description="python django aws, 3+ years", posted_at=NOW),
+        job("2", "Data Analyst", company="B", description="python"),
+    ]
+    profile = Profile(text="python django", skills=["python", "django", "aws"], titles=["Backend Engineer"], years=4)
+    top = rank(jobs, profile, settings(), now=NOW)[0]
+    result = breakdown(jobs[0], jobs, profile, settings(), now=NOW)
+    assert (result.score, result.reasons) == (top.score, top.reasons)
+    assert list(result.parts) == ["skills", "text", "title", "seniority", "freshness", "location"]
+    assert (result.parts["skills"], result.parts["title"], result.parts["freshness"]) == (1.0, 1.0, 1.0)
+    assert result.weights == RANKING_DEFAULTS["weights"]
+    assert result.checks == [("relevance", ""), ("shortlist", "")]
+
+
+def test_breakdown_shows_failed_filters():
+    target = job("1", "Python Intern", description="python", location="Berlin")
+    profile = Profile(skills=["python"], locations=["Pune"])
+    result = breakdown(target, [], profile, settings(exclude_title_words=["intern"]))
+    assert result.checks == [
+        ("exclude_title_words", "title has intern"),
+        ("location", "Berlin is not one of your locations"),
+        ("relevance", ""),
+    ]
+
+
+def test_text_similarity_ignores_stopwords():
+    profile = Profile(text="the and of with django", skills=["python"])
+    jobs = [
+        job("1", "Engineer", company="A", description="python, the and of with"),
+        job("2", "Engineer", company="B", description="python, django"),
+    ]
+    assert breakdown(jobs[0], jobs, profile, settings()).parts["text"] == 0.0
+    assert breakdown(jobs[1], jobs, profile, settings()).parts["text"] > 0.5
