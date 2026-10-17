@@ -21,7 +21,15 @@ search:
   max_age_days: 14
 
 # Turn sources on or off. Run "hirejutsu sources" to see them all.
-sources: {}
+sources:
+  # Big job boards. Their terms forbid scraping, so they stay off unless you turn them on.
+  # They need: pip install -e ".[jobspy]"
+  # indeed: {enabled: true, country: India, results: 50}
+  # naukri: {enabled: true, results: 20}
+  # linkedin: {enabled: true, results: 25, descriptions: false, delay_seconds: 30}
+  # glassdoor: {enabled: true, country: India, results: 30}
+  # ziprecruiter: {enabled: true, results: 20}   # US and Canada only
+  # Each board makes at most max_searches searches a run (3), delay_seconds apart (15).
 
 ranking:
   # How many jobs to pick each day.
