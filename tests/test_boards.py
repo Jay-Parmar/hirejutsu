@@ -198,7 +198,7 @@ def test_board_error_after_some_jobs_is_a_warning(tmp_path, jobspy, caplog):
     assert len(board(boards.Indeed, tmp_path, locations=["Pune", "Delhi"]).fetch()) == 1
     warnings = [record.getMessage() for record in caplog.records
                 if record.name == boards.__name__ and record.levelno == logging.WARNING]
-    assert warnings == ["Some indeed searches failed: Indeed: timed out"]
+    assert warnings == ["Some indeed results may be missing: Indeed: timed out"]
 
 
 @pytest.mark.parametrize("message, level", [
