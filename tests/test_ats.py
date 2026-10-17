@@ -180,6 +180,15 @@ def test_details_are_capped_newest_first(tmp_path):
     assert {item.external_id: item.description for item in found} == {"acme-1": "Job 1", "acme-2": "Job 2", "acme-3": ""}
 
 
+def test_old_date_found_in_details_drops_the_job(tmp_path):
+    class Dated(Detailed):
+        def job_details(self, board, job):
+            return replace(job, description="Old", posted_at=NOW - timedelta(days=400))
+
+    listings = {"acme": [replace(job("detailed", "acme", 1), posted_at=None)]}
+    assert Dated(config(tmp_path, "detailed"), FakeClient(), listings).fetch() == []
+
+
 def test_failed_details_keep_the_listed_job(tmp_path):
     listings = {"acme": [job("detailed", "acme", 1), job("detailed", "acme", 2)]}
     client = FakeClient({"https://ats.test/acme/1": {"text": "Fine"}})

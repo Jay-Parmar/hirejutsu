@@ -144,7 +144,9 @@ class DetailSource(AtsSource):
             self.warn(f"{failed} of {len(results)} job pages failed")
         if len(todo) > limit:
             log.info("%s: %d jobs wait for their details until the next fetch", self.name, len(todo) - limit)
-        return jobs + [job for _, job in todo[limit:]]
+        jobs += [job for _, job in todo[limit:]]
+        # A posting can show an older date than its list entry did, or the first date at all.
+        return [job for job in jobs if self.wanted(job)]
 
     def known_jobs(self) -> dict[str, Job]:
         """Jobs saved with their details by an earlier fetch, whose postings need no new call."""
