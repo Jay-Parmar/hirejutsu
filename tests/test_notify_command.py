@@ -1,9 +1,12 @@
+from datetime import date, datetime, timezone
+
 import pytest
 
 from hirejutsu import http, sources
 from hirejutsu.cli import main
-from hirejutsu.models import Job
+from hirejutsu.models import Job, Match
 from hirejutsu.sources import Source
+from hirejutsu.store import Store
 
 WEBHOOK = "https://discord.com/api/webhooks/1/abc"
 DISCORD = "notify:\n  discord:\n    enabled: true\n"
@@ -78,3 +81,57 @@ def test_run_without_channels_sends_nothing(tmp_path, posts, webhook, capsys):
     assert main(["--home", make_home(tmp_path), "run"]) == 0
     assert posts == []
     assert "sent" not in capsys.readouterr().out
+
+
+def test_notify_test_goes_to_enabled_channels(tmp_path, posts, webhook, capsys):
+    assert main(["--home", make_home(tmp_path, DISCORD), "notify", "--test"]) == 0
+    assert "discord: sent" in capsys.readouterr().out
+    [post] = posts
+    assert post["json"]["content"].startswith("hirejutsu: test message")
+
+
+def test_notify_resends_todays_picks(tmp_path, posts, webhook):
+    home = make_home(tmp_path, DISCORD)
+    main(["--home", home, "run", "--no-notify"])
+    assert main(["--home", home, "notify"]) == 0
+    [post] = posts
+    assert "1. Python Engineer 0 at Company 0" in post["json"]["content"]
+
+
+def test_notify_day_sends_that_days_picks_and_report(tmp_path, posts, webhook):
+    home = make_home(tmp_path, DISCORD)
+    with Store(tmp_path / "hirejutsu.db") as store:
+        store.upsert_jobs([Job("demo", "a", "Go Developer", "Gopher", "https://x/a"),
+                           Job("demo", "b", "Rust Developer", "Crab", "https://x/b")], datetime.now(timezone.utc))
+        store.record_picks(date(2026, 10, 16), [Match(job, 0.4) for job in store.find_jobs()])
+    report = tmp_path / "reports" / "2026-10-16.md"
+    report.parent.mkdir()
+    report.write_text("# Job picks", encoding="utf-8")
+    assert main(["--home", home, "notify", "--day", "2026-10-16"]) == 0
+    content = posts[0]["json"]["content"]
+    assert content.startswith("hirejutsu: 2 picks for 2026-10-16")
+    assert "1. Go Developer at Gopher" in content
+    assert f"Report: {report}" in content
+
+
+def test_notify_day_without_picks(tmp_path, posts, webhook, capsys):
+    assert main(["--home", make_home(tmp_path, DISCORD), "notify", "--day", "2026-10-16"]) == 1
+    assert "No picks for 2026-10-16" in capsys.readouterr().out
+    assert posts == []
+
+
+def test_notify_without_enabled_channels(tmp_path, posts, capsys):
+    assert main(["--home", make_home(tmp_path), "notify", "--test"]) == 1
+    assert "Nothing sent" in capsys.readouterr().out
+
+
+def test_notify_named_channel_must_be_enabled(tmp_path, posts, webhook, capsys):
+    assert main(["--home", make_home(tmp_path, DISCORD), "notify", "--test", "--channel", "slack"]) == 1
+    assert "notify.slack" in capsys.readouterr().out
+    assert posts == []
+
+
+def test_notify_failure_sets_exit_code(tmp_path, posts, monkeypatch, capsys):
+    monkeypatch.delenv("HIREJUTSU_DISCORD_WEBHOOK", raising=False)
+    assert main(["--home", make_home(tmp_path, DISCORD), "notify", "--test"]) == 1
+    assert "discord: failed" in capsys.readouterr().out

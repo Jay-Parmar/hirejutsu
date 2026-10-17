@@ -60,6 +60,11 @@ def picks_message(matches: list[Match], day: date, files: list[Path]) -> Message
     )
 
 
+def sample_message() -> Message:
+    text = "If you can read this, hirejutsu can reach you here."
+    return Message("hirejutsu: test message", text, f"<p>{text}</p>")
+
+
 def details(match: Match) -> str:
     return " | ".join(part for part in (where(match), f"score {match.score:.2f}") if part)
 
