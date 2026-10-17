@@ -1,12 +1,27 @@
 """Sending the daily picks by email, Telegram, Discord, Slack and ntfy."""
 
+import logging
+import os
 from dataclasses import dataclass, field
 from datetime import date
 from html import escape
 from pathlib import Path
 
+import requests
+
+from .config import Config, deep_merge
+from .errors import HirejutsuError
 from .models import Match
 from .report import where
+from .text import clean
+
+log = logging.getLogger(__name__)
+
+TELEGRAM_LIMIT = 4096
+
+NOTIFY_DEFAULTS = {
+    "telegram": {"enabled": False, "bot_token_env": "HIREJUTSU_TELEGRAM_TOKEN", "bot_token": "", "chat_id": ""},
+}
 
 
 @dataclass
@@ -53,3 +68,72 @@ def picks_html(matches: list[Match], files: list[Path]) -> str:
     )
     reports = "".join(f'<p style="color:#555555">Report: {escape(str(path))}</p>' for path in files)
     return f'<div style="font-family:Arial,sans-serif;font-size:14px;color:#222222"><ol>{items}</ol>{reports}</div>'
+
+
+def send_all(config: Config, client, message: Message, only: str | None = None) -> list[tuple[str, str]]:
+    """Send to every enabled channel. Returns (channel, error) pairs, the error is empty when it was sent."""
+    results = []
+    for name, send in SENDERS.items():
+        settings = deep_merge(NOTIFY_DEFAULTS[name], config.section("notify").get(name) or {})
+        if not settings["enabled"] or (only and only != name):
+            continue
+        try:
+            send(settings, client, message)
+        except Exception as exc:
+            log.debug("Sending to %s failed", name, exc_info=True)
+            results.append((name, describe(exc)))
+        else:
+            results.append((name, ""))
+    return results
+
+
+def describe(exc: Exception) -> str:
+    # Request errors quote the URL, and for some channels the URL holds the token.
+    if isinstance(exc, requests.HTTPError) and exc.response is not None:
+        return f"HTTP {exc.response.status_code} {clean(exc.response.text)[:200]}".strip()
+    if isinstance(exc, requests.RequestException):
+        return f"{type(exc).__name__}, check the address and your connection"
+    return str(exc) or type(exc).__name__
+
+
+def secret(settings: dict, key: str, channel: str) -> str:
+    """Read key from the environment variable named in key_env, or from the config with a warning."""
+    if settings[key]:
+        log.warning("notify.%s.%s is written in config.yaml. Put it in an environment variable "
+                    "and set %s_env to its name instead.", channel, key, key)
+        return str(settings[key])
+    name = settings[f"{key}_env"]
+    if not name:
+        raise HirejutsuError(f"notify.{channel} needs {key}_env in config.yaml")
+    value = os.environ.get(name)
+    if not value:
+        raise HirejutsuError(f"notify.{channel}: environment variable {name} is not set")
+    return value
+
+
+def require(settings: dict, channel: str, *keys: str) -> None:
+    missing = [key for key in keys if not settings[key]]
+    if missing:
+        raise HirejutsuError(f"notify.{channel} needs {' and '.join(missing)} in config.yaml")
+
+
+def split_text(text: str, limit: int) -> list[str]:
+    """Pieces of at most limit characters, cut between paragraphs where possible."""
+    pieces: list[str] = []
+    for block in text.split("\n\n"):
+        if pieces and len(pieces[-1]) + 2 + len(block) <= limit:
+            pieces[-1] += "\n\n" + block
+        else:
+            pieces += [block[start:start + limit] for start in range(0, len(block), limit)]
+    return pieces
+
+
+def send_telegram(settings: dict, client, message: Message) -> None:
+    require(settings, "telegram", "chat_id")
+    url = f"https://api.telegram.org/bot{secret(settings, 'bot_token', 'telegram')}/sendMessage"
+    for piece in split_text(f"{message.subject}\n\n{message.text}", TELEGRAM_LIMIT):
+        payload = {"chat_id": settings["chat_id"], "text": piece, "link_preview_options": {"is_disabled": True}}
+        client.post(url, json=payload)
+
+
+SENDERS = {"telegram": send_telegram}
