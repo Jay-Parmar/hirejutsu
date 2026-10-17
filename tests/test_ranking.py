@@ -314,3 +314,40 @@ def test_reasons_keep_the_four_most_important():
     assert rank(jobs, profile, settings(), now=NOW)[0].reasons == [
         "Skills: python (1 of 1)", "Title close to Backend Engineer", "Asks 6+ years, you have 4", "Remote",
     ]
+
+
+def test_exclude_keywords_drop_jobs_that_mention_them():
+    jobs = [
+        job("1", "Engineer", company="A", description="python and php"),
+        job("2", "Engineer", company="B", description="python"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(exclude_keywords=["PHP"]))
+    assert [match.job.external_id for match in matches] == ["2"]
+
+
+def test_exclude_title_words_only_look_at_the_title():
+    jobs = [
+        job("1", "Python Intern", company="A", description="python"),
+        job("2", "Python Engineer", company="B", description="python, mentor our interns and the sales team"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(exclude_title_words=["intern", "Sales"]))
+    assert [match.job.external_id for match in matches] == ["2"]
+
+
+def test_exclude_companies_match_whole_words():
+    jobs = [
+        job("1", "Engineer", company="Infosys Limited", description="python"),
+        job("2", "Engineer", company="Metalworks", description="python"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(exclude_companies=["infosys", "Meta"]))
+    assert [match.job.external_id for match in matches] == ["2"]
+
+
+def test_require_keywords_keep_jobs_that_mention_one():
+    jobs = [
+        job("1", "Engineer", company="A", description="python with go"),
+        job("2", "Engineer", company="B", description="python with rust"),
+        job("3", "Engineer", company="C", description="python"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(require_keywords=["Go", "rust"]))
+    assert [match.job.external_id for match in matches] == ["1", "2"]
