@@ -1,7 +1,10 @@
 """Showing and saving the daily picks."""
 
 from datetime import date
+from html import escape
+from importlib import resources
 from pathlib import Path
+from string import Template
 
 from rich.style import Style
 from rich.table import Table
@@ -89,6 +92,57 @@ def markdown(matches: list[Match], day: date) -> str:
         lines += [f"- {reason}" for reason in match.reasons]
         lines += [f"- Apply: {job.url}", ""]
     return "\n".join(lines)
+
+
+def html_page(matches: list[Match], day: date) -> str:
+    """The day's picks as one HTML file that loads nothing from the internet."""
+    page = Template(resources.files("hirejutsu").joinpath("data", "report.html").read_text(encoding="utf-8"))
+    count = len(matches)
+    return page.substitute(
+        title=f"Job picks for {day.isoformat()}",
+        heading=f"Job picks for {day:%A}, {day.day} {day:%B %Y}",
+        count=f"{count} job picked" if count == 1 else f"{count} jobs picked",
+        picks="\n".join(_pick_html(number, match, day) for number, match in enumerate(matches, start=1)),
+    )
+
+
+def _pick_html(number: int, match: Match, day: date) -> str:
+    job = match.job
+    link = escape(_web_link(job.url))
+    reasons = "".join(f"<li>{escape(reason)}</li>" for reason in match.reasons)
+    command = f"hirejutsu applied {job.id}"
+    return f"""<li class="pick">
+<div class="rank">{number}</div>
+<div>
+<h2><a href="{link}" target="_blank" rel="noopener noreferrer">{escape(job.title)}</a></h2>
+<p class="company">{escape(job.company)}</p>
+<p class="facts">{_facts_html(job, day)}</p>
+<p class="score"><span class="bar"><span style="width: {round(match.score * 100)}%"></span></span>Score {match.score:.2f}</p>
+<ul class="reasons">{reasons}</ul>
+<p class="actions"><a class="open" href="{link}" target="_blank" rel="noopener noreferrer">Open</a>
+<span class="command"><code>{command}</code><button type="button" data-command="{command}">Copy</button></span></p>
+</div>
+</li>"""
+
+
+def _facts_html(job: Job, day: date) -> str:
+    facts = []
+    if job.location:
+        facts.append(f"<span>{escape(job.location)}</span>")
+    if job.remote:
+        facts.append('<span class="remote">Remote</span>')
+    pay = salary(job)
+    if pay:
+        facts.append(f"<span>{escape(pay)}</span>")
+    since = age(job, day)
+    if since:
+        facts.append(f"<span>posted {since}</span>")
+    return "".join(facts)
+
+
+def _web_link(url: str) -> str:
+    """The job link, or "#" for anything that is not http(s), like a javascript: link from a bad listing."""
+    return url if url.lower().startswith(("http://", "https://")) else "#"
 
 
 def write_reports(matches: list[Match], config: Config, day: date) -> list[Path]:
