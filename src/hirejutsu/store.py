@@ -78,6 +78,16 @@ MIGRATIONS = [
     INSERT INTO events (job_id, status, at, note)
         SELECT id, status, status_at, note FROM jobs WHERE status_at IS NOT NULL;
     """,
+    """
+    CREATE TABLE ai_scores (
+        job_id INTEGER NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
+        model TEXT NOT NULL,
+        resume_hash TEXT NOT NULL,
+        score REAL NOT NULL,
+        reason TEXT NOT NULL DEFAULT '',
+        PRIMARY KEY (job_id, model, resume_hash)
+    );
+    """,
 ]
 
 
@@ -278,3 +288,18 @@ class Store:
                 (_to_text(not_seen_since),),
             )
         return cursor.rowcount
+
+    def ai_score(self, job_id: int, model: str, resume_hash: str) -> tuple[float, str] | None:
+        row = self.conn.execute(
+            "SELECT score, reason FROM ai_scores WHERE job_id = ? AND model = ? AND resume_hash = ?",
+            (job_id, model, resume_hash),
+        ).fetchone()
+        return (row["score"], row["reason"]) if row else None
+
+    def save_ai_scores(self, model: str, resume_hash: str, scores: dict[int, tuple[float, str]]) -> None:
+        """Remember AI scores, given as job id to (score, reason)."""
+        with self.conn:
+            self.conn.executemany(
+                "INSERT OR REPLACE INTO ai_scores (job_id, model, resume_hash, score, reason) VALUES (?, ?, ?, ?, ?)",
+                [(job_id, model, resume_hash, score, reason) for job_id, (score, reason) in scores.items()],
+            )
