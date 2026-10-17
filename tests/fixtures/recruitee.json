@@ -1,0 +1,431 @@
+{
+  "offers": [
+    {
+      "options_photo": "off",
+      "options_salutation": "off",
+      "position": 621,
+      "mailbox_email": "job.ewwlv@channable.recruitee.com",
+      "translations": {
+        "en": {
+          "description": "<p><span style=\"color:#000000\">Channable is a fast-growing B2B SaaS platform driving digital commerce across the globe. By offering a fully integrated solution, we empower marketers, online stores, and digital agencies to manage, scale, and optimize their online activities.</span></p><p><span style=\"color:#000000\">As the market leader in the Benelux, we owe our success to an incredible product, a...",
+          "title": "Senior Customer Success Manager Benelux",
+          "highlight": null,
+          "requirements": "<h4><strong><span style=\"color:#000000\">Here's what that looks like day-to-day:</span></strong></h4><ul><li><p style=\"text-align:justify;\"><span style=\"color:#000000\">Business-goal alignment and planning: understanding each client's and/or agency's annual objectives and how their digital marketing team contributes to them, then translating that into a strategic success plan with outcomes both side...",
+          "sharing_image": null,
+          "locations_question": "What is your preferred work location?",
+          "sharing_description": "Channable is a fast-growing B2B SaaS platform driving digital commerce across the globe. By offering a fully integrated solution, we empower marketers, online stores, and digital agencies to manage, s",
+          "sharing_title": "Senior Customer Success Manager Benelux"
+        }
+      },
+      "locations": [
+        {
+          "id": 64463,
+          "name": "Utrecht",
+          "state": "Utrecht",
+          "country": "Netherlands",
+          "city": "Utrecht",
+          "translations": {
+            "en": {
+              "name": "Utrecht",
+              "city": "Utrecht",
+              "postal_code": "3512 HL",
+              "street": "Kromme Nieuwegracht 66",
+              "note": null
+            }
+          },
+          "country_code": "NL",
+          "state_code": "UT",
+          "postal_code": "3512 HL",
+          "street": "Kromme Nieuwegracht 66",
+          "note": null
+        }
+      ],
+      "min_hours_per_week": "32",
+      "locations_question_type": "multiple_choice",
+      "education_code": "bachelor_degree",
+      "state_name": "Utrecht",
+      "options_phone": "required",
+      "dynamic_fields": [],
+      "careers_apply_url": "https://jobs.channable.com/o/senior-customer-success-manager-benelux-9/c/new",
+      "category_code": "consulting",
+      "city": "Utrecht",
+      "salary": {
+        "max": "5000",
+        "min": "3650",
+        "period": "month",
+        "currency": "EUR"
+      },
+      "department": "Customer Success",
+      "close_at": null,
+      "created_at": "2026-10-16 07:42:37 UTC",
+      "guid": "ewwlv",
+      "careers_url": "https://jobs.channable.com/o/senior-customer-success-manager-benelux-9",
+      "sharing_image": null,
+      "options_cover_letter": "off",
+      "max_hours": 40,
+      "country_code": "NL",
+      "experience_code": "experienced",
+      "options_title": "off",
+      "title": "Senior Customer Success Manager Benelux",
+      "tags": [],
+      "company_name": "Channable",
+      "requirements": "<h4><strong><span style=\"color:#000000\">Here's what that looks like day-to-day:</span></strong></h4><ul><li><p style=\"text-align:justify;\"><span style=\"color:#000000\">Business-goal alignment and planning: understanding each client's and/or agency's annual objectives and how their digital marketing team contributes to them, then translating that into a strategic success plan with outcomes both side...",
+      "country": "Netherlands",
+      "options_cv": "required",
+      "postal_code": "3512 HL",
+      "max_hours_per_week": "40",
+      "sharing_title": "Senior Customer Success Manager Benelux",
+      "description": "<p><span style=\"color:#000000\">Channable is a fast-growing B2B SaaS platform driving digital commerce across the globe. By offering a fully integrated solution, we empower marketers, online stores, and digital agencies to manage, scale, and optimize their online activities.</span></p><p><span style=\"color:#000000\">As the market leader in the Benelux, we owe our success to an incredible product, a...",
+      "locations_question_required": true,
+      "published_at": "2026-10-16 11:35:00 UTC",
+      "highlight": null,
+      "remote": false,
+      "cover_image": null,
+      "employment_type_code": "fulltime_fixed_term",
+      "id": 2786321,
+      "slug": "senior-customer-success-manager-benelux-9",
+      "location_question_visible": false,
+      "location": "Utrecht, Utrecht, Netherlands",
+      "sharing_description": "Channable is a fast-growing B2B SaaS platform driving digital commerce across the globe. By offering a fully integrated solution, we empower marketers, online stores, and digital agencies to manage, s",
+      "hybrid": true,
+      "locations_question": "What is your preferred work location?",
+      "on_site": false,
+      "status": "published",
+      "open_questions": [
+        {
+          "id": 4442175,
+          "position": 1,
+          "options": {},
+          "required": true,
+          "body": "Do you speak the Dutch language on a C2 (Native Proficiency) level?",
+          "kind": "boolean",
+          "translations": {
+            "en": {
+              "body": "Do you speak the Dutch language on a C2 (Native Proficiency) level?"
+            }
+          },
+          "open_question_options": []
+        },
+        {
+          "id": 4442176,
+          "position": 2,
+          "options": {},
+          "required": true,
+          "body": "How did you find out about Channable?",
+          "kind": "string",
+          "translations": {
+            "en": {
+              "body": "How did you find out about Channable?"
+            }
+          },
+          "open_question_options": []
+        }
+      ],
+      "state_code": "UT",
+      "updated_at": "2026-10-16 14:00:05 UTC",
+      "min_hours": 32
+    },
+    {
+      "options_photo": "off",
+      "options_salutation": "off",
+      "position": 12,
+      "mailbox_email": "job.89sad@channable.recruitee.com",
+      "translations": {
+        "en": {
+          "description": "<p><span style=\"color:#000000\">Channable powers product feeds and digital advertising for 14,000+ brands and agencies across 3,500+ channels. We're a market leader entering our next phase of North American growth.&nbsp; We need an AE who knows eCommerce technology, builds real relationships, and wants to own a market, not just a quota.</span></p><p style=\"min-height: 1.7em;\"></p><h4><strong>...",
+          "title": "Account Executive - North America",
+          "highlight": null,
+          "requirements": "<p style=\"min-height: 1.7em;\"></p><h4><strong><span style=\"color:#000000\">Who you are</span></strong></h4><ul><li><p><span style=\"color:#000000\">3+ years closing new business in B2B SaaS, ideally in eCommerce technology, feed management, product data, or martech.</span></p></li><li><p><span style=\"color:#000000\">You understand the eCommerce tech stack, including platforms, ERPs, PIMs, marketplaces...",
+          "sharing_image": null,
+          "locations_question": "What is your preferred work location?",
+          "sharing_description": "Channable powers product feeds and digital advertising for 14,000+ brands and agencies across 3,500+ channels. We're a market leader entering our next phase of North American growth.\u00a0 We need an AE wh",
+          "sharing_title": "Account Executive - North America"
+        }
+      },
+      "locations": [
+        {
+          "id": 64457,
+          "name": "New York City",
+          "state": "New York",
+          "country": "United States",
+          "city": "New York City",
+          "translations": {
+            "en": {
+              "name": "New York City",
+              "city": "New York City",
+              "postal_code": "10168",
+              "street": "122 East 42nd Street, Suite 1708",
+              "note": null
+            }
+          },
+          "country_code": "US",
+          "state_code": "NY",
+          "postal_code": "10168",
+          "street": "122 East 42nd Street, Suite 1708",
+          "note": null
+        }
+      ],
+      "min_hours_per_week": "40",
+      "locations_question_type": "multiple_choice",
+      "education_code": "bachelor_degree",
+      "state_name": "New York",
+      "options_phone": "required",
+      "dynamic_fields": [],
+      "careers_apply_url": "https://jobs.channable.com/o/account-executive-north-america-1/c/new",
+      "category_code": "sales",
+      "city": "New York City",
+      "salary": {
+        "max": "250000",
+        "min": "200000",
+        "period": "year",
+        "currency": "USD"
+      },
+      "department": "US",
+      "close_at": null,
+      "created_at": "2026-07-30 07:49:07 UTC",
+      "guid": "89sad",
+      "careers_url": "https://jobs.channable.com/o/account-executive-north-america-1",
+      "sharing_image": null,
+      "options_cover_letter": "off",
+      "max_hours": 40,
+      "country_code": "US",
+      "experience_code": "experienced",
+      "options_title": "off",
+      "title": "Account Executive - North America",
+      "tags": [],
+      "company_name": "Channable",
+      "requirements": "<p style=\"min-height: 1.7em;\"></p><h4><strong><span style=\"color:#000000\">Who you are</span></strong></h4><ul><li><p><span style=\"color:#000000\">3+ years closing new business in B2B SaaS, ideally in eCommerce technology, feed management, product data, or martech.</span></p></li><li><p><span style=\"color:#000000\">You understand the eCommerce tech stack, including platforms, ERPs, PIMs, marketplaces...",
+      "country": "United States",
+      "options_cv": "required",
+      "postal_code": "10168",
+      "max_hours_per_week": "40",
+      "sharing_title": "Account Executive - North America",
+      "description": "<p><span style=\"color:#000000\">Channable powers product feeds and digital advertising for 14,000+ brands and agencies across 3,500+ channels. We're a market leader entering our next phase of North American growth.&nbsp; We need an AE who knows eCommerce technology, builds real relationships, and wants to own a market, not just a quota.</span></p><p style=\"min-height: 1.7em;\"></p><h4><strong>...",
+      "locations_question_required": true,
+      "published_at": "2026-08-06 16:09:53 UTC",
+      "highlight": null,
+      "remote": true,
+      "cover_image": null,
+      "employment_type_code": "fulltime_permanent",
+      "id": 2694685,
+      "slug": "account-executive-north-america-1",
+      "location_question_visible": false,
+      "location": "Remote job",
+      "sharing_description": "Channable powers product feeds and digital advertising for 14,000+ brands and agencies across 3,500+ channels. We're a market leader entering our next phase of North American growth.\u00a0 We need an AE wh",
+      "hybrid": false,
+      "locations_question": "What is your preferred work location?",
+      "on_site": false,
+      "status": "published",
+      "open_questions": [
+        {
+          "id": 4292270,
+          "position": 1,
+          "options": {},
+          "required": true,
+          "body": "How did you find out about Channable?",
+          "kind": "string",
+          "translations": {
+            "en": {
+              "body": "How did you find out about Channable?"
+            }
+          },
+          "open_question_options": []
+        },
+        {
+          "id": 4292271,
+          "position": 2,
+          "options": {},
+          "required": true,
+          "body": "Do you have US citizenship or a valid work permit to work in the US?",
+          "kind": "single_choice",
+          "translations": {
+            "en": {
+              "body": "Do you have US citizenship or a valid work permit to work in the US?"
+            }
+          },
+          "open_question_options": [
+            {
+              "id": 6604089,
+              "position": 0,
+              "body": "US citizenship",
+              "translations": {
+                "en": {
+                  "body": "US citizenship"
+                }
+              }
+            },
+            {
+              "id": 6604090,
+              "position": 1,
+              "body": "Valid work permit",
+              "translations": {
+                "en": {
+                  "body": "Valid work permit"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "state_code": "NY",
+      "updated_at": "2026-10-01 09:44:35 UTC",
+      "min_hours": 40
+    },
+    {
+      "options_photo": "off",
+      "options_salutation": "off",
+      "position": 619,
+      "mailbox_email": "job.73yvw@channable.recruitee.com",
+      "translations": {
+        "en": {
+          "description": "<p><strong><span style=\"color:#000000\">About the role&nbsp;</span></strong></p><p><span style=\"color:#000000\">We are looking for a true hiring partner for our operations and commercial teams. Culture is critical for our success and you will help shape it. Do you enjoy building strong partnerships by advising and guiding hiring managers and candidates across multiple markets? If so, this is a role...",
+          "title": "Talent Acquisition Partner",
+          "highlight": null,
+          "requirements": "<p><strong><span style=\"color:#000000\">About you&nbsp;</span></strong></p><p><span style=\"color:#000000\">You take pride in the quality of your work and care deeply about the candidate experience. You are structured enough to follow the process but also know when to be flexible. Speed matters to you but not at the expense of quality.&nbsp;</span></p><p><span style=\"color:#000000\">You work well in a...",
+          "sharing_image": null,
+          "locations_question": "What is your preferred work location?",
+          "sharing_description": "About the role\u00a0We are looking for a true hiring partner for our operations and commercial teams. Culture is critical for our success and you will help shape it. Do you enjoy building strong partnershi",
+          "sharing_title": "Talent Acquisition Partner"
+        }
+      },
+      "locations": [
+        {
+          "id": 64463,
+          "name": "Utrecht",
+          "state": "Utrecht",
+          "country": "Netherlands",
+          "city": "Utrecht",
+          "translations": {
+            "en": {
+              "name": "Utrecht",
+              "city": "Utrecht",
+              "postal_code": "3512 HL",
+              "street": "Kromme Nieuwegracht 66",
+              "note": null
+            }
+          },
+          "country_code": "NL",
+          "state_code": "UT",
+          "postal_code": "3512 HL",
+          "street": "Kromme Nieuwegracht 66",
+          "note": null
+        }
+      ],
+      "min_hours_per_week": "32",
+      "locations_question_type": "multiple_choice",
+      "education_code": "bachelor_degree",
+      "state_name": "Utrecht",
+      "options_phone": "required",
+      "dynamic_fields": [],
+      "careers_apply_url": "https://jobs.channable.com/o/talent-acquisition-partner/c/new",
+      "category_code": "recruitment_hr",
+      "city": "Utrecht",
+      "salary": {
+        "max": "5000",
+        "min": "4250",
+        "period": "month",
+        "currency": "EUR"
+      },
+      "department": "Operations",
+      "close_at": null,
+      "created_at": "2026-10-06 13:46:11 UTC",
+      "guid": "73yvw",
+      "careers_url": "https://jobs.channable.com/o/talent-acquisition-partner",
+      "sharing_image": null,
+      "options_cover_letter": "optional",
+      "max_hours": 40,
+      "country_code": "NL",
+      "experience_code": "mid_level",
+      "options_title": "off",
+      "title": "Talent Acquisition Partner",
+      "tags": [],
+      "company_name": "Channable",
+      "requirements": "<p><strong><span style=\"color:#000000\">About you&nbsp;</span></strong></p><p><span style=\"color:#000000\">You take pride in the quality of your work and care deeply about the candidate experience. You are structured enough to follow the process but also know when to be flexible. Speed matters to you but not at the expense of quality.&nbsp;</span></p><p><span style=\"color:#000000\">You work well in a...",
+      "country": "Netherlands",
+      "options_cv": "required",
+      "postal_code": "3512 HL",
+      "max_hours_per_week": "40",
+      "sharing_title": "Talent Acquisition Partner",
+      "description": "<p><strong><span style=\"color:#000000\">About the role&nbsp;</span></strong></p><p><span style=\"color:#000000\">We are looking for a true hiring partner for our operations and commercial teams. Culture is critical for our success and you will help shape it. Do you enjoy building strong partnerships by advising and guiding hiring managers and candidates across multiple markets? If so, this is a role...",
+      "locations_question_required": true,
+      "published_at": "2026-10-08 08:03:01 UTC",
+      "highlight": null,
+      "remote": false,
+      "cover_image": null,
+      "employment_type_code": "fulltime_permanent",
+      "id": 2773400,
+      "slug": "talent-acquisition-partner",
+      "location_question_visible": false,
+      "location": "Utrecht, Utrecht, Netherlands",
+      "sharing_description": "About the role\u00a0We are looking for a true hiring partner for our operations and commercial teams. Culture is critical for our success and you will help shape it. Do you enjoy building strong partnershi",
+      "hybrid": true,
+      "locations_question": "What is your preferred work location?",
+      "on_site": false,
+      "status": "published",
+      "open_questions": [
+        {
+          "id": 4425941,
+          "position": 1,
+          "options": {},
+          "required": true,
+          "body": "How did you find out about Channable?",
+          "kind": "string",
+          "translations": {
+            "en": {
+              "body": "How did you find out about Channable?"
+            }
+          },
+          "open_question_options": []
+        },
+        {
+          "id": 4425942,
+          "position": 2,
+          "options": {},
+          "required": true,
+          "body": "Do you have EU citizenship or a valid work permit for the Netherlands? Or do you need sponsorship from us?",
+          "kind": "single_choice",
+          "translations": {
+            "en": {
+              "body": "Do you have EU citizenship or a valid work permit for the Netherlands? Or do you need sponsorship from us?"
+            }
+          },
+          "open_question_options": [
+            {
+              "id": 6816758,
+              "position": 0,
+              "body": "EU citizenship ",
+              "translations": {
+                "en": {
+                  "body": "EU citizenship "
+                }
+              }
+            },
+            {
+              "id": 6816759,
+              "position": 1,
+              "body": "Valid work permit",
+              "translations": {
+                "en": {
+                  "body": "Valid work permit"
+                }
+              }
+            },
+            {
+              "id": 6816760,
+              "position": 2,
+              "body": "I need sponsorship",
+              "translations": {
+                "en": {
+                  "body": "I need sponsorship"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "state_code": "UT",
+      "updated_at": "2026-10-09 08:34:35 UTC",
+      "min_hours": 32
+    }
+  ]
+}
