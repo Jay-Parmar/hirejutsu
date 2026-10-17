@@ -212,6 +212,22 @@ class Store:
         ).fetchall()
         return [(row["status"], _to_datetime(row["at"]), row["note"]) for row in rows]
 
+    def status_counts(self) -> dict[str, int]:
+        return dict(self.conn.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status").fetchall())
+
+    def applications(self) -> list[tuple[str, datetime, bool]]:
+        """(company, first applied, got an interview or offer) for each job that is applied or past it."""
+        rows = self.conn.execute(
+            """
+            SELECT jobs.company, MIN(events.at), MAX(events.status IN ('interview', 'offer'))
+            FROM jobs JOIN events ON events.job_id = jobs.id
+            WHERE jobs.status IN ('applied', 'interview', 'offer', 'rejected')
+              AND events.status IN ('applied', 'interview', 'offer', 'rejected')
+            GROUP BY jobs.id
+            """
+        ).fetchall()
+        return [(company, _to_datetime(at), bool(answered)) for company, at, answered in rows]
+
     def record_picks(self, day: date, matches: list[Match]) -> None:
         """Save the jobs picked for a day, replacing any earlier picks for that day."""
         with self.conn:
@@ -237,6 +253,9 @@ class Store:
         if before is not None:
             query, params = query + " WHERE day < ?", (before.isoformat(),)
         return {row[0] for row in self.conn.execute(query, params)}
+
+    def pick_count(self) -> int:
+        return self.conn.execute("SELECT COUNT(*) FROM picks").fetchone()[0]
 
     def log_fetch(self, source: str, started_at: datetime, seconds: float, found: int, added: int, error: str = "") -> None:
         with self.conn:

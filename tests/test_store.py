@@ -148,6 +148,39 @@ def test_upgrade_turns_existing_status_into_history(tmp_path, monkeypatch):
         assert store.history(store.find_jobs()[0].id) == [("applied", NOW, "by email")]
 
 
+def test_status_counts(store):
+    store.upsert_jobs([make_job("1"), make_job("2"), make_job("3")], NOW)
+    first, second, _ = store.find_jobs()
+    store.set_status(first.id, "applied")
+    store.set_status(second.id, "applied")
+    assert store.status_counts() == {"new": 1, "applied": 2}
+
+
+def test_applications_count_each_job_applied_to_once(store):
+    store.upsert_jobs([make_job(name, company=name) for name in ("a", "b", "c", "d")], NOW)
+    ids = {job.external_id: job.id for job in store.find_jobs()}
+    store.set_status(ids["a"], "saved", at=NOW - timedelta(days=9))
+    store.set_status(ids["a"], "applied", at=NOW - timedelta(days=8))
+    store.set_status(ids["a"], "interview", at=NOW - timedelta(days=2))
+    store.set_status(ids["a"], "rejected", at=NOW - timedelta(days=1))
+    store.set_status(ids["b"], "applied", at=NOW - timedelta(days=3))
+    store.set_status(ids["c"], "applied", at=NOW - timedelta(days=4))
+    store.set_status(ids["c"], "new", at=NOW - timedelta(days=4))
+    store.set_status(ids["d"], "skipped", at=NOW)
+    assert sorted(store.applications()) == [
+        ("a", NOW - timedelta(days=8), True),
+        ("b", NOW - timedelta(days=3), False),
+    ]
+
+
+def test_pick_count(store):
+    store.upsert_jobs([make_job("1"), make_job("2")], NOW)
+    first, second = store.find_jobs()
+    store.record_picks(date(2026, 10, 16), [Match(first, 0.5)])
+    store.record_picks(date(2026, 10, 17), [Match(second, 0.4)])
+    assert store.pick_count() == 2
+
+
 def test_picks_round_trip(store):
     store.upsert_jobs([make_job("1"), make_job("2")], NOW)
     first, second = sorted(store.find_jobs(), key=lambda job: job.external_id)
