@@ -12,6 +12,7 @@ dependencies = [
     "requests>=2.31",
     "PyYAML>=6.0",
     "rich>=13.0",
+    "pypdf>=4",
     "python-docx>=1.1",
 ]
 

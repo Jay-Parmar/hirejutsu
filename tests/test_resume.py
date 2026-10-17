@@ -1,5 +1,7 @@
 import pytest
 from docx import Document
+from fakes import FIXTURES
+from pypdf import PdfWriter
 
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
@@ -38,6 +40,29 @@ def test_unsupported_resume_type(tmp_path):
     (tmp_path / "resume.rtf").write_text("x", encoding="utf-8")
     with pytest.raises(HirejutsuError, match=".rtf"):
         load_profile(Config({"resume": "resume.rtf"}, tmp_path))
+
+
+def test_read_pdf():
+    assert read_text(FIXTURES / "resume.pdf").splitlines()[:2] == ["Priya Sharma", "Senior Software Engineer"]
+
+
+def test_read_pdf_expands_ligatures():
+    # The fixture writes the "fl" in Airflow as one ligature glyph, as LaTeX does.
+    assert "Airflow" in read_text(FIXTURES / "resume.pdf")
+
+
+def test_scanned_pdf_asks_for_a_text_resume(tmp_path):
+    writer = PdfWriter()
+    writer.add_blank_page(width=612, height=792)
+    writer.write(tmp_path / "resume.pdf")
+    with pytest.raises(HirejutsuError, match="scanned PDF"):
+        read_text(tmp_path / "resume.pdf")
+
+
+def test_read_pdf_that_is_not_a_pdf(tmp_path):
+    (tmp_path / "resume.pdf").write_bytes(b"not a pdf")
+    with pytest.raises(HirejutsuError, match="Cannot read"):
+        read_text(tmp_path / "resume.pdf")
 
 
 def test_read_docx_keeps_tables_in_document_order(tmp_path):
