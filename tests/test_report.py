@@ -1,4 +1,5 @@
 import io
+import re
 from datetime import date, datetime, timedelta
 
 import pytest
@@ -6,7 +7,7 @@ from rich.console import Console
 
 from hirejutsu.config import Config
 from hirejutsu.models import Job, Match
-from hirejutsu.report import age, markdown, print_picks, salary, write_reports
+from hirejutsu.report import age, html_page, markdown, print_picks, salary, write_reports
 
 DAY = date(2026, 10, 17)
 
@@ -79,6 +80,54 @@ def test_markdown_shows_salary_and_posted_age():
     text = markdown([Match(pick, 0.75)], DAY)
     assert "INR 18,00,000 - 25,00,000 / year" in text
     assert "posted 2 days ago" in text
+
+
+def test_html_page_shows_each_pick():
+    first = job("a", id=7, location="Pune, India", remote=True, salary_min=1800000.0, salary_max=2500000.0,
+                salary_currency="INR", salary_period="year", posted_at=local(2026, 10, 15, 9, 0))
+    second = job("b", id=8, remote=False)
+    page = html_page([Match(first, 0.75, ["Skills: python, django"]), Match(second, 0.4)], DAY)
+    assert "<title>Job picks for 2026-10-17</title>" in page
+    assert "Saturday, 17 October 2026" in page
+    assert "2 jobs picked" in page
+    assert "hirejutsu applied &lt;id&gt;" in page
+    assert '<a href="https://x/a" target="_blank" rel="noopener noreferrer">Python Engineer a</a>' in page
+    assert '<a class="open" href="https://x/b"' in page
+    assert 'class="rank">2<' in page
+    assert ">a</p>" in page
+    assert "Pune, India" in page
+    assert page.count(">Remote<") == 1
+    assert "INR 18,00,000 - 25,00,000 / year" in page
+    assert "posted 2 days ago" in page
+    assert "width: 75%" in page
+    assert "Score 0.75" in page
+    assert "<li>Skills: python, django</li>" in page
+    assert "hirejutsu applied 7" in page
+    assert "hirejutsu applied 8" in page
+
+
+def test_html_page_escapes_job_text():
+    nasty = job("a", title='<script>alert("hi")</script>', company="Fish & Chips", location="<b>Pune</b>",
+                url='https://x/a?b=1&c="2"')
+    page = html_page([Match(nasty, 0.5, ["<img src=x onerror=alert(1)>"])], DAY)
+    assert "<script>alert" not in page
+    assert "&lt;script&gt;alert(&quot;hi&quot;)&lt;/script&gt;" in page
+    assert "Fish &amp; Chips" in page
+    assert "&lt;b&gt;Pune&lt;/b&gt;" in page
+    assert "&lt;img src=x onerror=alert(1)&gt;" in page
+    assert 'href="https://x/a?b=1&amp;c=&quot;2&quot;"' in page
+
+
+def test_html_page_loads_nothing_from_the_internet():
+    page = html_page([Match(job("a"), 0.5), Match(job("b", url="http://y/b"), 0.4)], DAY)
+    assert set(re.findall(r"https?://[^\s\"'<>]+", page)) == {"https://x/a", "http://y/b"}
+    assert "src=" not in page
+    assert "url(" not in page
+
+
+def test_html_page_links_only_to_web_addresses():
+    page = html_page([Match(job("a", url="javascript:alert(1)"), 0.5)], DAY)
+    assert "javascript:" not in page
 
 
 def test_write_reports_saves_markdown(tmp_path):
