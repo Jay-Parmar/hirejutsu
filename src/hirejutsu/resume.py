@@ -1,6 +1,9 @@
 """Reading the resume and building a profile from it."""
 
+import re
 import unicodedata
+from functools import cache
+from importlib import resources
 from pathlib import Path
 
 from .config import Config
@@ -57,6 +60,32 @@ def read_docx(path: Path) -> str:
         else:
             lines.append(block.text)
     return "\n".join(lines)
+
+
+@cache
+def skill_terms() -> list[tuple[str, str]]:
+    """Every spelling of every known skill, paired with the skill's main name."""
+    text = resources.files("hirejutsu").joinpath("data", "skills.txt").read_text(encoding="utf-8")
+    terms = []
+    for line in text.splitlines():
+        if line.strip() and not line.startswith("#"):
+            names = [name.strip() for name in line.split("|")]
+            terms += [(name, names[0]) for name in names]
+    return terms
+
+
+def find_skills(text: str) -> list[str]:
+    """Known skills in text by main name, in the order they are first mentioned."""
+    lowered = text.lower()
+    first: dict[str, int] = {}
+    for term, name in skill_terms():
+        # A plain substring test skips most terms without running a regex.
+        if term.lower() not in lowered:
+            continue
+        match = re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text, re.IGNORECASE)
+        if match and match.start() < first.get(name, len(text)):
+            first[name] = match.start()
+    return sorted(first, key=first.get)
 
 
 def load_profile(config: Config) -> Profile:
