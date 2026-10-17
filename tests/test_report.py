@@ -12,7 +12,17 @@ from rich.console import Console
 from hirejutsu.config import Config, template
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job, Match
-from hirejutsu.report import REPORT_DEFAULTS, age, html_page, markdown, print_picks, salary, write_reports
+from hirejutsu.report import (
+    REPORT_DEFAULTS,
+    age,
+    export_row,
+    html_page,
+    markdown,
+    print_picks,
+    salary,
+    source_label,
+    write_reports,
+)
 
 DAY = date(2026, 10, 17)
 
@@ -74,7 +84,7 @@ def test_markdown_lists_jobs_with_links():
     text = markdown([Match(job("a", id=7, location="Remote"), 0.75, ["Skills: python"])], DAY)
     assert "# Job picks for 2026-10-17" in text
     assert "## 1. Python Engineer a at a" in text
-    assert "Remote | score 0.75 | id 7" in text
+    assert "Remote | via demo | score 0.75 | id 7" in text
     assert "- Skills: python" in text
     assert "https://x/a" in text
 
@@ -165,7 +175,7 @@ def test_csv_report_has_one_row_per_pick(tmp_path):
         "rank": "1", "id": "7", "score": "0.75", "title": "Python Engineer a", "company": "a",
         "location": "Pune, India", "remote": "True", "salary_min": "1800000.0", "salary_max": "2500000.0",
         "salary_currency": "INR", "salary_period": "year", "posted_at": "2026-10-15T09:30:00+00:00",
-        "url": "https://x/a", "reasons": "Skills: python; Title matches",
+        "url": "https://x/a", "source": "demo", "reasons": "Skills: python; Title matches",
     }
     assert (rows[1]["rank"], rows[1]["id"], rows[1]["remote"], rows[1]["posted_at"]) == ("2", "8", "", "")
 
@@ -178,7 +188,7 @@ def test_json_report_has_one_object_per_pick(tmp_path):
         "rank": 1, "id": 7, "score": 0.75, "title": "Python Engineer a", "company": "a",
         "location": "Pune, India", "remote": True, "salary_min": 1800000.0, "salary_max": 2500000.0,
         "salary_currency": "INR", "salary_period": "year", "posted_at": "2026-10-15T09:30:00+00:00",
-        "url": "https://x/a", "reasons": ["Skills: python", "Title matches"],
+        "url": "https://x/a", "source": "demo", "reasons": ["Skills: python", "Title matches"],
     }
     assert (data[1]["rank"], data[1]["id"], data[1]["remote"], data[1]["posted_at"]) == (2, 8, None, None)
 
@@ -220,3 +230,15 @@ def test_unknown_report_format_is_an_error(tmp_path):
 
 def test_starter_config_has_the_report_defaults():
     assert yaml.safe_load(template())["report"] == REPORT_DEFAULTS
+
+
+def test_reports_credit_the_board_a_job_came_from():
+    match = Match(Job("remoteok", "1", "Engineer", "Acme", "https://remoteok.com/1", id=1), 0.5)
+    day = date(2026, 10, 17)
+    assert "via Remote OK" in markdown([match], day)
+    assert "via Remote OK" in html_page([match], day)
+    assert export_row(1, match)["source"] == "Remote OK"
+
+
+def test_unknown_source_is_shown_by_name():
+    assert source_label("mystery") == "mystery"
