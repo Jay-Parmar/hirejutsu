@@ -4,7 +4,8 @@ import pytest
 from fakes import FakeClient, board_config, fixture
 
 from hirejutsu.companies import Company
-from hirejutsu.sources.breezy import Breezy, salary
+from hirejutsu.salary import parse_salary
+from hirejutsu.sources.breezy import Breezy
 
 API = "https://akt.breezy.hr/json"
 
@@ -57,4 +58,4 @@ def test_remote_details_win_over_the_remote_flag(tmp_path, details, flag, expect
     ("", {}),
 ])
 def test_salary_text(text, expected):
-    assert salary(text) == expected
+    assert parse_salary(text) == expected
