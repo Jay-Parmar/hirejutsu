@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from fakes import FakeClient
 
@@ -43,6 +45,17 @@ def test_query_defaults(tmp_path):
     assert query.keywords == []
     assert query.max_age_days == 14
     assert not query.wants_remote
+
+
+def test_query_is_recent_uses_max_age():
+    query = Query(max_age_days=7)
+    now = datetime.now(timezone.utc)
+    assert query.is_recent(now - timedelta(days=6))
+    assert not query.is_recent(now - timedelta(days=8))
+
+
+def test_query_is_recent_keeps_undated_jobs():
+    assert Query(max_age_days=7).is_recent(None)
 
 
 def test_source_settings_merge_defaults(tmp_path):
