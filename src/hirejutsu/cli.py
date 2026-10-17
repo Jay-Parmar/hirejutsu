@@ -7,11 +7,11 @@ from rich.markup import escape
 
 from . import __version__
 from .app import App
-from .commands import fetch, setup
+from .commands import daily, fetch, setup
 from .config import HOME_ENV, resolve_home
 from .errors import HirejutsuError
 
-COMMANDS = [setup, fetch]
+COMMANDS = [setup, fetch, daily]
 
 
 def build_parser() -> argparse.ArgumentParser:
