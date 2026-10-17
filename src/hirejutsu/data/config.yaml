@@ -1,0 +1,20 @@
+# hirejutsu config
+# Paths can use ~ and env vars. Relative paths are relative to this folder.
+
+# Your resume: pdf, docx, txt or md.
+resume: resume.pdf
+
+profile:
+  # Roles you want. Leave empty to use the titles found in your resume.
+  titles: []
+  # Extra skills to count on top of the ones found in your resume.
+  skills: []
+  # Where you can work. "remote" matches remote jobs.
+  locations: [remote]
+
+ranking:
+  # How many jobs to pick each day.
+  top: 10
+
+# Where daily reports are written.
+reports_dir: reports
