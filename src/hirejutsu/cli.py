@@ -11,7 +11,7 @@ from .commands import ai, companies, daily, doctor, explain, fetch, notify, repo
 from .config import HOME_ENV, resolve_home
 from .errors import HirejutsuError
 
-COMMANDS = [setup, resume, fetch, daily, explain, report, track, notify, schedule, ai, companies, doctor]
+COMMANDS = [setup, resume, fetch, companies, daily, explain, report, track, notify, schedule, ai, doctor]
 
 
 def build_parser() -> argparse.ArgumentParser:
