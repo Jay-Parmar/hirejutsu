@@ -17,7 +17,7 @@ from .config import Config
 from .errors import HirejutsuError
 from .models import Job, Match
 
-REPORT_DEFAULTS = {"formats": ["md", "html"], "keep_days": 60}
+REPORT_DEFAULTS = {"formats": ["md", "html"], "open": False, "keep_days": 60}
 FORMATS = ("md", "html", "csv", "json")
 EXPORT_FIELDS = [
     "rank", "id", "score", "title", "company", "location", "remote",
