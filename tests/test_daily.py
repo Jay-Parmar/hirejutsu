@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
+from fakes import CLAUDE_URL, FakeClient, claude_scorer
 
 from hirejutsu.config import Config
 from hirejutsu.daily import candidates, pick_today
@@ -55,3 +56,22 @@ def test_ranking_age_limit_wins_over_the_search_one(store, tmp_path):
     store.upsert_jobs([job("a", posted_at=NOW - timedelta(days=20))], NOW)
     config = Config({"search": {"max_age_days": 14}, "ranking": {"max_age_days": 30}}, tmp_path)
     assert len(pick_today(store, config, Profile(skills=["python"]), NOW)) == 1
+
+
+def test_pick_today_leaves_ai_off_by_default(store, tmp_path):
+    store.upsert_jobs([job("a")], NOW)
+    client = FakeClient()
+    pick_today(store, Config({}, tmp_path), Profile(skills=["python"]), NOW, client=client)
+    assert client.calls == []
+
+
+def test_pick_today_lets_the_ai_rerank_a_longer_shortlist(store, tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    store.upsert_jobs([job("a", description="python django"), job("b")], NOW)
+    ids = {stored.external_id: stored.id for stored in store.find_jobs()}
+    client = FakeClient({CLAUDE_URL: claude_scorer({ids["a"]: 0, ids["b"]: 10})})
+    config = Config({"ranking": {"top": 1}, "ai": {"enabled": True, "candidates": 2}}, tmp_path)
+    profile = Profile(text="Python developer", skills=["python", "django"])
+    matches = pick_today(store, config, profile, NOW, client=client)
+    assert [match.job.external_id for match in matches] == ["b"]
+    assert store.picks(NOW.date())[0].reasons[0] == "AI: Fit 10"
