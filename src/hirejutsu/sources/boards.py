@@ -19,6 +19,8 @@ log = logging.getLogger(__name__)
 PERIODS = {"yearly": "year", "monthly": "month", "weekly": "week", "daily": "day", "hourly": "hour"}
 # What jobspy logs when a board refuses us for a while: HTTP 429, a captcha or a block page.
 BLOCKED = re.compile(r"\b429\b|recaptcha|rate limited|blocked", re.IGNORECASE)
+# LinkedIn job pages sometimes leak the end of a CSS class attribute into the description.
+CLASS_JUNK = re.compile(r'^[^\n]*\]:[^\n]*?">\s*')
 
 
 class _Recorder(logging.Handler):
@@ -55,6 +57,10 @@ def _text(row: dict, key: str) -> str:
 def _tags(row: dict) -> list[str]:
     """Naukri's skills, which jobspy joins with commas."""
     return [tag for tag in map(clean, _text(row, "skills").split(",")) if tag]
+
+
+def _description(row: dict) -> str:
+    return CLASS_JUNK.sub("", html_to_text(_value(row, "description")))
 
 
 def _is_remote(place: str) -> bool:
@@ -139,7 +145,7 @@ class Board(Source):
             url=url,
             location=_text(row, "location"),
             remote=self.remote(row),
-            description=html_to_text(_value(row, "description")),
+            description=_description(row),
             posted_at=parse_date(_value(row, "date_posted")),
             salary_min=_value(row, "min_amount"),
             salary_max=_value(row, "max_amount"),
@@ -183,3 +189,21 @@ class Naukri(Board):
     def remote(self, row: dict) -> bool | None:
         mode = _value(row, "work_from_home_type")
         return mode == "Remote" if mode else super().remote(row)
+
+
+@register
+class LinkedIn(Board):
+    name = "linkedin"
+    label = "LinkedIn"
+    site = "linkedin"
+    # Each description is one more request, and LinkedIn starts refusing requests quickly.
+    defaults = {**Board.defaults, "delay_seconds": 30, "descriptions": False}
+
+    def places(self) -> list[str]:
+        # The logged-out search has no remote filter, so a "remote" search finds on-site jobs anywhere.
+        cities = [place for place in super().places() if not _is_remote(place)]
+        if not cities:
+            raise HirejutsuError(
+                "LinkedIn can only search cities when logged out. Add a city to profile.locations."
+            )
+        return cities
