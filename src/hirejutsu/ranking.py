@@ -1,11 +1,12 @@
 """Scoring jobs against the profile and picking the best ones."""
 
-import re
 from collections import Counter
 
 from .models import Job, Match, Profile
 
 RANKING_DEFAULTS = {"top": 10, "per_company": 2}
+
+WORD_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789")
 
 
 def rank(jobs: list[Job], profile: Profile, settings: dict) -> list[Match]:
@@ -23,7 +24,14 @@ def score(job: Job, profile: Profile) -> Match:
 
 def has_term(text: str, term: str) -> bool:
     """True if term appears in text as a whole word. Works for terms like c++ and node.js."""
-    return re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text) is not None
+    # A find loop is many times faster than a regex with a lookbehind, and this runs for every skill of every job.
+    start = text.find(term)
+    while start != -1:
+        end = start + len(term)
+        if (start == 0 or text[start - 1] not in WORD_CHARS) and (end == len(text) or text[end] not in WORD_CHARS):
+            return True
+        start = text.find(term, start + 1)
+    return False
 
 
 def pick(matches: list[Match], top: int, per_company: int) -> list[Match]:

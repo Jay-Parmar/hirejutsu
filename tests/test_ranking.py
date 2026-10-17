@@ -1,5 +1,8 @@
+import random
+import time
+
 from hirejutsu.models import Job, Profile
-from hirejutsu.ranking import RANKING_DEFAULTS, rank
+from hirejutsu.ranking import RANKING_DEFAULTS, has_term, rank
 
 
 def job(external_id, title, company="Acme", description=""):
@@ -11,6 +14,50 @@ def settings(**kwargs):
 
 
 PROFILE = Profile(text="", skills=["python", "django", "aws"], titles=["Backend Engineer"])
+
+VOCAB = (
+    "python django kafka aws docker react java go postgresql redis we build scalable reliable services for "
+    "customers you will own features end to end with product design and data teams review code mentor "
+    "engineers improve our systems cloud infrastructure distributed apis testing observability"
+).split()
+MANY_SKILLS = [
+    "python", "django", "kafka", "aws", "docker", "react", "java", "go", "postgresql", "redis", "c++", "c#",
+    "node.js", "machine learning", "ci/cd", ".net", "elixir", "haskell", "scala", "spark", "airflow",
+    "terraform", "kubernetes", "graphql", "rust", "flutter", "swift", "kotlin", "php", "ruby",
+]
+
+
+def synthetic_jobs(count):
+    rng = random.Random(7)
+    titles = ["Backend Engineer", "Senior Software Engineer", "Data Engineer", "Frontend Developer", "Sales Engineer"]
+    return [
+        Job("demo", str(n), rng.choice(titles), f"Company {n % 1000}", f"https://x/{n}",
+            description=" ".join(rng.choices(VOCAB, k=300)), id=n)
+        for n in range(count)
+    ]
+
+
+def test_has_term_needs_word_boundaries():
+    assert has_term("we use python daily", "python")
+    assert has_term("python", "python")
+    assert not has_term("pythonic code in python3", "python")
+    assert has_term("pythonic code, then python.", "python")
+
+
+def test_has_term_handles_symbols():
+    assert has_term("c++ and node.js", "c++")
+    assert has_term("c++ and node.js", "node.js")
+    assert has_term("node.js", "node")
+    assert not has_term("abc++", "c++")
+
+
+def test_rank_handles_twenty_thousand_jobs_quickly():
+    jobs = synthetic_jobs(20_000)
+    profile = Profile(text=" ".join(VOCAB), skills=MANY_SKILLS, titles=["Backend Engineer"])
+    start = time.perf_counter()
+    matches = rank(jobs, profile, settings())
+    assert time.perf_counter() - start < 5
+    assert len(matches) == 10
 
 
 def test_rank_orders_by_skill_overlap():
