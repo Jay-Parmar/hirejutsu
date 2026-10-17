@@ -6,6 +6,7 @@ These sites forbid scraping in their terms, so every board here is off until the
 import logging
 import re
 import time
+from datetime import datetime, timedelta, timezone
 
 from ..errors import HirejutsuError
 from ..models import Job
@@ -49,6 +50,11 @@ def _value(row: dict, key: str):
 
 def _text(row: dict, key: str) -> str:
     return clean(_value(row, key))
+
+
+def _tags(row: dict) -> list[str]:
+    """Naukri's skills, which jobspy joins with commas."""
+    return [tag for tag in map(clean, _text(row, "skills").split(",")) if tag]
 
 
 def _is_remote(place: str) -> bool:
@@ -141,6 +147,7 @@ class Board(Source):
             salary_period=PERIODS.get(_value(row, "interval"), ""),
             employment_type=_text(row, "job_type"),
             department=_text(row, "job_function"),
+            tags=_tags(row),
         )
 
     def remote(self, row: dict) -> bool | None:
@@ -154,3 +161,25 @@ class Indeed(Board):
     label = "Indeed"
     site = "indeed"
     defaults = {**Board.defaults, "results": 50, "country": "India"}
+
+
+@register
+class Naukri(Board):
+    name = "naukri"
+    label = "Naukri"
+    site = "naukri"
+    defaults = {**Board.defaults, "results": 20}
+
+    def fetch(self) -> list[Job]:
+        # Searches have no age limit (see search), so old jobs are dropped here.
+        oldest = (datetime.now(timezone.utc) - timedelta(days=self.query.max_age_days)).date()
+        return [job for job in super().fetch() if not job.posted_at or job.posted_at.date() >= oldest]
+
+    def search(self, keyword: str, place: str) -> dict:
+        # Naukri only filters on a bare city name, and an age limit makes it sort by date
+        # instead of relevance, which buries the jobs that match.
+        return {**super().search(keyword, place.split(",")[0]), "hours_old": None}
+
+    def remote(self, row: dict) -> bool | None:
+        mode = _value(row, "work_from_home_type")
+        return mode == "Remote" if mode else super().remote(row)
