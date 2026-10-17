@@ -71,7 +71,45 @@ def test_rank_orders_by_skill_overlap():
 
 def test_rank_explains_matches():
     match = rank([job("1", "Engineer", description="Python and AWS")], PROFILE, settings())[0]
-    assert match.reasons == ["Skills: python, aws"]
+    assert match.reasons == ["Skills: python, aws (2 of 3)"]
+
+
+def test_rare_skills_count_more_than_common_ones():
+    jobs = [
+        job("1", "Engineer", company="A", description="python django"),
+        job("2", "Engineer", company="B", description="python django"),
+        job("3", "Engineer", company="C", description="python kafka"),
+    ]
+    matches = rank(jobs, Profile(skills=["python", "django", "kafka"]), settings())
+    assert matches[0].job.external_id == "3"
+
+
+def test_skill_in_the_title_counts_more():
+    jobs = [
+        job("1", "Backend Engineer", company="A", description="python and django"),
+        job("2", "Python Engineer", company="B", description="python and django"),
+    ]
+    assert rank(jobs, Profile(skills=["python", "django", "kafka"]), settings())[0].job.external_id == "2"
+
+
+def test_long_skill_lists_still_reach_full_marks():
+    skills = [f"skill{n}" for n in range(16)]
+    jobs = [
+        job("1", "Engineer", company="A", description=" ".join(skills[:8])),
+        job("2", "Engineer", company="B", description=" ".join(skills[8:])),
+    ]
+    matches = rank(jobs, Profile(skills=skills), settings(weights={"skills": 1}))
+    assert [match.score for match in matches] == [1.0, 1.0]
+
+
+def test_skills_reason_names_the_rarest_three():
+    jobs = [
+        job("1", "Engineer", company="A", description="python django aws kafka redis"),
+        job("2", "Engineer", company="B", description="python django aws"),
+        job("3", "Engineer", company="C", description="python django"),
+    ]
+    matches = rank(jobs, Profile(skills=["python", "django", "aws", "kafka", "redis"]), settings())
+    assert matches[0].reasons == ["Skills: kafka, redis, aws (5 of 5)"]
 
 
 def test_rank_matches_whole_words_only():
