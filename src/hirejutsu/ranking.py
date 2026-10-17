@@ -78,6 +78,18 @@ STOPWORDS = frozenset(
 
 
 @dataclass
+class Breakdown:
+    """How one job scores: each part and its weight, the filters it passes or fails, and the reasons."""
+
+    job: Job
+    score: float
+    parts: dict[str, float]
+    weights: dict[str, float]
+    checks: list[tuple[str, str]]
+    reasons: list[str]
+
+
+@dataclass
 class _Entry:
     """A candidate job and what is known about it so far."""
 
@@ -125,6 +137,20 @@ def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None
         if entry.score >= settings["min_score"]
     ]
     return pick(matches, settings["top"], settings["per_company"])
+
+
+def breakdown(job: Job, jobs: list[Job], profile: Profile, settings: dict, now: datetime | None = None) -> Breakdown:
+    """Score one job the way rank does, with jobs as the other candidates."""
+    if all(other.id != job.id for other in jobs):
+        jobs = [*jobs, job]
+    run = _prepare(jobs, profile, settings, now)
+    text = _text(job)
+    entry = _entry(job, text, run)
+    _score_quick(entry, run)
+    _score_fully(entry, text, run)
+    parts = {name: entry.parts[name] for name in RANKING_DEFAULTS["weights"]}
+    weights = {name: settings["weights"].get(name, 0) for name in parts}
+    return Breakdown(job, round(entry.score, 3), parts, weights, _all_checks(entry, text, run), _reasons(entry, run))
 
 
 def has_term(text: str, term: str) -> bool:
@@ -206,6 +232,19 @@ def _checks(job: Job, text: str, run: _Run) -> list[tuple[str, str]]:
     if settings["location_mode"] == "filter" and (run.places or run.wants_remote):
         outside = _place(job, run) == ""
         checks.append(("location", f"{job.location or 'Remote'} is not one of your locations" if outside else ""))
+    return checks
+
+
+def _all_checks(entry: _Entry, text: str, run: _Run) -> list[tuple[str, str]]:
+    """The hard filters plus the ones rank applies after scoring."""
+    checks = _checks(entry.job, text, run)
+    checks.append(("relevance", "" if _relevant(entry) else "mentions none of your skills and the title is not close"))
+    min_score = run.settings["min_score"]
+    if min_score:
+        checks.append(("min_score", f"scores below {min_score}" if entry.score < min_score else ""))
+    if not any(problem for _, problem in checks):
+        listed = any(other.job.id == entry.job.id for other in run.shortlist)
+        checks.append(("shortlist", "" if listed else f"not among the {len(run.shortlist)} best by skills and title"))
     return checks
 
 
