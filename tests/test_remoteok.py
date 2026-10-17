@@ -33,6 +33,12 @@ def test_repairs_double_encoded_text(tmp_path):
     assert jobs["1137482"].location == "Ciudad de M\xe9xico, Mexico"
 
 
+def test_unescapes_names(tmp_path):
+    feed = fixture("remoteok.json")
+    feed[1]["company"] = "Transportation Partners &amp; Logistics"
+    assert fetch(tmp_path, feed)[0].company == "Transportation Partners & Logistics"
+
+
 def test_fix_text_leaves_good_text_alone():
     assert fix_text("caf\xe9") == "caf\xe9"
     assert fix_text("don\N{RIGHT SINGLE QUOTATION MARK}t") == "don\N{RIGHT SINGLE QUOTATION MARK}t"
