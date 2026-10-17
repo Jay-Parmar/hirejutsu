@@ -9,6 +9,7 @@ from ..companies import Company, companies_for
 from ..errors import HirejutsuError
 from ..models import Job
 from ..store import Store
+from ..text import clean
 from .base import Source
 
 log = logging.getLogger(__name__)
@@ -16,6 +17,8 @@ log = logging.getLogger(__name__)
 # Too common in job titles to tell one job from another.
 STOP_WORDS = {"a", "an", "and", "at", "de", "for", "in", "of", "on", "or", "the", "to", "with"}
 OLDEST = datetime.min.replace(tzinfo=timezone.utc)
+PERIODS = {"year": "year", "annual": "year", "month": "month", "week": "week", "day": "day", "daily": "day",
+           "hour": "hour"}
 
 
 def title_words(keywords: list[str]) -> tuple[str, ...]:
@@ -34,6 +37,18 @@ def remote_from(text: str | None) -> bool | None:
     if re.search(r"hybrid|on-?site|on_site|office|flex", text):
         return False
     return True if "remote" in text else None
+
+
+def pay_period(text: str | None) -> str:
+    """year, month, week, day or hour from values like per-year-salary, 1 MONTH or yearly."""
+    text = (text or "").lower()
+    return next((period for word, period in PERIODS.items() if word in text), "")
+
+
+def tags(*values) -> list[str]:
+    """The given values cleaned up, without blanks or repeats."""
+    cleaned = (clean(str(value)) for value in values if value)
+    return [tag for tag in dict.fromkeys(cleaned) if tag]
 
 
 class AtsSource(Source):
