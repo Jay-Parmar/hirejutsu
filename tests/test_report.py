@@ -1,6 +1,9 @@
+import codecs
+import csv
 import io
+import json
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from rich.console import Console
@@ -144,6 +147,39 @@ def test_write_reports_uses_configured_formats(tmp_path):
     paths = write_reports([Match(job("a", id=1), 0.5)], config, DAY)
     assert paths == [tmp_path / "reports" / "2026-10-17.html"]
     assert not (tmp_path / "reports" / "2026-10-17.md").exists()
+
+
+def export_picks():
+    first = job("a", id=7, location="Pune, India", remote=True, salary_min=1800000.0, salary_max=2500000.0,
+                salary_currency="INR", salary_period="year", posted_at=datetime(2026, 10, 15, 9, 30, tzinfo=timezone.utc))
+    return [Match(first, 0.75, ["Skills: python", "Title matches"]), Match(job("b", id=8), 0.5)]
+
+
+def test_csv_report_has_one_row_per_pick(tmp_path):
+    [path] = write_reports(export_picks(), Config({"report": {"formats": ["csv"]}}, tmp_path), DAY)
+    assert path == tmp_path / "reports" / "2026-10-17.csv"
+    assert path.read_bytes().startswith(codecs.BOM_UTF8)
+    rows = list(csv.DictReader(io.StringIO(path.read_text(encoding="utf-8-sig"))))
+    assert rows[0] == {
+        "rank": "1", "id": "7", "score": "0.75", "title": "Python Engineer a", "company": "a",
+        "location": "Pune, India", "remote": "True", "salary_min": "1800000.0", "salary_max": "2500000.0",
+        "salary_currency": "INR", "salary_period": "year", "posted_at": "2026-10-15T09:30:00+00:00",
+        "url": "https://x/a", "reasons": "Skills: python; Title matches",
+    }
+    assert (rows[1]["rank"], rows[1]["id"], rows[1]["remote"], rows[1]["posted_at"]) == ("2", "8", "", "")
+
+
+def test_json_report_has_one_object_per_pick(tmp_path):
+    [path] = write_reports(export_picks(), Config({"report": {"formats": ["json"]}}, tmp_path), DAY)
+    assert path == tmp_path / "reports" / "2026-10-17.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    assert data[0] == {
+        "rank": 1, "id": 7, "score": 0.75, "title": "Python Engineer a", "company": "a",
+        "location": "Pune, India", "remote": True, "salary_min": 1800000.0, "salary_max": 2500000.0,
+        "salary_currency": "INR", "salary_period": "year", "posted_at": "2026-10-15T09:30:00+00:00",
+        "url": "https://x/a", "reasons": ["Skills: python", "Title matches"],
+    }
+    assert (data[1]["rank"], data[1]["id"], data[1]["remote"], data[1]["posted_at"]) == (2, 8, None, None)
 
 
 def test_unknown_report_format_is_an_error(tmp_path):
