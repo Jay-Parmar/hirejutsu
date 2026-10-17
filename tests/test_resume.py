@@ -107,3 +107,18 @@ def test_find_skills_with_symbols_in_names():
 
 def test_find_skills_reads_js_libraries_as_javascript():
     assert find_skills("APIs in node.js") == ["Node.js", "JavaScript"]
+
+
+def test_short_and_plain_word_skills_need_their_exact_case():
+    plain = "Ready to go the extra mile, react calmly, spring into action. A swift fix, no rust, each node, c and r."
+    assert find_skills(plain) == []
+    skills = "Go, R, C, Swift, Rust, Spring, React, Node and Excel"
+    assert find_skills(skills) == ["Go", "R", "C", "Swift", "Rust", "Spring", "React", "Node.js", "Excel"]
+
+
+def test_short_skills_are_not_read_inside_joined_words():
+    assert find_skills("R&D for the C-suite, Go-live, USB-C, C++ and J. R. Smith") == ["C++"]
+
+
+def test_exact_case_skills_have_aliases_in_any_case():
+    assert find_skills("golang, reactjs and nodejs") == ["Go", "React", "Node.js"]

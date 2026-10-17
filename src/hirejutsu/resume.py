@@ -63,14 +63,15 @@ def read_docx(path: Path) -> str:
 
 
 @cache
-def skill_terms() -> list[tuple[str, str]]:
-    """Every spelling of every known skill, paired with the skill's main name."""
+def skill_terms() -> list[tuple[str, str, bool]]:
+    """Every spelling of every known skill as (spelling, main name, exact case only)."""
     text = resources.files("hirejutsu").joinpath("data", "skills.txt").read_text(encoding="utf-8")
     terms = []
     for line in text.splitlines():
         if line.strip() and not line.startswith("#"):
             names = [name.strip() for name in line.split("|")]
-            terms += [(name, names[0]) for name in names]
+            main = names[0].lstrip("!")
+            terms += [(name.lstrip("!"), main, name.startswith("!")) for name in names]
     return terms
 
 
@@ -78,14 +79,22 @@ def find_skills(text: str) -> list[str]:
     """Known skills in text by main name, in the order they are first mentioned."""
     lowered = text.lower()
     first: dict[str, int] = {}
-    for term, name in skill_terms():
+    for term, name, exact in skill_terms():
         # A plain substring test skips most terms without running a regex.
         if term.lower() not in lowered:
             continue
-        match = re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text, re.IGNORECASE)
+        match = _term_pattern(term, exact).search(text)
         if match and match.start() < first.get(name, len(text)):
             first[name] = match.start()
     return sorted(first, key=first.get)
+
+
+def _term_pattern(term: str, exact: bool) -> re.Pattern:
+    if exact:
+        # These names are short or plain words, so they must not touch - & . + or #
+        # either: that rules out C-suite, R&D, Go-live, C++ and initials like R.
+        return re.compile(rf"(?<![\w&.+#-]){re.escape(term)}(?![\w&.+#-])")
+    return re.compile(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", re.IGNORECASE)
 
 
 def load_profile(config: Config) -> Profile:
