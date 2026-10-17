@@ -57,7 +57,8 @@ def age(job: Job, today: date) -> str:
 
 
 def print_picks(console, matches: list[Match], title: str | None = None) -> None:
-    table = Table("#", "ID", "Score", "Job", "Company", "Location", title=title)
+    today = date.today()
+    table = Table("#", "ID", "Score", "Job", "Company", "Location", "Salary", "Posted", title=title)
     for number, match in enumerate(matches, start=1):
         job = match.job
         table.add_row(
@@ -67,6 +68,8 @@ def print_picks(console, matches: list[Match], title: str | None = None) -> None
             Text(job.title, style=Style(link=job.url)),
             Text(job.company),
             Text(where(match)),
+            Text(salary(job)),
+            age(job, today),
         )
     console.print(table)
     for number, match in enumerate(matches, start=1):
