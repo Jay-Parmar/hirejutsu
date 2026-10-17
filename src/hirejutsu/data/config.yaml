@@ -75,3 +75,39 @@ report:
   open: false
   # Delete reports older than this many days. 0 keeps them all.
   keep_days: 60
+
+# Send the daily picks to you. Nothing is sent until you set enabled: true on a channel.
+# Passwords, tokens and webhook URLs are read from the environment variables named by *_env.
+notify:
+  email:
+    enabled: false
+    host: smtp.gmail.com
+    # starttls with port 587, ssl with port 465, or none.
+    security: starttls
+    port: 587
+    username: you@gmail.com
+    # For Gmail this holds an app password, not your account password.
+    password_env: HIREJUTSU_SMTP_PASSWORD
+    # Sender address. Empty means the username.
+    from: ""
+    to: [you@gmail.com]
+    # Attach the day's report files.
+    attach: false
+  telegram:
+    enabled: false
+    bot_token_env: HIREJUTSU_TELEGRAM_TOKEN
+    # Your chat id, see the README.
+    chat_id: ""
+  discord:
+    enabled: false
+    webhook_url_env: HIREJUTSU_DISCORD_WEBHOOK
+  slack:
+    enabled: false
+    webhook_url_env: HIREJUTSU_SLACK_WEBHOOK
+  ntfy:
+    enabled: false
+    server: https://ntfy.sh
+    # Anyone who knows the topic can read it, so pick one that is hard to guess.
+    topic: ""
+    # Only needed for topics that require a login.
+    token_env: ""
