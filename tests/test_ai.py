@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -118,3 +119,36 @@ def test_ask_error_includes_the_api_message():
     client = FakeClient({CLAUDE_URL: requests.HTTPError("404 Client Error", response=response)})
     with pytest.raises(HirejutsuError, match="claude-nope not found"):
         ai.ask("s", "p", settings(model="claude-nope"), client)
+
+
+def test_parse_scores_reads_a_json_list():
+    reply = '[{"id": 1, "score": 8, "reason": "Python fits"}, {"id": 2, "score": 3.5, "reason": "Needs Go"}]'
+    assert ai.parse_scores(reply, {1, 2}) == {1: (8.0, "Python fits"), 2: (3.5, "Needs Go")}
+
+
+def test_parse_scores_ignores_code_fences_and_chatter():
+    reply = 'Scores for jobs [1]:\n```json\n[{"id": 1, "score": 7, "reason": "Good"}]\n```\nHope this helps!'
+    assert ai.parse_scores(reply, {1}) == {1: (7.0, "Good")}
+
+
+def test_parse_scores_accepts_a_wrapped_list_and_strings():
+    reply = '{"jobs": [{"id": "1", "score": "6", "reason": "Fine"}]}'
+    assert ai.parse_scores(reply, {1}) == {1: (6.0, "Fine")}
+
+
+def test_parse_scores_skips_bad_entries():
+    reply = json.dumps([
+        {"id": 1, "score": 11},
+        {"id": 2},
+        {"id": 99, "score": 5},
+        {"id": "x", "score": 5},
+        "junk",
+        {"id": 3, "score": 4, "reason": "Two\nlines"},
+        {"id": 4, "score": 0},
+    ])
+    assert ai.parse_scores(reply, {1, 2, 3, 4}) == {3: (4.0, "Two lines"), 4: (0.0, "")}
+
+
+def test_parse_scores_without_usable_json():
+    assert ai.parse_scores("Sorry, I can't help with that.", {1}) == {}
+    assert ai.parse_scores('[{"id": 1, "score": 5', {1}) == {}

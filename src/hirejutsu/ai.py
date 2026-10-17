@@ -1,12 +1,15 @@
 """Optional AI second opinion on the best matches."""
 
+import json
 import os
+import re
 
 import requests
 
 from . import http
 from .config import Config
 from .errors import HirejutsuError
+from .text import clean
 
 AI_DEFAULTS = {
     "enabled": False,
@@ -97,3 +100,29 @@ def _ask_openai(system: str, prompt: str, settings: dict, client) -> str:
         headers={"Authorization": f"Bearer {key}"} if key else None,
     )
     return reply["choices"][0]["message"]["content"] or ""
+
+
+def parse_scores(reply: str, job_ids: set[int]) -> dict[int, tuple[float, str]]:
+    """Score and reason by job id from the model's JSON answer. Malformed entries are skipped."""
+    scores = {}
+    for item in _json_list(reply):
+        try:
+            job_id, score = int(item["id"]), float(item["score"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if job_id in job_ids and 0 <= score <= 10:
+            scores[job_id] = (score, clean(str(item.get("reason") or "")))
+    return scores
+
+
+def _json_list(reply: str) -> list:
+    """The first JSON list of objects in the reply. Models like to wrap it in code fences or prose."""
+    decoder = json.JSONDecoder()
+    for found in re.finditer(r"\[", reply):
+        try:
+            value, _ = decoder.raw_decode(reply, found.start())
+        except ValueError:
+            continue
+        if any(isinstance(item, dict) for item in value):
+            return value
+    return []
