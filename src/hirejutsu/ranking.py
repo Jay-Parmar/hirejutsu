@@ -16,6 +16,10 @@ RANKING_DEFAULTS = {
     "half_life_days": 3,
     "seniority_tolerance": 2,
     "location_mode": "filter",
+    "exclude_keywords": [],
+    "exclude_title_words": [],
+    "exclude_companies": [],
+    "require_keywords": [],
 }
 
 # Score for a part that cannot be judged, such as skills when the profile lists none.
@@ -102,7 +106,11 @@ class _Run:
 def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None = None) -> list[Match]:
     """Best matches first, at most settings["top"] of them."""
     run = _Run(profile, settings, now or datetime.now().astimezone())
-    pool = [_entry(job, run) for job in jobs if not any(problem for _, problem in _checks(job, run))]
+    pool = []
+    for job in jobs:
+        text = _text(job)
+        if not any(problem for _, problem in _checks(job, text, run)):
+            pool.append(_entry(job, text, run))
     _learn(pool, run)
     for entry in pool:
         entry.parts = {
@@ -158,17 +166,38 @@ def _places(locations: list[str]) -> dict[str, str]:
     return places
 
 
-def _checks(job: Job, run: _Run) -> list[tuple[str, str]]:
+def _text(job: Job) -> str:
+    return f"{job.title}\n{job.description}".lower()
+
+
+def _checks(job: Job, text: str, run: _Run) -> list[tuple[str, str]]:
     """The hard filters that are on, each with why the job fails it, or "" when it passes."""
+    settings = run.settings
     checks = []
-    if run.settings["location_mode"] == "filter" and (run.places or run.wants_remote):
+    if settings["exclude_companies"]:
+        hit = _first_term(job.company.lower(), settings["exclude_companies"])
+        checks.append(("exclude_companies", f"company matches {hit}" if hit else ""))
+    if settings["exclude_title_words"]:
+        hit = _first_term(job.title.lower(), settings["exclude_title_words"])
+        checks.append(("exclude_title_words", f"title has {hit}" if hit else ""))
+    if settings["exclude_keywords"]:
+        hit = _first_term(text, settings["exclude_keywords"])
+        checks.append(("exclude_keywords", f"mentions {hit}" if hit else ""))
+    if settings["require_keywords"]:
+        hit = _first_term(text, settings["require_keywords"])
+        checks.append(("require_keywords", "" if hit else "mentions none of them"))
+    if settings["location_mode"] == "filter" and (run.places or run.wants_remote):
         outside = _place(job, run) == ""
         checks.append(("location", f"{job.location or 'Remote'} is not one of your locations" if outside else ""))
     return checks
 
 
-def _entry(job: Job, run: _Run) -> _Entry:
-    text = f"{job.title}\n{job.description}".lower()
+def _first_term(text: str, terms: list[str]) -> str | None:
+    """The first of terms that text has as a whole word, or None."""
+    return next((term for term in terms if has_term(text, term.lower())), None)
+
+
+def _entry(job: Job, text: str, run: _Run) -> _Entry:
     found = [skill for skill in run.skills if has_term(text, skill)]
     return _Entry(job, found, _title_words(job.title), _years_asked(text))
 
