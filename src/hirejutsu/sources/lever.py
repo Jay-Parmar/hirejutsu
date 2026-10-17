@@ -8,8 +8,9 @@ from ..text import clean, html_to_text, parse_date
 from . import register
 from .ats import AtsSource, pay_period, remote_from, tags
 
-US_API = "https://api.lever.co/v0/postings"
-EU_API = "https://api.eu.lever.co/v0/postings"
+# The same API as on api.lever.co, but these hosts gzip it: a 13 MB board comes down as 0.8 MB.
+US_API = "https://jobs.lever.co/v0/postings"
+EU_API = "https://jobs.eu.lever.co/v0/postings"
 
 
 @register

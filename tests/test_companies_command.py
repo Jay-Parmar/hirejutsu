@@ -9,7 +9,7 @@ from hirejutsu.cli import main
 from hirejutsu.models import Job
 from hirejutsu.store import Store
 
-LEVER = "https://api.lever.co/v0/postings"
+LEVER = "https://jobs.lever.co/v0/postings"
 GREENHOUSE = "https://boards-api.greenhouse.io/v1/boards"
 
 
@@ -171,7 +171,7 @@ def test_discover_adds_live_boards_linked_from_saved_jobs(tmp_path, client, caps
     assert "Skipped lever:ghost" in out
     assert user_file(tmp_path) == {"lever": {"zoox": "Zoox"}, "removed": ["lever:gone"]}
     assert sorted(call[1] for call in client.calls) == [
-        "https://api.eu.lever.co/v0/postings/ghost", f"{LEVER}/ghost", f"{LEVER}/zoox",
+        "https://jobs.eu.lever.co/v0/postings/ghost", f"{LEVER}/ghost", f"{LEVER}/zoox",
     ]
 
 

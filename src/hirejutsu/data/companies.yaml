@@ -172,7 +172,7 @@ lever:
   brevo: Brevo
   brightedge: BrightEdge
   brillio-2: Brillio
-  cirrus: Cirrus Logic  # EU host: api.eu.lever.co
+  cirrus: Cirrus Logic  # on the EU host, jobs.eu.lever.co
   cfsenergy: Commonwealth Fusion Systems
   coupa: Coupa
   cred: CRED
@@ -221,7 +221,7 @@ lever:
   pditechnologies: PDI Technologies
   pocketfm: Pocket FM
   pointclickcare: PointClickCare
-  quantinuum: Quantinuum  # EU host: api.eu.lever.co
+  quantinuum: Quantinuum  # on the EU host, jobs.eu.lever.co
   rover: Rover.com
   safe: Safe Security
   saviynt: Saviynt
@@ -241,7 +241,7 @@ lever:
   waabi: Waabi
   woven-by-toyota: Woven by Toyota
   xsolla: Xsolla
-  xtb: XTB  # EU host: api.eu.lever.co
+  xtb: XTB  # on the EU host, jobs.eu.lever.co
   zeta: Zeta
   zopa: Zopa
 ashby:

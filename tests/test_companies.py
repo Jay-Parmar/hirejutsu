@@ -128,6 +128,7 @@ def test_drop_companies_removes_and_remembers(tmp_path):
     ("https://jobs.lever.co/palantir/0b5a6c1e-7d9b-4c0e-9f1a-2b3c4d5e6f70/apply", ("lever", "palantir")),
     ("https://jobs.eu.lever.co/diabolocom/0b5a6c1e", ("lever", "diabolocom")),
     ("https://api.lever.co/v0/postings/zoox?mode=json", ("lever", "zoox")),
+    ("https://jobs.lever.co/v0/postings/zoox?mode=json", ("lever", "zoox")),
     ("https://jobs.ashbyhq.com/ramp/d84bbf19-572a-499c-9c87-0c154ce85caf", ("ashby", "ramp")),
     ("https://jobs.ashbyhq.com/hippocratic%20ai/123/application", ("ashby", "hippocratic ai")),
     ("https://jobs.ashbyhq.com/mistral.ai", ("ashby", "mistral.ai")),
