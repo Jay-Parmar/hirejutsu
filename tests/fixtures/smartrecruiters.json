@@ -1,0 +1,343 @@
+{
+  "offset": 0,
+  "limit": 100,
+  "totalFound": 3,
+  "content": [
+    {
+      "id": "744000156043929",
+      "name": "Sr Staff Inbound Product Manager - Partner Relationship Management(PRM)",
+      "uuid": "531ce3fe-9963-4bb8-a74a-5b6a7e3b7bbb",
+      "jobAdId": "c8957027-6270-408c-aa80-7d4b6c0df2d1",
+      "defaultJobAd": true,
+      "refNumber": "JB0076008",
+      "company": {
+        "identifier": "ServiceNow",
+        "name": "ServiceNow"
+      },
+      "releasedDate": "2026-10-16T16:28:12.166Z",
+      "location": {
+        "city": "Hyderabad",
+        "region": "Telangana",
+        "country": "in",
+        "address": "Plot No. 2, Survey No. 83/1, Orwell Block ,Knowledge City Raidurg Village, Serilingampally Mandal",
+        "postalCode": "500081",
+        "remote": false,
+        "hybrid": true,
+        "fullLocation": "Hyderabad, Telangana, India"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "2294174",
+        "label": "Product"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "customField": [
+        {
+          "fieldId": "60345fa28b4ba8595bef1863",
+          "fieldLabel": "Recruiting Team",
+          "valueId": "professional",
+          "valueLabel": "Professional"
+        },
+        {
+          "fieldId": "60345d5c5165a31b17288279",
+          "fieldLabel": "Region",
+          "valueId": "858884996eea4a49baa6231279f39054",
+          "valueLabel": "APAC - Asia Pacific"
+        },
+        {
+          "fieldId": "6034601b43915a29a4b3389b",
+          "fieldLabel": "Job Location",
+          "valueId": "L_HYD005",
+          "valueLabel": "Plot No. 2, Survey No. 83/1, Orwell Block ,Knowledge City, Hyderabad, 500081, India(L_HYD005)"
+        },
+        {
+          "fieldId": "60345e1a0b24a127cbdfa148",
+          "fieldLabel": "Employee Type",
+          "valueId": "0082f6cbe6154da19322cbab1f6aa5af",
+          "valueLabel": "Regular"
+        },
+        {
+          "fieldId": "5f63a78f1dae5c5c4e54ba2b",
+          "fieldLabel": "Department",
+          "valueId": "2294174",
+          "valueLabel": "Product"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "in",
+          "valueLabel": "India"
+        },
+        {
+          "fieldId": "5f63a78f1dae5c5c4e54ba2a",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "ServiceNow"
+        },
+        {
+          "fieldId": "603462175165a31b1728827d",
+          "fieldLabel": "Cost Center",
+          "valueId": "CC6058",
+          "valueLabel": "6058 Sales CRM BU"
+        },
+        {
+          "fieldId": "618ed92b8f5e5f110e5bfb95",
+          "fieldLabel": "Work Persona",
+          "valueId": "bf7551c6-9b06-4e7c-8217-3baf43edd060",
+          "valueLabel": "Flexible"
+        },
+        {
+          "fieldId": "690cc0e8c682c3dbadaa7d73",
+          "fieldLabel": "Job Posting Type",
+          "valueId": "professional",
+          "valueLabel": "Professional"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/ServiceNow/postings/744000156043929",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000156092899",
+      "name": "Sr Software Engineer - Veza",
+      "uuid": "f3e6cb0a-af66-4008-95d0-272bf34581c0",
+      "jobAdId": "76988de4-cd36-4246-a113-fad5956ebf76",
+      "defaultJobAd": true,
+      "refNumber": "JB0075316",
+      "company": {
+        "identifier": "ServiceNow",
+        "name": "ServiceNow"
+      },
+      "releasedDate": "2026-10-16T23:14:22.975Z",
+      "location": {
+        "city": "Radomlje",
+        "region": "SLOVENIA",
+        "country": "si",
+        "address": "Staretova ulica 7",
+        "postalCode": "1234",
+        "remote": true,
+        "hybrid": false,
+        "fullLocation": "Radomlje, SLOVENIA, Slovenia"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "2294038",
+        "label": "Engineering, Infrastructure and Operations"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "customField": [
+        {
+          "fieldId": "60345fa28b4ba8595bef1863",
+          "fieldLabel": "Recruiting Team",
+          "valueId": "professional",
+          "valueLabel": "Professional"
+        },
+        {
+          "fieldId": "60345d5c5165a31b17288279",
+          "fieldLabel": "Region",
+          "valueId": "395ee3093de740ba9cb8b3d35cb67e2d",
+          "valueLabel": "EMEA - Europe, Middle East and Africa"
+        },
+        {
+          "fieldId": "6034601b43915a29a4b3389b",
+          "fieldLabel": "Job Location",
+          "valueId": "L_RT_SVN",
+          "valueLabel": "Remote, Slovenia(L_RT_SVN)"
+        },
+        {
+          "fieldId": "60345e1a0b24a127cbdfa148",
+          "fieldLabel": "Employee Type",
+          "valueId": "0082f6cbe6154da19322cbab1f6aa5af",
+          "valueLabel": "Regular"
+        },
+        {
+          "fieldId": "5f63a78f1dae5c5c4e54ba2b",
+          "fieldLabel": "Department",
+          "valueId": "2294038",
+          "valueLabel": "Engineering, Infrastructure and Operations"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "si",
+          "valueLabel": "Slovenia"
+        },
+        {
+          "fieldId": "5f63a78f1dae5c5c4e54ba2a",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "ServiceNow"
+        },
+        {
+          "fieldId": "603462175165a31b1728827d",
+          "fieldLabel": "Cost Center",
+          "valueId": "CC6019",
+          "valueLabel": "6019 Veza Engineering"
+        },
+        {
+          "fieldId": "618ed92b8f5e5f110e5bfb95",
+          "fieldLabel": "Work Persona",
+          "valueId": "5530c877-6b63-4bf5-bde8-215ef35bf172",
+          "valueLabel": "Flexible or Remote"
+        },
+        {
+          "fieldId": "690cc0e8c682c3dbadaa7d73",
+          "fieldLabel": "Job Posting Type",
+          "valueId": "professional",
+          "valueLabel": "Professional"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/ServiceNow/postings/744000156092899",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    },
+    {
+      "id": "744000156093019",
+      "name": "Principal Software Engineer - Veza",
+      "uuid": "212bfb7e-c965-4521-ad87-bea7447acda4",
+      "jobAdId": "c4a04cc7-ce20-4cc6-bd75-5b6404760d24",
+      "defaultJobAd": true,
+      "refNumber": "JB0076129",
+      "company": {
+        "identifier": "ServiceNow",
+        "name": "ServiceNow"
+      },
+      "releasedDate": "2026-10-16T23:15:30.201Z",
+      "location": {
+        "city": "San Diego",
+        "region": "CALIFORNIA",
+        "country": "us",
+        "address": "4810 Eastgate Mall",
+        "postalCode": "92121",
+        "remote": false,
+        "hybrid": false,
+        "fullLocation": "San Diego, CALIFORNIA, United States"
+      },
+      "industry": {
+        "id": "it_and_services",
+        "label": "Information Technology And Services"
+      },
+      "department": {
+        "id": "2294038",
+        "label": "Engineering, Infrastructure and Operations"
+      },
+      "function": {
+        "id": "engineering",
+        "label": "Engineering"
+      },
+      "typeOfEmployment": {
+        "id": "permanent",
+        "label": "Full-time"
+      },
+      "experienceLevel": {
+        "id": "not_applicable",
+        "label": "Not Applicable"
+      },
+      "customField": [
+        {
+          "fieldId": "60345fa28b4ba8595bef1863",
+          "fieldLabel": "Recruiting Team",
+          "valueId": "professional",
+          "valueLabel": "Professional"
+        },
+        {
+          "fieldId": "60345d5c5165a31b17288279",
+          "fieldLabel": "Region",
+          "valueId": "722a833b93e4437798309f43c0d25990",
+          "valueLabel": "AMS - North America and Canada"
+        },
+        {
+          "fieldId": "6034601b43915a29a4b3389b",
+          "fieldLabel": "Job Location",
+          "valueId": "L_SAN003",
+          "valueLabel": "4810 Eastgate Mall, San Diego, California, 92121, United States of America(L_SAN003)"
+        },
+        {
+          "fieldId": "60345e1a0b24a127cbdfa148",
+          "fieldLabel": "Employee Type",
+          "valueId": "0082f6cbe6154da19322cbab1f6aa5af",
+          "valueLabel": "Regular"
+        },
+        {
+          "fieldId": "5f63a78f1dae5c5c4e54ba2b",
+          "fieldLabel": "Department",
+          "valueId": "2294038",
+          "valueLabel": "Engineering, Infrastructure and Operations"
+        },
+        {
+          "fieldId": "COUNTRY",
+          "fieldLabel": "Country/Region",
+          "valueId": "us",
+          "valueLabel": "United States"
+        },
+        {
+          "fieldId": "5f63a78f1dae5c5c4e54ba2a",
+          "fieldLabel": "Brands",
+          "valueId": "default",
+          "valueLabel": "ServiceNow"
+        },
+        {
+          "fieldId": "603462175165a31b1728827d",
+          "fieldLabel": "Cost Center",
+          "valueId": "CC6019",
+          "valueLabel": "6019 Veza Engineering"
+        },
+        {
+          "fieldId": "618ed92b8f5e5f110e5bfb95",
+          "fieldLabel": "Work Persona",
+          "valueId": "bf7551c6-9b06-4e7c-8217-3baf43edd060",
+          "valueLabel": "Flexible"
+        },
+        {
+          "fieldId": "690cc0e8c682c3dbadaa7d73",
+          "fieldLabel": "Job Posting Type",
+          "valueId": "professional",
+          "valueLabel": "Professional"
+        }
+      ],
+      "visibility": "PUBLIC",
+      "ref": "https://api.smartrecruiters.com/v1/companies/ServiceNow/postings/744000156093019",
+      "language": {
+        "code": "en",
+        "label": "English",
+        "labelNative": "English (US)"
+      }
+    }
+  ]
+}
