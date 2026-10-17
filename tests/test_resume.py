@@ -5,7 +5,7 @@ from pypdf import PdfWriter
 
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
-from hirejutsu.resume import find_skills, load_profile, read_text
+from hirejutsu.resume import find_skills, load_profile, read_text, skill_terms
 
 
 def test_load_profile_reads_text_resume(tmp_path):
@@ -122,3 +122,17 @@ def test_short_skills_are_not_read_inside_joined_words():
 
 def test_exact_case_skills_have_aliases_in_any_case():
     assert find_skills("golang, reactjs and nodejs") == ["Go", "React", "Node.js"]
+
+
+def test_skills_list_is_broad_and_lists_each_spelling_once():
+    terms = skill_terms()
+    assert len({name for _, name, _ in terms}) >= 600
+    spellings = [term.lower() for term, _, _ in terms]
+    assert len(spellings) == len(set(spellings))
+
+
+def test_find_skills_beyond_software():
+    text = "Tally, GST and MS-Excel; Google Ads, SEO and Figma; agile, Scrum and product management"
+    assert find_skills(text) == [
+        "Tally", "GST", "Excel", "Google Ads", "SEO", "Figma", "Agile", "Scrum", "Product Management",
+    ]
