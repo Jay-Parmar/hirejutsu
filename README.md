@@ -80,6 +80,42 @@ hirejutsu top -n 30        # rank everything saved without recording picks
 `run` picks `ranking.top` jobs (10 by default) and never shows a job again on a later day.
 Each day's picks are also saved as a Markdown file in the `reports` folder.
 
+## Ranking
+
+Each job gets a score from 0 to 1, a weighted mix of six parts:
+
+- **skills**: which of your skills the job mentions. Skills that few of the day's jobs mention count
+  more, and a skill in the job title counts double.
+- **text**: how close the description is to your resume (TF-IDF cosine similarity).
+- **title**: how close the job title is to the titles you want, after spelling out Sr, Jr, Eng, Dev
+  and Mgr. Developer and engineer count as the same word.
+- **seniority**: whether the level in the title (intern, junior, senior, staff, lead, manager and so
+  on) and the years the description asks for fit `profile.years`.
+- **freshness**: halves every `half_life_days` (3 by default) after the job was posted.
+- **location**: remote, or in one of `profile.locations`. Bengaluru and Bangalore, Gurugram and
+  Gurgaon, Mumbai and Bombay, NCR and Delhi count as the same place.
+
+A part that can't be judged, like seniority when a job doesn't say, scores 0.5. Change the mix
+under `ranking.weights`.
+
+Jobs that mention none of your skills and have no close title are skipped. Jobs outside your
+locations are skipped too, but jobs that give no location are kept. Set `location_mode: score` to
+rank outside jobs lower instead. Jobs posted more than `max_age_days` ago are skipped (empty means
+`search.max_age_days`). More filters are off until you set them: `exclude_keywords`,
+`exclude_title_words`, `exclude_companies`, `require_keywords`, `min_score` and `min_salary` with
+`salary_currency`.
+
+Only the best 300 jobs by skills and title get the slower resume text comparison, so ranking stays
+quick on big job lists.
+
+To see how one job scored, which filters it passed and why it was picked:
+
+```
+hirejutsu explain 42
+```
+
+The id is shown by `run`, `today` and `top`.
+
 ## Development
 
 ```

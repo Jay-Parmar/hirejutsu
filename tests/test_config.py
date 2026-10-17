@@ -13,6 +13,7 @@ from hirejutsu.config import (
     resolve_home,
     template,
 )
+from hirejutsu.ranking import RANKING_DEFAULTS
 
 
 def test_resolve_home_prefers_flag_over_env(tmp_path, monkeypatch):
@@ -90,6 +91,10 @@ def test_template_is_valid_yaml():
 
 def test_template_leaves_years_to_the_resume():
     assert yaml.safe_load(template())["profile"]["years"] is None
+
+
+def test_template_lists_every_ranking_setting_with_its_default():
+    assert yaml.safe_load(template())["ranking"] == RANKING_DEFAULTS
 
 
 def test_init_home_creates_files(tmp_path):
