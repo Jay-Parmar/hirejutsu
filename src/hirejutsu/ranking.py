@@ -5,13 +5,15 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from .models import Job, Match, Profile
 
 RANKING_DEFAULTS = {
     "top": 10,
     "per_company": 2,
-    "weights": {"skills": 0.35, "title": 0.2, "seniority": 0.1},
+    "weights": {"skills": 0.35, "title": 0.2, "seniority": 0.1, "freshness": 0.1},
+    "half_life_days": 3,
     "seniority_tolerance": 2,
 }
 
@@ -73,6 +75,7 @@ class _Run:
 
     profile: Profile
     settings: dict
+    now: datetime
     skills: list[str] = field(init=False)
     titles: list[tuple[str, list[str]]] = field(init=False)
     size: int = 0
@@ -85,9 +88,9 @@ class _Run:
         self.titles = [(title, _role_words(_title_words(title))) for title in self.profile.titles]
 
 
-def rank(jobs: list[Job], profile: Profile, settings: dict) -> list[Match]:
+def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None = None) -> list[Match]:
     """Best matches first, at most settings["top"] of them."""
-    run = _Run(profile, settings)
+    run = _Run(profile, settings, now or datetime.now().astimezone())
     pool = [_entry(job, run) for job in jobs]
     _learn(pool, run)
     for entry in pool:
@@ -95,6 +98,7 @@ def rank(jobs: list[Job], profile: Profile, settings: dict) -> list[Match]:
             "skills": _skills_score(entry, run),
             "title": _title_match(entry.words, run)[0],
             "seniority": _seniority(entry, run),
+            "freshness": _freshness(entry.job, run),
         }
         entry.score = _combine(entry.parts, settings["weights"])
     best = sorted((entry for entry in pool if _relevant(entry)), key=lambda entry: entry.score, reverse=True)
@@ -257,13 +261,27 @@ def _gap(years: float, band: tuple[int, int | None]) -> float:
     return 0
 
 
+def _freshness(job: Job, run: _Run) -> float:
+    """Halves every half_life_days after the job was posted, or first seen when the post date is unknown."""
+    posted = job.posted_at or job.first_seen
+    if posted is None:
+        return NEUTRAL
+    age = max(0.0, (run.now - posted).total_seconds() / 86400)
+    return 0.5 ** (age / run.settings["half_life_days"])
+
+
 def _relevant(entry: _Entry) -> bool:
     """A job needs one of your skills or a close title to be worth showing."""
     return bool(entry.found) or entry.parts["title"] >= CLOSE_TITLE
 
 
 def _reasons(entry: _Entry, run: _Run) -> list[str]:
-    reasons = [_skills_reason(entry, run), _title_reason(entry, run), _seniority_reason(entry, run)]
+    reasons = [
+        _skills_reason(entry, run),
+        _title_reason(entry, run),
+        _seniority_reason(entry, run),
+        _freshness_reason(entry.job, run),
+    ]
     return [reason for reason in reasons if reason]
 
 
@@ -292,3 +310,12 @@ def _seniority_reason(entry: _Entry, run: _Run) -> str:
     if level and _gap(years, LEVELS[level]) > tolerance:
         return f"Asks {level} level, you have {years:g} years"
     return ""
+
+
+def _freshness_reason(job: Job, run: _Run) -> str:
+    if job.posted_at is None:
+        return ""
+    days = max(0, (run.now.date() - job.posted_at.astimezone(run.now.tzinfo).date()).days)
+    if days == 0:
+        return "Posted today"
+    return "Posted yesterday" if days == 1 else f"Posted {days} days ago"

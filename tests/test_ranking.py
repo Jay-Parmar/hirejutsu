@@ -1,14 +1,18 @@
 import random
 import time
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from hirejutsu.models import Job, Profile
 from hirejutsu.ranking import RANKING_DEFAULTS, has_term, rank
 
+NOW = datetime(2026, 10, 17, 9, 0, tzinfo=timezone.utc)
 
-def job(external_id, title, company="Acme", description=""):
-    return Job("demo", external_id, title, company, f"https://x/{external_id}", description=description, id=int(external_id))
+
+def job(external_id, title, company="Acme", description="", **fields):
+    return Job("demo", external_id, title, company, f"https://x/{external_id}", description=description,
+               id=int(external_id), **fields)
 
 
 def settings(**kwargs):
@@ -215,3 +219,41 @@ def test_junior_roles_rank_lower_for_experienced_people():
     match = rank(jobs, Profile(skills=["python"], years=10), settings(weights={"seniority": 1}))[0]
     assert match.score < 0.5
     assert "Asks junior level, you have 10 years" in match.reasons
+
+
+def test_newer_jobs_rank_higher():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", posted_at=NOW - timedelta(days=10)),
+        job("2", "Engineer", company="B", description="python", posted_at=NOW - timedelta(days=1)),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(), now=NOW)
+    assert [match.job.external_id for match in matches] == ["2", "1"]
+
+
+def test_freshness_halves_every_half_life():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", posted_at=NOW - timedelta(days=3)),
+        job("2", "Engineer", company="B", description="python", posted_at=NOW - timedelta(days=6)),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(weights={"freshness": 1}, half_life_days=3), now=NOW)
+    assert [match.score for match in matches] == [0.5, 0.25]
+
+
+def test_freshness_uses_first_seen_without_a_post_date():
+    jobs = [job("1", "Engineer", description="python", first_seen=NOW - timedelta(days=3))]
+    assert rank(jobs, Profile(skills=["python"]), settings(weights={"freshness": 1}), now=NOW)[0].score == 0.5
+
+
+def test_freshness_is_neutral_without_dates():
+    jobs = [job("1", "Engineer", description="python")]
+    assert rank(jobs, Profile(skills=["python"]), settings(weights={"freshness": 1}), now=NOW)[0].score == 0.5
+
+
+@pytest.mark.parametrize("age, reason", [
+    (timedelta(hours=5), "Posted today"),
+    (timedelta(days=1, hours=2), "Posted yesterday"),
+    (timedelta(days=2, hours=3), "Posted 2 days ago"),
+])
+def test_freshness_reason_says_when_it_was_posted(age, reason):
+    jobs = [job("1", "Engineer", description="python", posted_at=NOW - age)]
+    assert reason in rank(jobs, Profile(skills=["python"]), settings(), now=NOW)[0].reasons
