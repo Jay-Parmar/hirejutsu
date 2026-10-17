@@ -175,3 +175,26 @@ def test_find_years_skips_education():
 
 def test_find_years_without_dates():
     assert find_years("Python developer", TODAY) is None
+
+
+@pytest.mark.parametrize(
+    ("text", "years"),
+    [
+        ("Backend developer with 5+ years of experience in Python.", 5),
+        ("Over 7 years building data platforms.", 7),
+        ("Total Experience: 4.5 Years", 4.5),
+        ("3 yrs of hands-on industry experience", 3),
+        ("8 years' experience, including 3 years of experience with Go", 8),
+    ],
+)
+def test_find_years_from_stated_experience(text, years):
+    assert find_years(text, TODAY) == years
+
+
+def test_find_years_ignores_other_year_counts():
+    assert find_years("B.Tech (4 years), 2 years warranty, a 10 year old app", TODAY) is None
+
+
+def test_find_years_takes_the_larger_of_stated_and_dated():
+    assert find_years("5+ years of experience\nAcme, Jan 2015 - Present", TODAY) == 11.8
+    assert find_years("12 years of experience\nAcme, Jan 2020 - Present", TODAY) == 12
