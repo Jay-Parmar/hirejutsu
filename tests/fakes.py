@@ -1,6 +1,7 @@
 """Test doubles shared by the test suite."""
 
 import json
+import subprocess
 from pathlib import Path
 
 import requests
@@ -39,3 +40,19 @@ class FakeClient:
 
     def post_json(self, url, payload, headers=None):
         return self._answer("POST", url, payload=payload)
+
+
+class FakeRun:
+    """Stands in for subprocess.run. Replies are (returncode, stdout, stderr) keyed by the first two words."""
+
+    def __init__(self, replies: dict | None = None):
+        self.replies = replies or {}
+        self.calls: list[list[str]] = []
+        self.task_file = b""
+
+    def __call__(self, args, **kwargs):
+        self.calls.append(list(args))
+        if "/XML" in args:
+            self.task_file = Path(args[args.index("/XML") + 1]).read_bytes()
+        returncode, stdout, stderr = self.replies.get(" ".join(args[:2]), (0, "", ""))
+        return subprocess.CompletedProcess(args, returncode, stdout, stderr)

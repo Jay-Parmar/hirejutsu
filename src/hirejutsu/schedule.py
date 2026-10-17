@@ -1,10 +1,16 @@
 """Running hirejutsu every morning with the Windows Task Scheduler."""
 
 import os
+import subprocess
 import sys
+import tempfile
 from datetime import datetime, time, timedelta
 from pathlib import Path
 from xml.sax.saxutils import escape
+
+from .errors import HirejutsuError
+
+TASK_NAME = "hirejutsu"
 
 TASK_XML = """\
 <?xml version="1.0" encoding="UTF-16"?>
@@ -40,8 +46,7 @@ TASK_XML = """\
       <WorkingDirectory>{folder}</WorkingDirectory>
     </Exec>
   </Actions>
-</Task>
-"""
+</Task>"""
 
 EVERY_DAY = """\
       <ScheduleByDay>
@@ -85,3 +90,21 @@ def task_xml(home: Path, at: time, weekdays: bool = False, wake: bool = False, n
         arguments=escape(f'-m hirejutsu --home "{home}" run --log'),
         folder=escape(str(home)),
     )
+
+
+def install(home: Path, at: time, weekdays: bool = False, wake: bool = False) -> None:
+    """Register the daily run, replacing an earlier one."""
+    # The task cannot start in a working directory that does not exist.
+    home.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as folder:
+        path = Path(folder) / "hirejutsu.xml"
+        path.write_text(task_xml(home, at, weekdays, wake), encoding="utf-16")
+        _schtasks("/Create", "/TN", TASK_NAME, "/XML", str(path), "/F")
+
+
+def _schtasks(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+    # Its messages use the console code page, which differs between PCs.
+    result = subprocess.run(["schtasks", *args], capture_output=True, text=True, errors="replace")
+    if check and result.returncode:
+        raise HirejutsuError(f"schtasks {args[0]} failed: {result.stderr.strip()}")
+    return result
