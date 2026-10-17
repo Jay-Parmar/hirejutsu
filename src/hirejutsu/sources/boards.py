@@ -93,7 +93,8 @@ class Board(Source):
 
     def run(self, search: dict) -> tuple[list[dict], list[logging.LogRecord]]:
         """Run one search and keep what jobspy logs about it. Board failures are logged, not raised."""
-        # jobspy 1.3 gives each board a "JobSpy:<Board>" logger whose own handler prints to stderr.
+        # jobspy 1.3 logs each board on a logger named after it, like "JobSpy:LinkedIn",
+        # with its own handler that prints to stderr. The labels here use the same names.
         logger = logging.getLogger(f"JobSpy:{self.label}")
         recorder = _Recorder()
         saved = logger.handlers

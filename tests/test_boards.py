@@ -231,6 +231,20 @@ def test_other_errors_do_not_stop_the_other_searches(tmp_path, jobspy):
     assert len(jobspy.searches) == 2
 
 
+# The logger names come from jobspy 1.3, one per board.
+@pytest.mark.parametrize("cls, logger", [
+    (boards.Indeed, "Indeed"),
+    (boards.Naukri, "Naukri"),
+    (boards.LinkedIn, "LinkedIn"),
+    (boards.Glassdoor, "Glassdoor"),
+    (boards.ZipRecruiter, "ZipRecruiter"),
+])
+def test_each_board_hears_its_own_jobspy_logger(tmp_path, jobspy, cls, logger):
+    jobspy.answers = [logs("response status code 500", board=logger)]
+    with pytest.raises(HirejutsuError, match="status code 500"):
+        board(cls, tmp_path).fetch()
+
+
 def test_jobspy_handlers_are_muted_during_a_search_and_put_back(tmp_path, jobspy, monkeypatch):
     logger = logging.getLogger("JobSpy:Indeed")
     printer = logging.handlers.BufferingHandler(100)
