@@ -1,0 +1,489 @@
+# Built-in companies for the career page sources, by ATS and board name.
+# Every board was live with at least one open job on 2026-10-17.
+# Add or remove companies in companies.yaml in your data folder, not here.
+
+greenhouse:
+  abnormalsecurity: Abnormal AI
+  ada18: Ada
+  adyen: Adyen
+  affirm: Affirm
+  agoda: Agoda
+  airbnb: Airbnb
+  airtable: Airtable
+  akunacapital: Akuna Capital
+  algolia: Algolia
+  andurilindustries: Anduril Industries
+  anthropic: Anthropic
+  apolloio: Apollo.io
+  applovin: AppLovin
+  arizeai: Arize AI
+  asana: Asana
+  assemblyai: AssemblyAI
+  asteralabs: Astera Labs
+  attentive: Attentive
+  binance: Binance
+  bitwarden: Bitwarden
+  block: Block
+  brave: Brave
+  braze: Braze
+  brex: Brex
+  bybit: Bybit
+  canonical: Canonical
+  carta: Carta
+  celonis: Celonis
+  chainguard: Chainguard
+  checkr: Checkr
+  chime: Chime
+  cloudflare: Cloudflare
+  cockroachlabs: Cockroach Labs
+  coinbase: Coinbase
+  contentful: Contentful
+  coreweave: CoreWeave
+  couchbaseinc: Couchbase
+  coupang: Coupang
+  cresta: Cresta
+  cribl: Cribl
+  customerio: Customer.io
+  databricks: Databricks
+  datadog: Datadog
+  descript: Descript
+  discord: Discord
+  doordashusa: DoorDash
+  dropbox: Dropbox
+  druva: Druva
+  drweng: DRW
+  duolingo: Duolingo
+  ebanx: EBANX
+  elastic: Elastic
+  emergentlabsinc: Emergent
+  epicgames: Epic Games
+  purestorage: Everpure (Pure Storage)
+  faire: Faire
+  figma: Figma
+  figureai: Figure AI
+  five9: Five9
+  fivetran: Fivetran
+  flexport: Flexport
+  flowtraders: Flow Traders
+  gitlab: GitLab
+  glance: Glance
+  gleanwork: Glean
+  gongio: Gong
+  grafanalabs: Grafana Labs
+  gravitonresearchcapital: Graviton Research Capital
+  groww: Groww
+  gusto: Gusto
+  harnessinc: Harness
+  hellofresh: HelloFresh
+  helsing: Helsing
+  highradius: HighRadius
+  honeycomb: Honeycomb
+  wehrtyou: Hudson River Trading
+  imc: IMC Trading
+  inmobi: InMobi
+  instacart: Instacart
+  intercom: Intercom (Fin)
+  isomorphiclabs: Isomorphic Labs
+  janestreet: Jane Street
+  jfrog: JFrog
+  jumptrading: Jump Trading
+  klaviyo: Klaviyo
+  lightningai: Lightning AI
+  lucidmotors: Lucid Motors
+  lyft: Lyft
+  mangroup: Man Group
+  mercury: Mercury
+  mixpanel: Mixpanel
+  mongodb: MongoDB
+  moniepoint: Moniepoint
+  monzo: Monzo
+  mozilla: Mozilla
+  n26: N26
+  tripactions: Navan
+  neuralink: Neuralink
+  newrelic: New Relic
+  observeai: Observe.AI
+  okta: Okta
+  okx: OKX
+  otterai: Otter.ai
+  pagerduty: PagerDuty
+  parloa: Parloa
+  payhawkio: Payhawk
+  payoneer: Payoneer
+  pendo: Pendo
+  pinterest: Pinterest
+  point72: Point72
+  proton: Proton
+  razorpaysoftwareprivatelimited: Razorpay
+  reddit: Reddit
+  riotgames: Riot Games
+  ripple: Ripple
+  robinhood: Robinhood
+  roblox: Roblox
+  roku: Roku
+  rubrik: Rubrik
+  sambanovasystems: SambaNova
+  samsara: Samsara
+  scaleai: Scale AI
+  sigmoid: Sigmoid
+  skildai-careers: Skild AI
+  smartsheet: Smartsheet
+  snorkelai: Snorkel AI
+  sofi: SoFi
+  sourcegraph91: Sourcegraph
+  spacex: SpaceX
+  speechmatics: Speechmatics
+  squarepointcapital: Squarepoint Capital
+  squarespace: Squarespace
+  starburst: Starburst
+  storyblok: Storyblok
+  stripe: Stripe
+  sumologic: Sumo Logic
+  sumup: SumUp
+  tailscale: Tailscale
+  thoughtworks: Thoughtworks
+  toast: Toast
+  togetherai: Together AI
+  traderepublicbank: Trade Republic
+  truecaller: Truecaller
+  turing: Turing
+  twilio: Twilio
+  twitch: Twitch
+  typeface: Typeface
+  vercel: Vercel
+  verkada: Verkada
+  virtu: Virtu Financial
+  waymo: Waymo
+  wikimedia: Wikimedia Foundation
+  wizinc: Wiz
+  wolt: Wolt
+  workato: Workato
+  worldquant: WorldQuant
+  xai: xAI
+  zenoti: Zenoti
+  zetaglobal: Zeta Global
+  zscaler: Zscaler
+lever:
+  360learning: 360Learning
+  acceldata: Acceldata
+  thinkahead: AHEAD
+  aircall: Aircall
+  beghouconsulting: Beghou Consulting
+  brevo: Brevo
+  brightedge: BrightEdge
+  brillio-2: Brillio
+  cirrus: Cirrus Logic  # EU host: api.eu.lever.co
+  cfsenergy: Commonwealth Fusion Systems
+  coupa: Coupa
+  cred: CRED
+  crypto: Crypto.com
+  cyderes: Cyderes
+  dlocal: dLocal
+  dozee: Dozee
+  drivetrain: Drivetrain
+  dnb: Dun & Bradstreet
+  everbridge: Everbridge
+  extremenetworks: Extreme Networks
+  fampay: FamPay
+  farfetch: Farfetch
+  floqast: FloQast
+  gopuff: Gopuff
+  GoToGroup: GoTo Group
+  hevodata: Hevo Data
+  gohighlevel: HighLevel
+  includedhealth: Included Health
+  insiderone: Insider One
+  ion: ION Group
+  jumpcloud: JumpCloud
+  keyloop: Keyloop
+  kpler: Kpler
+  lalamove: Lalamove
+  larian: Larian Studios
+  levelai: Level AI
+  lingarogroup: Lingaro
+  loftorbital: Loft Orbital
+  lyrahealth: Lyra Health
+  mactores: Mactores
+  matchgroup: Match Group
+  meesho: Meesho
+  megaport: Megaport
+  mendix: Mendix
+  mindtickle: Mindtickle
+  mythic-ai.com: Mythic
+  netomi: Netomi
+  neuron7: Neuron 7
+  ninjavan: Ninja Van
+  octoenergy: Octopus Energy
+  outreach: Outreach
+  pattern: Pattern
+  paytm: Paytm
+  paytmpayments: Paytm Payments Services
+  pditechnologies: PDI Technologies
+  pocketfm: Pocket FM
+  pointclickcare: PointClickCare
+  quantinuum: Quantinuum  # EU host: api.eu.lever.co
+  rover: Rover.com
+  safe: Safe Security
+  saviynt: Saviynt
+  shieldai: Shield AI
+  shopback-2: ShopBack
+  shyftlabs: ShyftLabs
+  sonarsource: Sonar
+  sophos: Sophos
+  spotify: Spotify
+  Sprinto: Sprinto
+  stable-money1: Stable Money
+  trendyol: Trendyol
+  ttecdigital: TTEC Digital
+  upscale-ai: Upscale AI
+  valgenesis: ValGenesis
+  veeva: Veeva Systems
+  waabi: Waabi
+  woven-by-toyota: Woven by Toyota
+  xsolla: Xsolla
+  xtb: XTB  # EU host: api.eu.lever.co
+  zeta: Zeta
+  zopa: Zopa
+ashby:
+  1password: 1Password
+  1x: 1X Technologies
+  abridge: Abridge
+  airbyte: Airbyte
+  airwallex: Airwallex
+  alchemy: Alchemy
+  amplitude: Amplitude
+  andela: Andela
+  anyscale: Anyscale
+  applied: Applied Intuition
+  astronomer: Astronomer
+  atlan: Atlan
+  baseten: Baseten
+  bureau: Bureau
+  cartesia: Cartesia
+  cerebras: Cerebras Systems
+  chainalysis-careers: Chainalysis
+  checkout.com: Checkout.com
+  claylabs: Clay
+  clickhouse: ClickHouse
+  close: Close
+  cognition: Cognition
+  cohere: Cohere
+  composio: Composio
+  cursor: Cursor (Anysphere)
+  decagon: Decagon
+  deepgram: Deepgram
+  docker: Docker
+  drata: Drata
+  duck-duck-go: DuckDuckGo
+  elevenlabs: ElevenLabs
+  ema: Ema
+  factory: Factory
+  fireworks: Fireworks AI
+  frontcareers: Front
+  fullstory: FullStory
+  gainsight: Gainsight
+  gigaml: Giga
+  gorgias: Gorgias
+  hackerone: HackerOne
+  harvey: Harvey
+  helpscout: Help Scout
+  hippocratic ai: Hippocratic AI
+  incident: incident.io
+  kong: Kong
+  kraken.com: Kraken
+  lambda: Lambda
+  langchain: LangChain
+  ledger: Ledger
+  linear: Linear
+  lovable: Lovable
+  lumaai: Luma AI
+  mercor: Mercor
+  miro: Miro
+  mistral.ai: Mistral AI
+  modal: Modal
+  mollie: Mollie
+  n8n: n8n
+  notion: Notion
+  nubank: Nubank
+  openai: OpenAI
+  oyster: Oyster
+  paxos: Paxos
+  perplexity: Perplexity
+  physicalintelligence: Physical Intelligence
+  pinecone: Pinecone
+  plaid: Plaid
+  pleo: Pleo
+  posthog: PostHog
+  prefect: Prefect
+  railway: Railway
+  ramp: Ramp
+  redis: Redis
+  reflectionai: Reflection AI
+  render: Render
+  replit: Replit
+  runpod: Runpod
+  runway-ml: Runway
+  sanity: Sanity
+  sarvam: Sarvam AI
+  sentry: Sentry
+  sierra: Sierra
+  smallest: Smallest AI
+  snowflake: Snowflake
+  snyk: Snyk
+  span: Span
+  spotdraft: SpotDraft
+  suno: Suno
+  supabase: Supabase
+  synthesia: Synthesia
+  goteleport: Teleport
+  temporal: Temporal
+  uniswap: Uniswap Labs
+  vanta: Vanta
+  vapi: Vapi
+  wayve: Wayve
+  wispr-flow: Wispr Flow
+  workos: WorkOS
+  writer: Writer
+  zapier: Zapier
+smartrecruiters:
+  AbbVie: AbbVie
+  aecom2: AECOM
+  aristanetworks: Arista Networks
+  betsol: BETSOL
+  blend360: Blend360
+  BoschGroup: Bosch
+  canva: Canva
+  carousellgroup: Carousell
+  Continental: Continental
+  endava: Endava
+  experian: Experian
+  freshworks: Freshworks
+  grab: Grab
+  ixigo: ixigo
+  Jitterbit: Jitterbit
+  LinkedIn3: LinkedIn
+  MicroStrategy1: MicroStrategy
+  mirantis: Mirantis
+  nagarro1: Nagarro
+  NielsenIQ: NielsenIQ
+  qadinc: QAD
+  servicenow: ServiceNow
+  SopraSteria1: Sopra Steria
+  Sutherland: Sutherland
+  swiggy: Swiggy
+  Ubisoft2: Ubisoft
+  version1: Version 1
+  westerndigital: Western Digital
+  Wise: Wise
+  Wix2: Wix
+recruitee:
+  acturis: Acturis
+  addepto: Addepto
+  aikidosecurity: Aikido Security
+  bitfinex: Bitfinex
+  bunq: bunq
+  channable: Channable
+  curotec: Curotec
+  jobsdeerns: Deerns
+  careersdeltacapita: Delta Capita
+  dvtcareers: DVT
+  gsbsolutions1: GSB Solutions
+  holded: Holded
+  hostaway: Hostaway
+  infoprolearning: Infopro Learning
+  lenskartcareers: Lenskart
+  machinelearningreply: Machine Learning Reply
+  o2h: o2h Group
+  pragmaticcoders: Pragmatic Coders
+  qualifyzegmbh: Qualifyze
+  sequra: seQura
+  shopwareag: Shopware
+  transperfect: TransPerfect
+  trustedshops: Trusted Shops
+workable:
+  base-com: Base.com
+  caddi: CADDi
+  control-risks-6: Control Risks
+  covergo: CoverGo
+  crewai: CrewAI
+  dubizzlemena: Dubizzle MENA
+  envalior: Envalior
+  exponent-energy: Exponent Energy
+  fe-fundinfo: FE fundinfo
+  genetec-inc: Genetec
+  huggingface: Hugging Face
+  coldquanta: Infleqtion
+  innovaccer-analytics: Innovaccer
+  kahoot: Kahoot!
+  landytech: Landytech
+  mercari: Mercari
+  mercari-india: Mercari India
+  origin-10x: Origin
+  platzi: Platzi
+  rollingarrays-tech: Rolling Arrays
+  semios: Semios
+  tiger-analytics: Tiger Analytics
+  twgai: TWG Global AI
+  withings: Withings
+  writesonic: Writesonic
+workday:
+  - name: Accenture
+    url: https://accenture.wd103.myworkdayjobs.com/AccentureCareers
+  - name: Adobe
+    url: https://adobe.wd5.myworkdayjobs.com/external_experienced
+  - name: Applied Materials
+    url: https://amat.wd1.myworkdayjobs.com/External
+  - name: Autodesk
+    url: https://autodesk.wd1.myworkdayjobs.com/Ext
+  - name: Barclays
+    url: https://barclays.wd3.myworkdayjobs.com/External_Career_Site_Barclays
+  - name: BrowserStack
+    url: https://browserstack.wd3.myworkdayjobs.com/external
+  - name: Cadence
+    url: https://cadence.wd1.myworkdayjobs.com/External_Careers
+  - name: Cisco
+    url: https://cisco.wd5.myworkdayjobs.com/cisco_careers
+  - name: Citi
+    url: https://citi.wd5.myworkdayjobs.com/2
+  - name: CrowdStrike
+    url: https://crowdstrike.wd5.myworkdayjobs.com/crowdstrikecareers
+  - name: Deutsche Bank
+    url: https://db.wd3.myworkdayjobs.com/DBWebsite
+  - name: Fractal Analytics
+    url: https://fractal.wd1.myworkdayjobs.com/careers
+  - name: Genpact
+    url: https://genpact.wd108.myworkdayjobs.com/External_Careers
+  - name: Hewlett Packard Enterprise
+    url: https://hpe.wd5.myworkdayjobs.com/jobsathpe
+  - name: Intel
+    url: https://intel.wd1.myworkdayjobs.com/external
+  - name: LSEG
+    url: https://lseg.wd3.myworkdayjobs.com/Careers
+  - name: Mastercard
+    url: https://mastercard.wd1.myworkdayjobs.com/CorporateCareers
+  - name: Micron
+    url: https://micron.wd1.myworkdayjobs.com/External
+  - name: Morgan Stanley
+    url: https://ms.wd5.myworkdayjobs.com/External
+  - name: NVIDIA
+    url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+  - name: Palo Alto Networks
+    url: https://paloaltonetworks.wd5.myworkdayjobs.com/panwexternalcareers
+  - name: PayPal
+    url: https://paypal.wd1.myworkdayjobs.com/jobs
+  - name: Postman
+    url: https://postman.wd108.myworkdayjobs.com/careers
+  - name: PwC
+    url: https://pwc.wd3.myworkdayjobs.com/global_experienced_careers
+  - name: Salesforce
+    url: https://salesforce.wd12.myworkdayjobs.com/External_Career_Site
+  - name: Sprinklr
+    url: https://sprinklr.wd1.myworkdayjobs.com/careers
+  - name: State Street
+    url: https://statestreet.wd1.myworkdayjobs.com/Global
+  - name: Target
+    url: https://target.wd5.myworkdayjobs.com/targetcareers
+  - name: Visa
+    url: https://visa.wd5.myworkdayjobs.com/Visa
+  - name: Workday
+    url: https://workday.wd5.myworkdayjobs.com/workday

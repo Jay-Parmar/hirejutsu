@@ -1,6 +1,121 @@
-import pytest
+from collections import Counter
+from importlib import resources
 
-from hirejutsu.companies import detect, find_boards
+import pytest
+import yaml
+
+from hirejutsu.companies import (
+    Company,
+    builtin,
+    companies_for,
+    detect,
+    drop_companies,
+    find_boards,
+    load_companies,
+    read_user,
+    save_companies,
+)
+from hirejutsu.config import Config
+from hirejutsu.errors import HirejutsuError
+
+
+def write_user_file(home, text):
+    (home / "companies.yaml").write_text(text, encoding="utf-8")
+
+
+def test_builtin_list_covers_every_seed_board():
+    counts = Counter(company.ats for company in builtin())
+    assert counts == {
+        "greenhouse": 160, "lever": 80, "ashby": 100, "smartrecruiters": 30,
+        "recruitee": 23, "workable": 25, "workday": 30,
+    }
+    assert Company("greenhouse", "stripe", "Stripe") in builtin()
+    assert Company("workday", "nvidia.wd5/NVIDIAExternalCareerSite", "NVIDIA") in builtin()
+
+
+def test_builtin_file_is_ascii():
+    raw = resources.files("hirejutsu").joinpath("data", "companies.yaml").read_bytes()
+    assert raw.isascii()
+
+
+def test_key_ignores_case():
+    assert Company("lever", "GoToGroup").key == "lever:gotogroup"
+
+
+def test_load_companies_merges_user_file(tmp_path):
+    write_user_file(tmp_path, (
+        "greenhouse:\n"
+        "  acme: Acme Inc\n"
+        "  stripe: Stripe Payments\n"
+        "workday:\n"
+        "  - name: Big Corp\n"
+        "    url: https://bigcorp.wd3.myworkdayjobs.com/en-US/External\n"
+        "removed:\n"
+        "  - lever:gotogroup\n"
+    ))
+    companies = {company.key: company for company in load_companies(Config({}, tmp_path))}
+    assert companies["greenhouse:acme"].name == "Acme Inc"
+    assert companies["greenhouse:stripe"].name == "Stripe Payments"
+    assert companies["workday:bigcorp.wd3/external"].slug == "bigcorp.wd3/External"
+    assert "lever:gotogroup" not in companies
+    assert len(companies) == 448 + 2 - 1
+
+
+def test_builtin_list_can_be_turned_off(tmp_path):
+    write_user_file(tmp_path, "lever:\n  acme: Acme\n")
+    config = Config({"companies": {"builtin": False}}, tmp_path)
+    assert load_companies(config) == [Company("lever", "acme", "Acme")]
+
+
+def test_companies_for_one_ats(tmp_path):
+    lever = companies_for(Config({}, tmp_path), "lever")
+    assert len(lever) == 80
+    assert {company.ats for company in lever} == {"lever"}
+
+
+def test_company_without_name_uses_its_board(tmp_path):
+    write_user_file(tmp_path, "ashby:\n  acme:\n")
+    assert read_user(tmp_path)[0] == [Company("ashby", "acme", "acme")]
+
+
+def test_user_file_with_unknown_ats(tmp_path):
+    write_user_file(tmp_path, "greenhose:\n  acme: Acme\n")
+    with pytest.raises(HirejutsuError, match="greenhose"):
+        load_companies(Config({}, tmp_path))
+
+
+def test_user_file_must_be_a_mapping(tmp_path):
+    write_user_file(tmp_path, "- acme\n")
+    with pytest.raises(HirejutsuError):
+        read_user(tmp_path)
+
+
+def test_save_companies_writes_user_file(tmp_path):
+    write_user_file(tmp_path, "removed:\n  - lever:acme\n")
+    path = save_companies(tmp_path, [
+        Company("lever", "acme", "Acme"),
+        Company("workday", "bigcorp.wd3/External", "Big Corp"),
+    ])
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert data == {
+        "lever": {"acme": "Acme"},
+        "workday": [{"name": "Big Corp", "url": "https://bigcorp.wd3.myworkdayjobs.com/External"}],
+    }
+    assert path.read_text(encoding="utf-8").startswith("#")
+
+
+def test_save_companies_replaces_same_board(tmp_path):
+    save_companies(tmp_path, [Company("lever", "acme", "Acme")])
+    save_companies(tmp_path, [Company("lever", "ACME", "Acme Corp")])
+    assert read_user(tmp_path) == ([Company("lever", "ACME", "Acme Corp")], [])
+
+
+def test_drop_companies_removes_and_remembers(tmp_path):
+    save_companies(tmp_path, [Company("lever", "acme", "Acme")])
+    drop_companies(tmp_path, [Company("lever", "acme", "Acme"), Company("greenhouse", "Stripe", "Stripe")])
+    assert read_user(tmp_path) == ([], ["greenhouse:stripe", "lever:acme"])
+    keys = {company.key for company in load_companies(Config({}, tmp_path))}
+    assert "greenhouse:stripe" not in keys
 
 
 @pytest.mark.parametrize("url, expected", [
