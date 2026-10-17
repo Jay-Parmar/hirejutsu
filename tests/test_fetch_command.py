@@ -22,9 +22,18 @@ class Broken(Source):
         raise RuntimeError("site is down")
 
 
+class Partial(Source):
+    name = "partial"
+    defaults = {"enabled": False}
+
+    def fetch(self):
+        self.warning = "1 of 2 boards failed"
+        return [Job("partial", "1", "Engineer", "Acme", "https://x/1")]
+
+
 @pytest.fixture(autouse=True)
 def registry(monkeypatch):
-    monkeypatch.setattr(sources, "SOURCES", {"demo": Demo, "broken": Broken})
+    monkeypatch.setattr(sources, "SOURCES", {"demo": Demo, "broken": Broken, "partial": Partial})
     monkeypatch.setattr(sources.pkgutil, "iter_modules", lambda path: [])
 
 
@@ -50,6 +59,11 @@ def test_errors_keep_square_brackets(tmp_path, capsys, monkeypatch):
     assert "[extra]" in capsys.readouterr().out
     main(["--home", str(tmp_path), "sources"])
     assert "[extra]" in capsys.readouterr().out
+
+
+def test_fetch_shows_partial_failure(tmp_path, capsys):
+    assert main(["--home", str(tmp_path), "fetch", "-s", "partial"]) == 0
+    assert "1 of 2 boards failed" in capsys.readouterr().out
 
 
 def test_fetch_unknown_source(tmp_path, capsys):
