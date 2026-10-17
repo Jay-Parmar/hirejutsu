@@ -12,6 +12,15 @@ profile:
   # Where you can work. "remote" matches remote jobs.
   locations: [remote]
 
+search:
+  # Search words for sites that need one. Empty means your target titles.
+  keywords: []
+  # Ignore jobs posted more than this many days ago.
+  max_age_days: 14
+
+# Turn sources on or off. Run "hirejutsu sources" to see them all.
+sources: {}
+
 ranking:
   # How many jobs to pick each day.
   top: 10
