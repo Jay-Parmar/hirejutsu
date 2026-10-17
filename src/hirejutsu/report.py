@@ -3,7 +3,7 @@
 import csv
 import io
 import json
-from datetime import date
+from datetime import date, timedelta
 from html import escape
 from importlib import resources
 from pathlib import Path
@@ -17,7 +17,7 @@ from .config import Config
 from .errors import HirejutsuError
 from .models import Job, Match
 
-REPORT_DEFAULTS = {"formats": ["md", "html"]}
+REPORT_DEFAULTS = {"formats": ["md", "html"], "keep_days": 60}
 FORMATS = ("md", "html", "csv", "json")
 EXPORT_FIELDS = [
     "rank", "id", "score", "title", "company", "location", "remote",
@@ -212,13 +212,29 @@ def render(fmt: str, matches: list[Match], day: date) -> str:
 
 
 def write_reports(matches: list[Match], config: Config, day: date) -> list[Path]:
-    """Save the day's picks in each configured format. Returns the files written."""
+    """Save the day's picks in each configured format and delete old reports. Returns the files written."""
+    settings = report_settings(config)
     folder = config.reports_dir
     folder.mkdir(parents=True, exist_ok=True)
     paths = []
-    for fmt in report_settings(config)["formats"]:
+    for fmt in settings["formats"]:
         path = folder / f"{day.isoformat()}.{fmt}"
         # Excel only reads a CSV file as UTF-8 when it starts with a byte order mark.
         path.write_text(render(fmt, matches, day), encoding="utf-8-sig" if fmt == "csv" else "utf-8")
         paths.append(path)
+    prune_reports(folder, day, settings["keep_days"])
     return paths
+
+
+def prune_reports(folder: Path, day: date, keep_days: int) -> None:
+    """Delete report files dated more than keep_days before day. 0 keeps everything."""
+    if keep_days <= 0:
+        return
+    cutoff = day - timedelta(days=keep_days)
+    for path in folder.glob("????-??-??.*"):
+        try:
+            dated = date.fromisoformat(path.stem)
+        except ValueError:
+            continue
+        if dated < cutoff and path.suffix[1:] in FORMATS:
+            path.unlink()
