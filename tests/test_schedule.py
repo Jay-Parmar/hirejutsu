@@ -1,13 +1,23 @@
 import sys
 import xml.etree.ElementTree as ET
 from datetime import datetime, time
+from pathlib import Path
 
 import pytest
+from fakes import FakeRun
 
 from hirejutsu import schedule
+from hirejutsu.errors import HirejutsuError
 
 NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 MORNING = datetime(2026, 10, 17, 8, 0)
+
+
+@pytest.fixture
+def run(monkeypatch):
+    fake = FakeRun()
+    monkeypatch.setattr(schedule.subprocess, "run", fake)
+    return fake
 
 
 @pytest.fixture
@@ -83,3 +93,21 @@ def test_task_runs_pythonw_in_the_data_folder(python, tmp_path):
 def test_task_uses_python_when_there_is_no_pythonw(python, tmp_path):
     task = parse(schedule.task_xml(tmp_path, time(9, 0), now=MORNING))
     assert find(task, "Actions/Exec/Command") == str(python)
+
+
+def test_install_registers_the_task_from_a_utf16_file(python, tmp_path, run):
+    home = tmp_path / "home"
+    schedule.install(home, time(9, 0))
+    command = run.calls[0]
+    assert command[:5] == ["schtasks", "/Create", "/TN", "hirejutsu", "/XML"]
+    assert command[6:] == ["/F"]
+    assert not Path(command[5]).exists()
+    assert run.task_file.startswith(b"\xff\xfe")
+    assert find(ET.fromstring(run.task_file), "Actions/Exec/WorkingDirectory") == str(home)
+    assert home.is_dir()
+
+
+def test_install_reports_schtasks_errors(python, tmp_path, run):
+    run.replies["schtasks /Create"] = (1, "", "ERROR: Access is denied.\n")
+    with pytest.raises(HirejutsuError, match="Access is denied"):
+        schedule.install(tmp_path, time(9, 0))
