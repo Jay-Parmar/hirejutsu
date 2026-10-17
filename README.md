@@ -54,6 +54,18 @@ hirejutsu fetch -s lever   # just one source
 Jobs are saved in `hirejutsu.db` inside the data folder, so each fetch only adds what is new.
 A source that fails is reported and skipped, the others still run.
 
+## Daily picks
+
+```
+hirejutsu run              # fetch, then pick today's best jobs for your resume
+hirejutsu today            # show today's picks again
+hirejutsu today --day 2026-10-16
+hirejutsu top -n 30        # rank everything saved without recording picks
+```
+
+`run` picks `ranking.top` jobs (10 by default) and never shows a job again on a later day.
+Each day's picks are also saved as a Markdown file in the `reports` folder.
+
 ## Development
 
 ```
