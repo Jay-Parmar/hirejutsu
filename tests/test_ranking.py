@@ -1,6 +1,8 @@
 import random
 import time
 
+import pytest
+
 from hirejutsu.models import Job, Profile
 from hirejutsu.ranking import RANKING_DEFAULTS, has_term, rank
 
@@ -164,3 +166,52 @@ def test_rank_skips_duplicate_listings():
         Job("other", "9", "Backend Engineer", "Acme", "https://y/9", description="python", id=9),
     ]
     assert len(rank(jobs, PROFILE, settings(per_company=5))) == 1
+
+
+def test_jobs_far_above_your_years_rank_lower():
+    jobs = [
+        job("1", "Staff Engineer", company="A", description="python"),
+        job("2", "Engineer", company="B", description="python, 3+ years of experience"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"], years=3), settings())
+    assert [match.job.external_id for match in matches] == ["2", "1"]
+
+
+@pytest.mark.parametrize("asks, reason", [
+    ("3+ years of experience", "Asks 3+ years, you have 2"),
+    ("5-7 years of experience", "Asks 5-7 years, you have 2"),
+    ("5\N{EN DASH}7 years of experience", "Asks 5-7 years, you have 2"),
+    ("3 to 5 years", "Asks 3-5 years, you have 2"),
+    ("minimum of 4 years in backend", "Asks 4+ years, you have 2"),
+    ("at least 6 yrs", "Asks 6+ years, you have 2"),
+    ("5 years of relevant experience", "Asks 5+ years, you have 2"),
+])
+def test_seniority_reads_years_asked(asks, reason):
+    match = rank([job("1", "Engineer", description=f"python. {asks}")], Profile(skills=["python"], years=2), settings())[0]
+    assert reason in match.reasons
+
+
+def test_years_about_the_company_are_not_asked():
+    jobs = [job("1", "Engineer", description="python. Founded 12 years ago, 25+ years of experience serving clients")]
+    match = rank(jobs, Profile(skills=["python"], years=2), settings(weights={"seniority": 1}))[0]
+    assert match.score == 0.5
+    assert match.reasons == ["Skills: python (1 of 1)"]
+
+
+def test_seniority_is_neutral_without_your_years():
+    jobs = [job("1", "Staff Engineer", description="python, 8+ years")]
+    assert rank(jobs, Profile(skills=["python"]), settings(weights={"seniority": 1}))[0].score == 0.5
+
+
+def test_seniority_within_tolerance_scores_full():
+    jobs = [job("1", "Senior Engineer", description="python, 5+ years")]
+    match = rank(jobs, Profile(skills=["python"], years=4), settings(weights={"seniority": 1}))[0]
+    assert match.score == 1.0
+    assert "Asks 5+ years, you have 4" in match.reasons
+
+
+def test_junior_roles_rank_lower_for_experienced_people():
+    jobs = [job("1", "Junior Python Developer", description="python")]
+    match = rank(jobs, Profile(skills=["python"], years=10), settings(weights={"seniority": 1}))[0]
+    assert match.score < 0.5
+    assert "Asks junior level, you have 10 years" in match.reasons

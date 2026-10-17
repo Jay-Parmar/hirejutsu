@@ -8,7 +8,12 @@ from dataclasses import dataclass, field
 
 from .models import Job, Match, Profile
 
-RANKING_DEFAULTS = {"top": 10, "per_company": 2, "weights": {"skills": 0.35, "title": 0.2}}
+RANKING_DEFAULTS = {
+    "top": 10,
+    "per_company": 2,
+    "weights": {"skills": 0.35, "title": 0.2, "seniority": 0.1},
+    "seniority_tolerance": 2,
+}
 
 # Score for a part that cannot be judged, such as skills when the profile lists none.
 NEUTRAL = 0.5
@@ -23,14 +28,24 @@ CLOSE_TITLE = 0.6
 WORD_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789")
 WORD = re.compile(r"[a-z0-9+#]+")
 COMPOUND = re.compile(r"\b(back|front|full)[ -](end|stack)\b")
+YEARS = re.compile(r"(\d{1,2})\s*(\+|plus)?\s*(?:(?:-|\N{EN DASH}|to)\s*(\d{1,2})\s*\+?\s*)?(?:years?|yrs?)\b")
+# Experience right after the years, as in "5 years of relevant experience" or "4 yrs exp".
+EXPERIENCE = re.compile(r"(?:\s+of)?(?:\s+[\w-]+){0,2}?\s+exp")
 # Title words spelled out, or swapped for the word most titles use: a backend developer and a
 # backend engineer do the same job.
 TITLE_ALIASES = {
     "sr": "senior", "snr": "senior", "jr": "junior", "eng": "engineer", "engg": "engineer", "dev": "engineer",
     "developer": "engineer", "mgr": "manager", "sde": "software engineer", "swe": "software engineer",
 }
-# Seniority is scored on its own, so these words are left out when comparing titles.
-SENIORITY_WORDS = {"intern", "internship", "trainee", "junior", "mid", "senior", "lead", "staff", "principal"}
+# Years of experience a title word usually means, as (low, high) with high None when open ended.
+LEVELS = {
+    "intern": (0, 1), "internship": (0, 1), "trainee": (0, 1), "junior": (0, 2), "mid": (2, 5),
+    "senior": (4, 10), "lead": (6, 12), "staff": (8, 15), "principal": (10, None),
+    "manager": (6, None), "director": (10, None), "head": (10, None), "vp": (12, None),
+}
+# Seniority is scored on its own, so these words are left out when comparing titles. Manager,
+# director, head and vp stay in because they also name the role.
+SENIORITY_WORDS = set(LEVELS) - {"manager", "director", "head", "vp"}
 NUMERALS = {"i", "ii", "iii", "iv", "v"}
 STOPWORDS = frozenset(
     "a about after all also an and any are as at be been but by can could do does each for from had has have he "
@@ -47,6 +62,7 @@ class _Entry:
     job: Job
     found: list[str]
     words: list[str]
+    asked: tuple[int, int | None] | None = None
     parts: dict[str, float] = field(default_factory=dict)
     score: float = 0.0
 
@@ -75,7 +91,11 @@ def rank(jobs: list[Job], profile: Profile, settings: dict) -> list[Match]:
     pool = [_entry(job, run) for job in jobs]
     _learn(pool, run)
     for entry in pool:
-        entry.parts = {"skills": _skills_score(entry, run), "title": _title_match(entry.words, run)[0]}
+        entry.parts = {
+            "skills": _skills_score(entry, run),
+            "title": _title_match(entry.words, run)[0],
+            "seniority": _seniority(entry, run),
+        }
         entry.score = _combine(entry.parts, settings["weights"])
     best = sorted((entry for entry in pool if _relevant(entry)), key=lambda entry: entry.score, reverse=True)
     matches = [Match(entry.job, round(entry.score, 3), _reasons(entry, run)) for entry in best]
@@ -113,7 +133,8 @@ def pick(matches: list[Match], top: int, per_company: int) -> list[Match]:
 
 def _entry(job: Job, run: _Run) -> _Entry:
     text = f"{job.title}\n{job.description}".lower()
-    return _Entry(job, [skill for skill in run.skills if has_term(text, skill)], _title_words(job.title))
+    found = [skill for skill in run.skills if has_term(text, skill)]
+    return _Entry(job, found, _title_words(job.title), _years_asked(text))
 
 
 def _learn(pool: list[_Entry], run: _Run) -> None:
@@ -192,13 +213,57 @@ def _title_weight(words: set[str], run: _Run) -> float:
     return sum(_rarity(run.title_counts[word], run.size) for word in words)
 
 
+def _level(words: list[str]) -> str | None:
+    """The seniority word in a title, if any."""
+    found = [word for word in words if word in LEVELS]
+    if not found:
+        return None
+    # An intern or junior word decides, so a junior product manager is still a junior role.
+    entry = [word for word in found if LEVELS[word][0] == 0]
+    return entry[0] if entry else max(found, key=lambda word: LEVELS[word][0])
+
+
+def _years_asked(text: str) -> tuple[int, int | None] | None:
+    """Years of experience a description asks for, as (low, high) with high None when open ended."""
+    asked = None
+    for match in YEARS.finditer(text):
+        low, plus, high = int(match[1]), match[2], match[3]
+        before = text[max(0, match.start() - 12):match.start()]
+        clear = plus or high or "least" in before or "min" in before or EXPERIENCE.match(text, match.end())
+        # Only clear requirements count: a bare "12 years" or anything above 15 is usually about the company.
+        if clear and low <= 15 and (asked is None or low > asked[0]):
+            asked = (low, int(high) if high else None)
+    return asked
+
+
+def _seniority(entry: _Entry, run: _Run) -> float:
+    """Full marks when the level and years asked fit your years, halving for each year beyond the tolerance."""
+    years = run.profile.years
+    bands = [band for band in (LEVELS.get(_level(entry.words)), entry.asked) if band]
+    if years is None or not bands:
+        return NEUTRAL
+    gap = max(_gap(years, band) for band in bands)
+    tolerance = run.settings["seniority_tolerance"]
+    return 1.0 if gap <= tolerance else 0.5 ** (gap - tolerance)
+
+
+def _gap(years: float, band: tuple[int, int | None]) -> float:
+    """Years between your experience and a (low, high) band, 0 inside it."""
+    low, high = band
+    if years < low:
+        return low - years
+    if high is not None and years > high:
+        return years - high
+    return 0
+
+
 def _relevant(entry: _Entry) -> bool:
     """A job needs one of your skills or a close title to be worth showing."""
     return bool(entry.found) or entry.parts["title"] >= CLOSE_TITLE
 
 
 def _reasons(entry: _Entry, run: _Run) -> list[str]:
-    reasons = [_skills_reason(entry, run), _title_reason(entry, run)]
+    reasons = [_skills_reason(entry, run), _title_reason(entry, run), _seniority_reason(entry, run)]
     return [reason for reason in reasons if reason]
 
 
@@ -212,3 +277,18 @@ def _skills_reason(entry: _Entry, run: _Run) -> str:
 def _title_reason(entry: _Entry, run: _Run) -> str:
     similarity, title = _title_match(entry.words, run)
     return f"Title close to {title}" if title and similarity >= CLOSE_TITLE else ""
+
+
+def _seniority_reason(entry: _Entry, run: _Run) -> str:
+    years = run.profile.years
+    if years is None:
+        return ""
+    tolerance = run.settings["seniority_tolerance"]
+    if entry.asked and (years < entry.asked[0] or _gap(years, entry.asked) > tolerance):
+        low, high = entry.asked
+        span = f"{low}+" if high is None else f"{low}-{high}"
+        return f"Asks {span} years, you have {years:g}"
+    level = _level(entry.words)
+    if level and _gap(years, LEVELS[level]) > tolerance:
+        return f"Asks {level} level, you have {years:g} years"
+    return ""
