@@ -1,0 +1,58 @@
+{
+  "jobPostingInfo": {
+    "id": "3f6fbe95422b1001f85b64602b9a0000",
+    "title": "Principal Software Engineer \u2013 Large-Scale LLM Memory and Storage Systems",
+    "jobDescription": "<p>NVIDIA Dynamo is a high-throughput, low-latency inference framework for serving generative AI and reasoning models across multi-node distributed environments. Built in Rust for performance and Python for extensibility, Dynamo orchestrates GPU shards, routes requests, and manages shared KV cache across heterogeneous clusters so that many accelerators feel like a single system at datacenter scale...",
+    "location": "US, CA, Santa Clara",
+    "additionalLocations": [
+      "US, WA, Remote",
+      "US, MA, Remote"
+    ],
+    "postedOn": "Posted 30+ Days Ago",
+    "startDate": "2026-01-09",
+    "timeType": "Full time",
+    "jobReqId": "JR2010271",
+    "jobPostingId": "Principal-Software-Engineer---Large-Scale-LLM-Memory-and-Storage-Systems_JR2010271",
+    "jobPostingSiteId": "NVIDIAExternalCareerSite",
+    "country": {
+      "descriptor": "United States of America",
+      "id": "bc33aa3152ec42d4995f4791a106ed09"
+    },
+    "canApply": true,
+    "posted": true,
+    "includeResumeParsing": true,
+    "jobRequisitionLocation": {
+      "descriptor": "US, CA, Santa Clara",
+      "country": {
+        "descriptor": "United States of America",
+        "id": "bc33aa3152ec42d4995f4791a106ed09",
+        "alpha2Code": "US"
+      }
+    },
+    "externalUrl": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/US-CA-Santa-Clara/Principal-Software-Engineer---Large-Scale-LLM-Memory-and-Storage-Systems_JR2010271",
+    "questionnaireId": "3403860341171001f57d5c603f290000"
+  },
+  "hiringOrganization": {
+    "name": "2100 NVIDIA USA",
+    "url": ""
+  },
+  "similarJobs": [
+    {
+      "title": "Principal Software Engineer - Networking - DGX Cloud",
+      "externalPath": "/job/US-CA-Santa-Clara/Principal-Software-Engineer---Networking---DGX-Cloud_JR2024724",
+      "timeType": "Full time",
+      "locationsText": "2 Locations",
+      "postedOn": "Posted 30+ Days Ago",
+      "startDate": "2026-09-08"
+    },
+    {
+      "title": "Principal System Software Engineer - CUDA Driver",
+      "externalPath": "/job/US-CA-Santa-Clara/Principal-System-Software-Engineer---CUDA-Driver_JR2027584",
+      "timeType": "Full time",
+      "locationsText": "US, CA, Santa Clara",
+      "postedOn": "Posted 3 Days Ago",
+      "startDate": "2026-10-14"
+    }
+  ],
+  "userAuthenticated": false
+}
