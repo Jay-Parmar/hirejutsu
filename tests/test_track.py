@@ -110,3 +110,18 @@ def test_note_on_todays_pick(home):
 def test_note_on_unknown_job(home, capsys):
     assert hj(home, "note", "99", "hello") == 1
     assert "No job with id 99" in capsys.readouterr().out
+
+
+def test_show_prints_details_history_and_start_of_description(home, capsys):
+    description = "\n".join(f"line {n}" for n in range(1, 51))
+    with Store(home / "hirejutsu.db") as store:
+        store.upsert_jobs([job("a", location="Pune", salary_min=100000.0, salary_max=150000.0, salary_currency="INR",
+                               salary_period="year", description=description)], NOW)
+        store.set_status(1, "applied", note="referred by Sam", at=NOW)
+        store.add_note(1, "recruiter called", at=NOW)
+    assert hj(home, "show", "1") == 0
+    out = capsys.readouterr().out
+    for text in ("Engineer a at Company a", "Pune", "INR 100,000 - 150,000 per year", "https://x/a",
+                 "applied since", "referred by Sam", "recruiter called", "line 40", "10 more lines"):
+        assert text in out, text
+    assert "line 41" not in out
