@@ -257,3 +257,60 @@ def test_freshness_is_neutral_without_dates():
 def test_freshness_reason_says_when_it_was_posted(age, reason):
     jobs = [job("1", "Engineer", description="python", posted_at=NOW - age)]
     assert reason in rank(jobs, Profile(skills=["python"]), settings(), now=NOW)[0].reasons
+
+
+def test_location_filter_keeps_your_places_and_unknown_ones():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", location="Bengaluru, India"),
+        job("2", "Engineer", company="B", description="python", location="Berlin, Germany"),
+        job("3", "Engineer", company="C", description="python"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"], locations=["Bangalore"]), settings())
+    assert [match.job.external_id for match in matches] == ["1", "3"]
+    assert "In Bangalore" in matches[0].reasons
+
+
+def test_remote_matches_remote_jobs():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", remote=True),
+        job("2", "Engineer", company="B", description="python", location="Anywhere"),
+        job("3", "Engineer", company="C", description="python", location="WFH, India"),
+        job("4", "Engineer", company="D", description="python", location="Pune"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"], locations=["Remote"]), settings())
+    assert [match.job.external_id for match in matches] == ["1", "2", "3"]
+    assert all("Remote" in match.reasons for match in matches)
+
+
+@pytest.mark.parametrize("wanted, where", [
+    ("Gurgaon", "Gurugram, Haryana"),
+    ("Mumbai", "Bombay"),
+    ("NCR", "New Delhi"),
+    ("bangalore", "BENGALURU"),
+])
+def test_locations_match_common_aliases(wanted, where):
+    jobs = [job("1", "Engineer", description="python", location=where)]
+    assert f"In {wanted}" in rank(jobs, Profile(skills=["python"], locations=[wanted]), settings())[0].reasons
+
+
+def test_location_score_mode_ranks_other_places_lower():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", location="Berlin"),
+        job("2", "Engineer", company="B", description="python", location="Pune"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"], locations=["Pune"]), settings(location_mode="score"))
+    assert [match.job.external_id for match in matches] == ["2", "1"]
+    assert "Outside your locations: Berlin" in matches[1].reasons
+
+
+def test_no_locations_means_anywhere():
+    jobs = [job("1", "Engineer", description="python", location="Berlin")]
+    assert rank(jobs, Profile(skills=["python"]), settings(weights={"location": 1}))[0].score == 0.5
+
+
+def test_reasons_keep_the_four_most_important():
+    jobs = [job("1", "Backend Engineer", description="python, 6+ years", location="Remote", posted_at=NOW)]
+    profile = Profile(skills=["python"], titles=["Backend Engineer"], years=4, locations=["remote"])
+    assert rank(jobs, profile, settings(), now=NOW)[0].reasons == [
+        "Skills: python (1 of 1)", "Title close to Backend Engineer", "Asks 6+ years, you have 4", "Remote",
+    ]

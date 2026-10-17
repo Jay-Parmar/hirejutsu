@@ -12,9 +12,10 @@ from .models import Job, Match, Profile
 RANKING_DEFAULTS = {
     "top": 10,
     "per_company": 2,
-    "weights": {"skills": 0.35, "title": 0.2, "seniority": 0.1, "freshness": 0.1},
+    "weights": {"skills": 0.35, "title": 0.2, "seniority": 0.1, "freshness": 0.1, "location": 0.05},
     "half_life_days": 3,
     "seniority_tolerance": 2,
+    "location_mode": "filter",
 }
 
 # Score for a part that cannot be judged, such as skills when the profile lists none.
@@ -26,6 +27,7 @@ TITLE_BONUS = 2
 FULL_SKILLS = 8
 # Title similarity from which a title counts as close to one you want.
 CLOSE_TITLE = 0.6
+MAX_REASONS = 4
 
 WORD_CHARS = frozenset("abcdefghijklmnopqrstuvwxyz0123456789")
 WORD = re.compile(r"[a-z0-9+#]+")
@@ -49,6 +51,11 @@ LEVELS = {
 # director, head and vp stay in because they also name the role.
 SENIORITY_WORDS = set(LEVELS) - {"manager", "director", "head", "vp"}
 NUMERALS = {"i", "ii", "iii", "iv", "v"}
+REMOTE_WORDS = ("remote", "anywhere", "wfh", "work from home")
+PLACE_ALIASES = [
+    {"bengaluru", "bangalore"}, {"gurugram", "gurgaon"}, {"mumbai", "bombay"}, {"delhi", "ncr"},
+    {"chennai", "madras"}, {"kolkata", "calcutta"}, {"us", "usa", "united states"}, {"uk", "united kingdom"},
+]
 STOPWORDS = frozenset(
     "a about after all also an and any are as at be been but by can could do does each for from had has have he "
     "her here his how i if in into is its just may me more most my no not of on only or other our out over she "
@@ -78,6 +85,8 @@ class _Run:
     now: datetime
     skills: list[str] = field(init=False)
     titles: list[tuple[str, list[str]]] = field(init=False)
+    places: dict[str, str] = field(init=False)
+    wants_remote: bool = field(init=False)
     size: int = 0
     skill_weights: dict[str, float] = field(default_factory=dict)
     title_counts: Counter = field(default_factory=Counter)
@@ -86,12 +95,14 @@ class _Run:
     def __post_init__(self):
         self.skills = list(dict.fromkeys(skill.strip().lower() for skill in self.profile.skills if skill.strip()))
         self.titles = [(title, _role_words(_title_words(title))) for title in self.profile.titles]
+        self.places = _places(self.profile.locations)
+        self.wants_remote = any(location.strip().lower() == "remote" for location in self.profile.locations)
 
 
 def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None = None) -> list[Match]:
     """Best matches first, at most settings["top"] of them."""
     run = _Run(profile, settings, now or datetime.now().astimezone())
-    pool = [_entry(job, run) for job in jobs]
+    pool = [_entry(job, run) for job in jobs if not any(problem for _, problem in _checks(job, run))]
     _learn(pool, run)
     for entry in pool:
         entry.parts = {
@@ -99,6 +110,7 @@ def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None
             "title": _title_match(entry.words, run)[0],
             "seniority": _seniority(entry, run),
             "freshness": _freshness(entry.job, run),
+            "location": _location(entry.job, run),
         }
         entry.score = _combine(entry.parts, settings["weights"])
     best = sorted((entry for entry in pool if _relevant(entry)), key=lambda entry: entry.score, reverse=True)
@@ -133,6 +145,26 @@ def pick(matches: list[Match], top: int, per_company: int) -> list[Match]:
         per[company] += 1
         chosen.append(match)
     return chosen
+
+
+def _places(locations: list[str]) -> dict[str, str]:
+    """Each accepted place name, aliases included, mapped to the profile location it stands for."""
+    places = {}
+    for location in locations:
+        name = location.strip().lower()
+        if name and name != "remote":
+            for alias in next((group for group in PLACE_ALIASES if name in group), {name}):
+                places[alias] = location.strip()
+    return places
+
+
+def _checks(job: Job, run: _Run) -> list[tuple[str, str]]:
+    """The hard filters that are on, each with why the job fails it, or "" when it passes."""
+    checks = []
+    if run.settings["location_mode"] == "filter" and (run.places or run.wants_remote):
+        outside = _place(job, run) == ""
+        checks.append(("location", f"{job.location or 'Remote'} is not one of your locations" if outside else ""))
+    return checks
 
 
 def _entry(job: Job, run: _Run) -> _Entry:
@@ -270,6 +302,26 @@ def _freshness(job: Job, run: _Run) -> float:
     return 0.5 ** (age / run.settings["half_life_days"])
 
 
+def _place(job: Job, run: _Run) -> str | None:
+    """Which of your locations the job is in: "Remote" or a place, "" for none, None when it is unknown."""
+    if not run.places and not run.wants_remote:
+        return None
+    where = job.location.lower()
+    remote = job.remote is True or any(has_term(where, word) for word in REMOTE_WORDS)
+    if remote and run.wants_remote:
+        return "Remote"
+    if not where:
+        return "" if remote else None
+    return next((location for name, location in run.places.items() if has_term(where, name)), "")
+
+
+def _location(job: Job, run: _Run) -> float:
+    place = _place(job, run)
+    if place is None:
+        return NEUTRAL
+    return 1.0 if place else 0.0
+
+
 def _relevant(entry: _Entry) -> bool:
     """A job needs one of your skills or a close title to be worth showing."""
     return bool(entry.found) or entry.parts["title"] >= CLOSE_TITLE
@@ -280,9 +332,10 @@ def _reasons(entry: _Entry, run: _Run) -> list[str]:
         _skills_reason(entry, run),
         _title_reason(entry, run),
         _seniority_reason(entry, run),
+        _location_reason(entry.job, run),
         _freshness_reason(entry.job, run),
     ]
-    return [reason for reason in reasons if reason]
+    return [reason for reason in reasons if reason][:MAX_REASONS]
 
 
 def _skills_reason(entry: _Entry, run: _Run) -> str:
@@ -310,6 +363,15 @@ def _seniority_reason(entry: _Entry, run: _Run) -> str:
     if level and _gap(years, LEVELS[level]) > tolerance:
         return f"Asks {level} level, you have {years:g} years"
     return ""
+
+
+def _location_reason(job: Job, run: _Run) -> str:
+    place = _place(job, run)
+    if place is None:
+        return ""
+    if not place:
+        return f"Outside your locations: {job.location or 'Remote'}"
+    return place if place == "Remote" else f"In {place}"
 
 
 def _freshness_reason(job: Job, run: _Run) -> str:
