@@ -3,6 +3,7 @@
 These sites forbid scraping in their terms, so every board here is off until the user turns it on.
 """
 
+import logging
 import time
 
 from ..errors import HirejutsuError
@@ -11,7 +12,20 @@ from ..text import clean, html_to_text, parse_date
 from . import register
 from .base import Source
 
+log = logging.getLogger(__name__)
+
 PERIODS = {"yearly": "year", "monthly": "month", "weekly": "week", "daily": "day", "hourly": "hour"}
+
+
+class _Recorder(logging.Handler):
+    """Keeps log records instead of printing them."""
+
+    def __init__(self):
+        super().__init__(logging.WARNING)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
 
 
 def _scrape(**search) -> list[dict]:
@@ -46,11 +60,34 @@ class Board(Source):
 
     def fetch(self) -> list[Job]:
         jobs: list[Job] = []
+        errors: list[str] = []
         for number, search in enumerate(self.searches()):
             if number:
                 time.sleep(self.settings["delay_seconds"])
-            jobs += [job for job in map(self.to_job, _scrape(**search)) if job]
+            rows, records = self.run(search)
+            jobs += [job for job in map(self.to_job, rows) if job]
+            errors += [record.getMessage() for record in records if record.levelno >= logging.ERROR]
+        errors = list(dict.fromkeys(errors))
+        if errors and not jobs:
+            raise HirejutsuError("; ".join(errors))
+        if errors:
+            log.warning("Some %s searches failed: %s", self.name, "; ".join(errors))
         return jobs
+
+    def run(self, search: dict) -> tuple[list[dict], list[logging.LogRecord]]:
+        """Run one search and keep what jobspy logs about it. Board failures are logged, not raised."""
+        # jobspy 1.3 gives each board a "JobSpy:<Board>" logger whose own handler prints to stderr.
+        logger = logging.getLogger(f"JobSpy:{self.label}")
+        recorder = _Recorder()
+        saved = logger.handlers
+        logger.handlers = [recorder]
+        try:
+            rows = _scrape(**search)
+        finally:
+            logger.handlers = saved
+        for record in recorder.records:
+            log.debug("%s: %s", self.name, record.getMessage())
+        return rows, recorder.records
 
     def searches(self) -> list[dict]:
         if not self.query.keywords:
