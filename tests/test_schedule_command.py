@@ -72,10 +72,11 @@ def test_show_prints_the_cron_line_on_macos_and_linux(tmp_path, run, capsys, mon
 def test_status_shows_the_next_and_last_run(tmp_path, run, capsys):
     run.replies["schtasks /Query"] = (0, LISTING, "")
     assert main(["--home", str(tmp_path), "schedule", "status"]) == 0
-    lines = capsys.readouterr().out.splitlines()
-    assert "18-10-2026 09:00:00" in next(line for line in lines if line.startswith("Next run"))
-    assert "17-10-2026 09:00:04" in next(line for line in lines if line.startswith("Last run"))
-    assert "0" in next(line for line in lines if line.startswith("Last result"))
+    assert capsys.readouterr().out.splitlines() == [
+        "Next run    18-10-2026 09:00:00",
+        "Last run    17-10-2026 09:00:04",
+        "Last result 0",
+    ]
 
 
 def test_status_shows_the_end_of_the_latest_run_log(tmp_path, run, capsys):
