@@ -165,6 +165,11 @@ def test_find_skills_beyond_software():
     ]
 
 
+def test_find_skills_for_websites_and_online_stores():
+    text = "Built WordPress and Shopify stores, then moved to Webflow, Magento and WooCommerce"
+    assert find_skills(text) == ["WordPress", "Shopify", "Webflow", "Magento", "WooCommerce"]
+
+
 @pytest.mark.parametrize(
     ("text", "years"),
     [
