@@ -1,3 +1,4 @@
+import csv
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
@@ -193,3 +194,31 @@ def test_stats(home, capsys):
 def test_stats_without_applications(home, capsys):
     assert hj(home, "stats") == 0
     assert "no applications yet" in capsys.readouterr().out
+
+
+def test_export_writes_csv(home, capsys):
+    set_statuses(home, (1, "applied", 2), (2, "skipped", 1))
+    with Store(home / "hirejutsu.db") as store:
+        store.add_note(1, "referred by Sam")
+        store.add_note(1, "call on Monday")
+    path = home / "out.csv"
+    assert hj(home, "export", "--output", str(path)) == 0
+    assert "Saved 2 jobs" in capsys.readouterr().out
+    rows = list(csv.DictReader(path.read_text(encoding="utf-8-sig").splitlines()))
+    assert [(row["id"], row["status"]) for row in rows] == [("2", "skipped"), ("1", "applied")]
+    assert rows[1]["notes"] == "referred by Sam; call on Monday"
+    assert rows[1]["applied"] == rows[1]["changed"] != ""
+    assert rows[0]["applied"] == ""
+
+
+def test_export_defaults_to_the_data_folder(home):
+    set_statuses(home, (1, "applied", 0), (2, "skipped", 0))
+    assert hj(home, "export", "--status", "applied") == 0
+    [path] = home.glob("tracked-jobs-*.csv")
+    assert path.read_bytes().startswith(b"\xef\xbb\xbf")
+    assert path.read_text(encoding="utf-8-sig").count("https://x/") == 1
+
+
+def test_export_reports_unwritable_path(home, capsys):
+    assert hj(home, "export", "--output", str(home)) == 2
+    assert "Cannot write" in capsys.readouterr().out

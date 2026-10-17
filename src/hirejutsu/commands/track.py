@@ -1,7 +1,9 @@
 """Commands for keeping track of what you did with each job."""
 
+import csv
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
 from rich.markup import escape
 from rich.style import Style
@@ -15,6 +17,10 @@ from ..store import STATUSES, Store
 
 DESCRIPTION_LINES = 40
 TRACKED = tuple(status for status in STATUSES if status != "new")
+EXPORT_COLUMNS = [
+    "id", "title", "company", "location", "status", "changed", "applied", "posted",
+    "first_seen", "last_seen", "url", "notes",
+]
 
 
 def register(sub) -> None:
@@ -56,6 +62,12 @@ def register(sub) -> None:
 
     parser = sub.add_parser("stats", help="show how your applications are going")
     parser.set_defaults(func=stats)
+
+    parser = sub.add_parser("export", help="save tracked jobs to a CSV file")
+    add_status_filter(parser)
+    parser.add_argument("-o", "--output", type=Path, metavar="PATH",
+                        help="file to write (default: tracked-jobs-<date>.csv in the data folder)")
+    parser.set_defaults(func=export)
 
 
 def add_ids(parser, nargs="+") -> None:
@@ -261,4 +273,28 @@ def stats(app, args) -> int:
     top = Counter(company for company, _, _ in applications).most_common(5)
     if top:
         console.print(Text("Top companies: " + ", ".join(f"{company} ({count})" for company, count in top)))
+    return 0
+
+
+def export_row(job: Job, history: list) -> list:
+    applied = next((at for status, at, _ in history if status == "applied"), None)
+    notes = "; ".join(text for _, _, text in history if text)
+    return [
+        job.id, job.title, job.company, place(job), job.status, local(job.status_at), local(applied),
+        local(job.posted_at), local(job.first_seen), local(job.last_seen), job.url, notes,
+    ]
+
+
+def export(app, args) -> int:
+    path = args.output or app.home / f"tracked-jobs-{datetime.now().astimezone().date()}.csv"
+    rows = [export_row(job, app.store.history(job.id)) for job in tracked_jobs(app.store, args.status)]
+    try:
+        # The BOM makes Excel read the file as UTF-8 instead of the Windows code page.
+        with path.open("w", newline="", encoding="utf-8-sig") as file:
+            writer = csv.writer(file)
+            writer.writerow(EXPORT_COLUMNS)
+            writer.writerows(rows)
+    except OSError as exc:
+        raise HirejutsuError(f"Cannot write {path}: {exc.strerror}") from exc
+    app.console.print(Text(f"Saved {len(rows)} jobs to {path}"))
     return 0
