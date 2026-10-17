@@ -43,6 +43,17 @@ Copy your resume into the data folder and open the config:
 hirejutsu config --edit
 ```
 
+## Fetching jobs
+
+```
+hirejutsu sources          # list sources, whether they are on, and their last fetch
+hirejutsu fetch            # download jobs from every enabled source
+hirejutsu fetch -s lever   # just one source
+```
+
+Jobs are saved in `hirejutsu.db` inside the data folder, so each fetch only adds what is new.
+A source that fails is reported and skipped, the others still run.
+
 ## Development
 
 ```
