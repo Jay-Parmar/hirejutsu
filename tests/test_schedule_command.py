@@ -14,8 +14,10 @@ Last Result:                          0
 
 @pytest.fixture
 def run(monkeypatch):
+    """A Windows PC whose commands are recorded instead of run."""
     fake = FakeRun()
     monkeypatch.setattr(schedule.subprocess, "run", fake)
+    monkeypatch.setattr(schedule, "WINDOWS", True)
     monkeypatch.setenv("USERDOMAIN", "PC")
     monkeypatch.setenv("USERNAME", "jay")
     return fake
@@ -55,6 +57,15 @@ def test_install_failure_is_reported(tmp_path, run, capsys):
 def test_show_prints_the_task_without_registering_it(tmp_path, run, capsys):
     assert main(["--home", str(tmp_path), "schedule", "show", "--wake"]) == 0
     assert "<WakeToRun>true</WakeToRun>" in capsys.readouterr().out
+    assert run.calls == []
+
+
+def test_show_prints_the_cron_line_on_macos_and_linux(tmp_path, run, capsys, monkeypatch):
+    monkeypatch.setattr(schedule, "WINDOWS", False)
+    assert main(["--home", str(tmp_path), "schedule", "show", "--weekdays"]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("0 9 * * 1-5 ")
+    assert out.rstrip().endswith("run --log # hirejutsu")
     assert run.calls == []
 
 

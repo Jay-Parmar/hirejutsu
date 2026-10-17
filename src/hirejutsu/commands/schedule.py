@@ -40,7 +40,7 @@ def install(app, args) -> int:
 
 
 def show(app, args) -> int:
-    app.console.print(schedule.task_xml(app.home, args.time, args.weekdays, args.wake), markup=False, highlight=False)
+    app.console.print(schedule.preview(app.home, args.time, args.weekdays, args.wake), markup=False, highlight=False)
     return 0
 
 
