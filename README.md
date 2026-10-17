@@ -68,6 +68,44 @@ hirejutsu fetch -s lever   # just one source
 Jobs are saved in `hirejutsu.db` inside the data folder, so each fetch only adds what is new.
 A source that fails is reported and skipped, the others still run.
 
+## LinkedIn, Indeed, Naukri and other big sites (optional)
+
+hirejutsu can also search Indeed, Naukri, LinkedIn, Glassdoor and ZipRecruiter through
+[python-jobspy](https://github.com/speedyapply/JobSpy). Install the extra:
+
+```
+pip install -e ".[jobspy]"
+```
+
+Then turn on the sites you want in `config.yaml`:
+
+```yaml
+sources:
+  indeed: {enabled: true, country: India}
+  naukri: {enabled: true}
+  linkedin: {enabled: true}
+```
+
+Each site runs one search per keyword (`search.keywords`, or your titles) and city in
+`profile.locations`. `remote` in your locations adds a search for remote jobs.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `results` | Indeed 50, Glassdoor 30, LinkedIn 25, others 20 | jobs per search |
+| `max_searches` | 3 | searches per site in one run |
+| `delay_seconds` | 15, LinkedIn 30 | pause between searches |
+| `descriptions` | on, LinkedIn off | load full descriptions, which takes extra requests |
+| `country` | India | Indeed and Glassdoor only |
+
+- LinkedIn has no remote filter when logged out, so it only searches your cities.
+- Naukri wants plain city names such as `Bengaluru`.
+- ZipRecruiter only lists jobs in the US and Canada.
+
+These sites forbid scraping in their terms of use. That is why they stay off until you turn them
+on, at your own risk. hirejutsu only reads job listings, a few searches a day, and never logs in
+or applies for you. If a site starts refusing requests (usually a temporary rate limit on your
+IP address), `hirejutsu fetch` shows the error and skips that site's other searches for the run.
+
 ## Daily picks
 
 ```
