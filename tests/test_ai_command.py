@@ -61,3 +61,11 @@ def test_ai_explain_unknown_job(home, monkeypatch, capsys):
     fake_ai(monkeypatch, claude_reply("unused"))
     assert main(["--home", str(home), "ai", "explain", "99"]) == 2
     assert "No job with id 99" in capsys.readouterr().out
+
+
+def test_ai_explain_sends_nothing_while_ai_is_off(home, monkeypatch, capsys):
+    (home / "config.yaml").write_text("resume: resume.txt\n", encoding="utf-8")
+    client = fake_ai(monkeypatch, claude_reply("unused"))
+    assert main(["--home", str(home), "ai", "explain", "1"]) == 2
+    assert "ai.enabled" in capsys.readouterr().out
+    assert client.calls == []

@@ -35,11 +35,13 @@ def check(app, args) -> int:
 
 
 def explain(app, args) -> int:
+    settings = ai.load_settings(app.config)
+    if not settings["enabled"]:
+        raise HirejutsuError("The AI second opinion is off. Set ai.enabled to true in the config first.")
     job = app.store.get_job(args.job_id)
     if job is None:
         raise HirejutsuError(f"No job with id {args.job_id}")
     profile = load_profile(app.config)
-    settings = ai.load_settings(app.config)
     app.console.print(Text(f"{job.title} at {job.company}", style="bold"))
     app.console.print(Text(ai.explain(job, profile, settings, ai.make_client(settings))))
     return 0
