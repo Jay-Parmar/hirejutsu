@@ -1,0 +1,179 @@
+{
+  "exhaustive": {
+    "nbHits": true,
+    "typo": true
+  },
+  "exhaustiveNbHits": true,
+  "exhaustiveTypo": true,
+  "hits": [
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "whoishiring"
+        },
+        "story_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "who",
+            "is",
+            "hiring"
+          ],
+          "value": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and [...]"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "who",
+            "is",
+            "hiring"
+          ],
+          "value": "Ask HN: <em>Who is hiring</em>? (October 2026)"
+        }
+      },
+      "_tags": [
+        "story",
+        "author_whoishiring",
+        "story_49922569",
+        "ask_hn"
+      ],
+      "author": "whoishiring",
+      "children": [
+        49926618,
+        49922584,
+        49925643
+      ],
+      "created_at": "2026-10-01T15:02:07Z",
+      "created_at_i": 1790866927,
+      "num_comments": 393,
+      "objectID": "49922569",
+      "points": 277,
+      "story_id": 49922569,
+      "story_text": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and [...]",
+      "title": "Ask HN: Who is hiring? (October 2026)",
+      "updated_at": "2026-10-17T11:25:07Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "whoishiring"
+        },
+        "story_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "who",
+            "is",
+            "hiring"
+          ],
+          "value": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and [...]"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "who",
+            "is",
+            "hiring"
+          ],
+          "value": "Ask HN: <em>Who is hiring</em>? (September 2026)"
+        }
+      },
+      "_tags": [
+        "story",
+        "author_whoishiring",
+        "story_49522897",
+        "ask_hn"
+      ],
+      "author": "whoishiring",
+      "children": [
+        49523712,
+        49523950,
+        49524580
+      ],
+      "created_at": "2026-09-01T15:01:17Z",
+      "created_at_i": 1788274877,
+      "num_comments": 392,
+      "objectID": "49522897",
+      "points": 254,
+      "story_id": 49522897,
+      "story_text": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and [...]",
+      "title": "Ask HN: Who is hiring? (September 2026)",
+      "updated_at": "2026-10-16T15:15:49Z"
+    },
+    {
+      "_highlightResult": {
+        "author": {
+          "matchLevel": "none",
+          "matchedWords": [],
+          "value": "whoishiring"
+        },
+        "story_text": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "who",
+            "is",
+            "hiring"
+          ],
+          "value": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and [...]"
+        },
+        "title": {
+          "fullyHighlighted": false,
+          "matchLevel": "full",
+          "matchedWords": [
+            "who",
+            "is",
+            "hiring"
+          ],
+          "value": "Ask HN: <em>Who is hiring</em>? (August 2026)"
+        }
+      },
+      "_tags": [
+        "story",
+        "author_whoishiring",
+        "story_49156683",
+        "ask_hn"
+      ],
+      "author": "whoishiring",
+      "children": [
+        49165394,
+        49159312,
+        49159002
+      ],
+      "created_at": "2026-08-03T15:00:54Z",
+      "created_at_i": 1785769254,
+      "num_comments": 376,
+      "objectID": "49156683",
+      "points": 237,
+      "story_id": 49156683,
+      "story_text": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and [...]",
+      "title": "Ask HN: Who is hiring? (August 2026)",
+      "updated_at": "2026-10-16T15:22:19Z"
+    }
+  ],
+  "hitsPerPage": 3,
+  "nbHits": 187,
+  "nbPages": 63,
+  "page": 0,
+  "params": "query=%22who+is+hiring%22&tags=story%2Cauthor_whoishiring&restrictSearchableAttributes=title&hitsPerPage=3&advancedSyntax=true&analyticsTags=backend",
+  "processingTimeMS": 27,
+  "processingTimingsMS": {
+    "_request": {
+      "roundTrip": 17
+    },
+    "fetch": {
+      "query": 1,
+      "scanning": 24,
+      "total": 26
+    },
+    "total": 27
+  },
+  "query": "\"who is hiring\"",
+  "serverTimeMS": 28
+}
