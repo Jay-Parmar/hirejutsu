@@ -1,12 +1,14 @@
 import logging
 import logging.handlers
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
+import yaml
 from fakes import FakeClient, fixture
 
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.sources import available, boards
 
@@ -76,11 +78,20 @@ def row(**fields):
     return {**base, **fields}
 
 
-@pytest.mark.parametrize("name", ["indeed", "naukri", "linkedin", "glassdoor", "ziprecruiter"])
+BOARDS = ["indeed", "naukri", "linkedin", "glassdoor", "ziprecruiter"]
+
+
+@pytest.mark.parametrize("name", BOARDS)
 def test_boards_are_registered_and_off_by_default(tmp_path, name):
     source = board(available()[name], tmp_path)
     assert source.name == name
     assert source.settings["enabled"] is False
+
+
+def test_starter_config_shows_how_to_turn_boards_on(tmp_path):
+    lines = [re.sub(r"^  # (\w+: \{)", r"  \1", line) for line in template().splitlines()]
+    config = Config(yaml.safe_load("\n".join(lines)), tmp_path)
+    assert all(available()[name](config, FakeClient()).settings["enabled"] for name in BOARDS)
 
 
 def test_indeed_search_arguments(tmp_path, jobspy):
