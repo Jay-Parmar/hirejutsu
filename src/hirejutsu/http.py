@@ -55,3 +55,7 @@ class Client:
 
     def post_json(self, url: str, payload, headers: dict | None = None):
         return self._send("POST", url, json=payload, headers=headers).json()
+
+    def post(self, url: str, json=None, data: bytes | None = None, headers: dict | None = None) -> str:
+        """POST for services that answer with plain text or nothing at all."""
+        return self._send("POST", url, json=json, data=data, headers=headers).text

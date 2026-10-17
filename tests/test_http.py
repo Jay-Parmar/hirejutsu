@@ -78,3 +78,18 @@ def test_post_json_sends_payload():
     client.post_json("https://example.com/search", {"limit": 20})
     assert json.loads(adapter.sent[0].body) == {"limit": 20}
     assert adapter.sent[0].method == "POST"
+
+
+def test_post_accepts_empty_reply():
+    client = Client()
+    adapter = stub(client, status=204, body=b"")
+    assert client.post("https://example.com/hook", json={"content": "hi"}, headers={"Title": "Picks"}) == ""
+    assert json.loads(adapter.sent[0].body) == {"content": "hi"}
+    assert adapter.sent[0].headers["Title"] == "Picks"
+
+
+def test_post_sends_raw_data():
+    client = Client()
+    adapter = stub(client, body=b"ok")
+    assert client.post("https://example.com/topic", data=b"hello") == "ok"
+    assert adapter.sent[0].body == b"hello"
