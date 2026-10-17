@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
+from hirejutsu import store as store_module
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job, Match
 from hirejutsu.store import Store
@@ -101,6 +102,44 @@ def test_set_status_keeps_note(store):
     assert store.get_job(job_id).note == "referred by Sam"
 
 
+def test_set_status_records_history(store):
+    store.upsert_jobs([make_job()], NOW)
+    job_id = store.find_jobs()[0].id
+    store.set_status(job_id, "applied", note="referred by Sam", at=NOW)
+    store.set_status(job_id, "interview", at=NOW + timedelta(days=3))
+    assert store.history(job_id) == [
+        ("applied", NOW, "referred by Sam"),
+        ("interview", NOW + timedelta(days=3), ""),
+    ]
+
+
+def test_add_note_keeps_status(store):
+    store.upsert_jobs([make_job()], NOW)
+    job_id = store.find_jobs()[0].id
+    store.set_status(job_id, "applied", at=NOW)
+    store.add_note(job_id, "recruiter called", at=NOW + timedelta(hours=2))
+    job = store.get_job(job_id)
+    assert (job.status, job.note) == ("applied", "recruiter called")
+    assert store.history(job_id)[-1] == (None, NOW + timedelta(hours=2), "recruiter called")
+
+
+def test_add_note_rejects_unknown_job(store):
+    with pytest.raises(HirejutsuError):
+        store.add_note(999, "hello")
+
+
+def test_upgrade_turns_existing_status_into_history(tmp_path, monkeypatch):
+    path = tmp_path / "old.db"
+    monkeypatch.setattr(store_module, "MIGRATIONS", store_module.MIGRATIONS[:1])
+    with Store(path) as old:
+        old.upsert_jobs([make_job()], NOW)
+        with old.conn:
+            old.conn.execute("UPDATE jobs SET status = 'applied', status_at = ?, note = 'by email'", (NOW.isoformat(),))
+    monkeypatch.undo()
+    with Store(path) as store:
+        assert store.history(store.find_jobs()[0].id) == [("applied", NOW, "by email")]
+
+
 def test_picks_round_trip(store):
     store.upsert_jobs([make_job("1"), make_job("2")], NOW)
     first, second = sorted(store.find_jobs(), key=lambda job: job.external_id)
@@ -138,6 +177,15 @@ def test_prune_drops_stale_untouched_jobs(store):
     store.record_picks(date(2026, 8, 1), [Match(jobs["picked"], 0.5)])
     assert store.prune(NOW - timedelta(days=30)) == 1
     assert sorted(job.external_id for job in store.find_jobs()) == ["kept", "picked"]
+
+
+def test_prune_drops_history_of_jobs_set_back_to_new(store):
+    store.upsert_jobs([make_job()], NOW - timedelta(days=60))
+    job_id = store.find_jobs()[0].id
+    store.set_status(job_id, "applied")
+    store.set_status(job_id, "new")
+    assert store.prune(NOW - timedelta(days=30)) == 1
+    assert store.history(job_id) == []
 
 
 def test_reopening_keeps_data(tmp_path):

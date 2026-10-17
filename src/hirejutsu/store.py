@@ -65,6 +65,19 @@ MIGRATIONS = [
         error TEXT NOT NULL DEFAULT ''
     );
     """,
+    """
+    -- One row per status change or note. status is NULL for a note on its own.
+    CREATE TABLE events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        job_id INTEGER NOT NULL REFERENCES jobs (id) ON DELETE CASCADE,
+        status TEXT,
+        at TEXT NOT NULL,
+        note TEXT NOT NULL DEFAULT ''
+    );
+    CREATE INDEX events_job_id ON events (job_id);
+    INSERT INTO events (job_id, status, at, note)
+        SELECT id, status, status_at, note FROM jobs WHERE status_at IS NOT NULL;
+    """,
 ]
 
 
@@ -169,14 +182,34 @@ class Store:
     def set_status(self, job_id: int, status: str, note: str | None = None, at: datetime | None = None) -> None:
         if status not in STATUSES:
             raise HirejutsuError(f"Unknown status '{status}'. Use one of: {', '.join(STATUSES)}")
-        at = at or datetime.now(timezone.utc)
+        at = _to_text(at or datetime.now(timezone.utc))
         with self.conn:
             cursor = self.conn.execute(
                 "UPDATE jobs SET status = ?, status_at = ?, note = COALESCE(?, note) WHERE id = ?",
-                (status, _to_text(at), note, job_id),
+                (status, at, note, job_id),
             )
-        if not cursor.rowcount:
-            raise HirejutsuError(f"No job with id {job_id}")
+            if not cursor.rowcount:
+                raise HirejutsuError(f"No job with id {job_id}")
+            self.conn.execute(
+                "INSERT INTO events (job_id, status, at, note) VALUES (?, ?, ?, ?)",
+                (job_id, status, at, note or ""),
+            )
+
+    def add_note(self, job_id: int, note: str, at: datetime | None = None) -> None:
+        """Note something about a job without changing its status."""
+        at = _to_text(at or datetime.now(timezone.utc))
+        with self.conn:
+            cursor = self.conn.execute("UPDATE jobs SET note = ? WHERE id = ?", (note, job_id))
+            if not cursor.rowcount:
+                raise HirejutsuError(f"No job with id {job_id}")
+            self.conn.execute("INSERT INTO events (job_id, at, note) VALUES (?, ?, ?)", (job_id, at, note))
+
+    def history(self, job_id: int) -> list[tuple[str | None, datetime, str]]:
+        """(status, at, note) for each change to a job, oldest first. status is None for a plain note."""
+        rows = self.conn.execute(
+            "SELECT status, at, note FROM events WHERE job_id = ? ORDER BY at, id", (job_id,)
+        ).fetchall()
+        return [(row["status"], _to_datetime(row["at"]), row["note"]) for row in rows]
 
     def record_picks(self, day: date, matches: list[Match]) -> None:
         """Save the jobs picked for a day, replacing any earlier picks for that day."""
