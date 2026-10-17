@@ -214,6 +214,26 @@ hirejutsu run --no-notify            # pick without sending anything
 
 A channel that fails is reported and the others still get the picks.
 
+## Run it every morning
+
+```
+hirejutsu schedule install                 # every day at 09:00
+hirejutsu schedule install --time 07:30 --weekdays
+hirejutsu schedule status                  # next and last run, and the end of the latest log
+hirejutsu schedule remove
+```
+
+On Windows this adds a task named `hirejutsu` to Task Scheduler. It runs as you, only while you are
+logged in, and needs no admin rights. If the PC is off or asleep at that time, the run happens as
+soon as it is on again and you are logged in. Add `--wake` to wake a sleeping PC instead.
+`hirejutsu schedule show` prints the task without adding it.
+
+On macOS and Linux it adds a line to your crontab. Cron skips the run if the computer is off.
+
+A scheduled run writes everything to `logs/run-YYYY-MM-DD.log` in the data folder, and the newest
+30 logs are kept. It uses the Python you installed it with, so run `install` again if you move or
+recreate your virtual environment.
+
 ## Development
 
 ```
