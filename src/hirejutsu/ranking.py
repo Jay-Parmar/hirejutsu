@@ -17,6 +17,7 @@ RANKING_DEFAULTS = {
     "half_life_days": 3,
     "seniority_tolerance": 2,
     "location_mode": "filter",
+    "remote_from": [],
     "exclude_keywords": [],
     "exclude_title_words": [],
     "exclude_companies": [],
@@ -65,6 +66,11 @@ LEVELS = {
 SENIORITY_WORDS = set(LEVELS) - {"manager", "director", "head", "vp"}
 NUMERALS = {"i", "ii", "iii", "iv", "v"}
 REMOTE_WORDS = ("remote", "anywhere", "wfh", "work from home")
+# Words in the location of a remote job that do not limit where you can work from.
+OPEN_WORDS = frozenset(
+    "remote anywhere worldwide world global globally everywhere international wfh work from home any "
+    "location locations in the fully first friendly time zone zones timezone timezones or and".split()
+)
 PLACE_ALIASES = [
     {"bengaluru", "bangalore"}, {"gurugram", "gurgaon"}, {"mumbai", "bombay"}, {"delhi", "ncr"},
     {"chennai", "madras"}, {"kolkata", "calcutta"}, {"us", "usa", "united states"}, {"uk", "united kingdom"},
@@ -116,6 +122,7 @@ class _Run:
     titles: list[tuple[str, list[str]]] = field(init=False)
     places: dict[str, str] = field(init=False)
     wants_remote: bool = field(init=False)
+    remote_from: set[str] = field(init=False)
     size: int = 0
     skill_weights: dict[str, float] = field(default_factory=dict)
     title_counts: Counter = field(default_factory=Counter)
@@ -130,6 +137,7 @@ class _Run:
         self.titles = [(title, _role_words(_title_words(title))) for title in self.profile.titles]
         self.places = _places(self.profile.locations)
         self.wants_remote = any(location.strip().lower() == "remote" for location in self.profile.locations)
+        self.remote_from = set(_places(self.settings["remote_from"]))
 
 
 def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None = None) -> list[Match]:
@@ -477,10 +485,17 @@ def _place(job: Job, run: _Run) -> str | None:
     where = job.location.lower()
     remote = job.remote is True or any(has_term(where, word) for word in REMOTE_WORDS)
     if remote and run.wants_remote:
-        return "Remote"
+        return "Remote" if _open_to_you(where, run) else ""
     if not where:
         return "" if remote else None
     return next((location for name, location in run.places.items() if has_term(where, name)), "")
+
+
+def _open_to_you(where: str, run: _Run) -> bool:
+    """True for a remote job that names no places, or names one you can work from."""
+    if not run.remote_from or any(has_term(where, place) for place in run.remote_from):
+        return True
+    return all(word in OPEN_WORDS for word in re.findall(r"[a-z]+", where))
 
 
 def _location(job: Job, run: _Run) -> float:
