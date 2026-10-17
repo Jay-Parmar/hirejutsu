@@ -1,6 +1,7 @@
 """Commands for keeping track of what you did with each job."""
 
-from datetime import datetime, timedelta, timezone
+from collections import Counter
+from datetime import date, datetime, timedelta, timezone
 
 from rich.markup import escape
 from rich.style import Style
@@ -52,6 +53,9 @@ def register(sub) -> None:
     parser.add_argument("--company", metavar="TEXT", help="only companies whose name contains TEXT")
     parser.add_argument("-n", type=int, default=50, metavar="LIMIT", help="how many to show (default 50)")
     parser.set_defaults(func=list_jobs)
+
+    parser = sub.add_parser("stats", help="show how your applications are going")
+    parser.set_defaults(func=stats)
 
 
 def add_ids(parser, nargs="+") -> None:
@@ -219,4 +223,42 @@ def list_jobs(app, args) -> int:
     app.console.print(table)
     if len(jobs) > args.n:
         app.console.print(f"Showing {args.n} of {len(jobs)}. Use -n to see more.")
+    return 0
+
+
+def per_week(days: list[date], today: date, weeks: int = 8) -> list[tuple[date, int]]:
+    """How many of the days fall in each of the last few weeks, oldest first. Weeks start on Monday."""
+    counts = Counter(day - timedelta(days=day.weekday()) for day in days)
+    this_monday = today - timedelta(days=today.weekday())
+    mondays = [this_monday - timedelta(weeks=back) for back in reversed(range(weeks))]
+    return [(monday, counts[monday]) for monday in mondays]
+
+
+def stats(app, args) -> int:
+    console = app.console
+    counts = app.store.status_counts()
+    table = Table("Status", Column("Jobs", justify="right"), title="Jobs by status")
+    for status in STATUSES:
+        table.add_row(status, str(counts.get(status, 0)))
+    console.print(table)
+
+    applications = app.store.applications()
+    days = [at.astimezone().date() for _, at, _ in applications]
+    table = Table("Week of", Column("Applied", justify="right"), "", title="Applications per week")
+    for monday, count in per_week(days, datetime.now().astimezone().date()):
+        table.add_row(monday.isoformat(), str(count), "#" * count)
+    console.print(table)
+
+    if applications:
+        answered = sum(1 for _, _, got_answer in applications if got_answer)
+        console.print(
+            f"Response rate: {answered / len(applications):.0%} "
+            f"({answered} of {len(applications)} applications got an interview or offer)"
+        )
+    else:
+        console.print("Response rate: no applications yet")
+    console.print(f"Picks shown: {app.store.pick_count()}")
+    top = Counter(company for company, _, _ in applications).most_common(5)
+    if top:
+        console.print(Text("Top companies: " + ", ".join(f"{company} ({count})" for company, count in top)))
     return 0

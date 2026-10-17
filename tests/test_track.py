@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
@@ -169,3 +169,27 @@ def test_list_filters(home, capsys):
 def test_list_without_tracked_jobs(home, capsys):
     assert hj(home, "list") == 0
     assert "No matching jobs" in capsys.readouterr().out
+
+
+def test_per_week_counts_the_last_few_weeks():
+    days = [date(2026, 10, 12), date(2026, 10, 17), date(2026, 10, 1), date(2026, 8, 1)]
+    assert track.per_week(days, today=date(2026, 10, 17), weeks=3) == [
+        (date(2026, 9, 28), 1),
+        (date(2026, 10, 5), 0),
+        (date(2026, 10, 12), 2),
+    ]
+
+
+def test_stats(home, capsys):
+    set_statuses(home, (1, "applied", 3), (1, "interview", 1), (2, "applied", 2), (3, "skipped", 0))
+    pick_today(home, 1, 2, 3)
+    assert hj(home, "stats") == 0
+    out = capsys.readouterr().out
+    assert "Response rate: 50% (1 of 2 applications" in out
+    assert "Picks shown: 3" in out
+    assert "Company a (1)" in out
+
+
+def test_stats_without_applications(home, capsys):
+    assert hj(home, "stats") == 0
+    assert "no applications yet" in capsys.readouterr().out
