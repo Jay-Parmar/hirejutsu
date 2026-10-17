@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime, timezone
 
 import pytest
@@ -79,6 +80,12 @@ def test_one_search_per_keyword_and_place(tmp_path, jobspy):
 def test_no_locations_searches_anywhere(tmp_path, jobspy):
     board(boards.Indeed, tmp_path, locations=[]).fetch()
     assert [(search["location"], search["is_remote"]) for search in jobspy.searches] == [(None, False)]
+
+
+def test_missing_jobspy_says_how_to_install_it(tmp_path, monkeypatch):
+    monkeypatch.setitem(sys.modules, "jobspy", None)
+    with pytest.raises(HirejutsuError, match=r'pip install -e "\.\[jobspy\]"'):
+        board(boards.Indeed, tmp_path).fetch()
 
 
 def test_board_needs_keywords(tmp_path, jobspy):
