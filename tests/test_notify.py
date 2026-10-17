@@ -12,6 +12,8 @@ DAY = date(2026, 10, 17)
 REPORT = Path("reports") / "2026-10-17.md"
 MESSAGE = Message("hirejutsu: test", "hello", "<p>hello</p>")
 TELEGRAM = {"enabled": True, "chat_id": 42}
+DISCORD_URL = "https://discord.com/api/webhooks/1/abc"
+SLACK_URL = "https://hooks.slack.com/services/T1/B1/abc"
 
 
 class Recorder:
@@ -50,6 +52,12 @@ def http_error(status, body, url):
 @pytest.fixture
 def token(monkeypatch):
     monkeypatch.setenv("HIREJUTSU_TELEGRAM_TOKEN", "123:secret")
+
+
+@pytest.fixture
+def webhooks(monkeypatch):
+    monkeypatch.setenv("HIREJUTSU_DISCORD_WEBHOOK", DISCORD_URL)
+    monkeypatch.setenv("HIREJUTSU_SLACK_WEBHOOK", SLACK_URL)
 
 
 def test_picks_message_lists_jobs_and_report():
@@ -133,3 +141,51 @@ def test_connection_error_does_not_show_the_token(tmp_path, token):
     [(name, reason)] = send_all(config(tmp_path, telegram=TELEGRAM), Recorder(error), MESSAGE)
     assert "ConnectionError" in reason
     assert "secret" not in reason
+
+
+def test_discord_posts_content_without_link_previews(tmp_path, webhooks):
+    client = Recorder()
+    assert send_all(config(tmp_path, discord={"enabled": True}), client, MESSAGE) == [("discord", "")]
+    [post] = client.posts
+    assert post["url"] == DISCORD_URL
+    assert post["json"] == {"content": "hirejutsu: test\n\nhello", "flags": 4}
+
+
+def test_discord_splits_at_2000_characters(tmp_path, webhooks):
+    client = Recorder()
+    long = Message("subject", "\n\n".join("x" * 500 for _ in range(9)), "")
+    send_all(config(tmp_path, discord={"enabled": True}), client, long)
+    assert len(client.posts) == 3
+    assert all(len(post["json"]["content"]) <= 2000 for post in client.posts)
+
+
+def test_slack_escapes_markup_characters(tmp_path, webhooks):
+    client = Recorder()
+    message = Message("hirejutsu: test", "R&D <Lead>", "")
+    assert send_all(config(tmp_path, slack={"enabled": True}), client, message) == [("slack", "")]
+    [post] = client.posts
+    assert post["url"] == SLACK_URL
+    assert post["json"] == {"text": "hirejutsu: test\n\nR&amp;D &lt;Lead&gt;"}
+
+
+def test_webhook_url_written_in_config_works(tmp_path, monkeypatch, caplog):
+    monkeypatch.delenv("HIREJUTSU_SLACK_WEBHOOK", raising=False)
+    client = Recorder()
+    send_all(config(tmp_path, slack={"enabled": True, "webhook_url": SLACK_URL}), client, MESSAGE)
+    assert client.posts[0]["url"] == SLACK_URL
+    assert "webhook_url_env" in caplog.text
+
+
+def test_a_failing_channel_does_not_stop_the_others(tmp_path, webhooks):
+    client = Recorder()
+    channels = {"telegram": {"enabled": True}, "discord": {"enabled": True}, "slack": {"enabled": True}}
+    results = send_all(config(tmp_path, **channels), client, MESSAGE)
+    assert [(name, bool(error)) for name, error in results] == [("telegram", True), ("discord", False), ("slack", False)]
+    assert [post["url"] for post in client.posts] == [DISCORD_URL, SLACK_URL]
+
+
+def test_only_sends_to_the_named_channel(tmp_path, token, webhooks):
+    client = Recorder()
+    channels = {"telegram": TELEGRAM, "discord": {"enabled": True}}
+    assert send_all(config(tmp_path, **channels), client, MESSAGE, only="discord") == [("discord", "")]
+    assert send_all(config(tmp_path, **channels), client, MESSAGE, only="slack") == []

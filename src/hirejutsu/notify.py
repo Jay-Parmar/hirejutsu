@@ -18,9 +18,12 @@ from .text import clean
 log = logging.getLogger(__name__)
 
 TELEGRAM_LIMIT = 4096
+DISCORD_LIMIT = 2000
 
 NOTIFY_DEFAULTS = {
     "telegram": {"enabled": False, "bot_token_env": "HIREJUTSU_TELEGRAM_TOKEN", "bot_token": "", "chat_id": ""},
+    "discord": {"enabled": False, "webhook_url_env": "HIREJUTSU_DISCORD_WEBHOOK", "webhook_url": ""},
+    "slack": {"enabled": False, "webhook_url_env": "HIREJUTSU_SLACK_WEBHOOK", "webhook_url": ""},
 }
 
 
@@ -136,4 +139,18 @@ def send_telegram(settings: dict, client, message: Message) -> None:
         client.post(url, json=payload)
 
 
-SENDERS = {"telegram": send_telegram}
+def send_discord(settings: dict, client, message: Message) -> None:
+    url = secret(settings, "webhook_url", "discord")
+    for piece in split_text(f"{message.subject}\n\n{message.text}", DISCORD_LIMIT):
+        # Flag 4 is SUPPRESS_EMBEDS, so the job links do not each get a preview card.
+        client.post(url, json={"content": piece, "flags": 4})
+
+
+def send_slack(settings: dict, client, message: Message) -> None:
+    url = secret(settings, "webhook_url", "slack")
+    # Slack reads &, < and > as markup, so they have to be escaped.
+    text = f"{message.subject}\n\n{message.text}".replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    client.post(url, json={"text": text})
+
+
+SENDERS = {"telegram": send_telegram, "discord": send_discord, "slack": send_slack}
