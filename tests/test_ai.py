@@ -1,15 +1,20 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 import requests
-from fakes import CLAUDE_URL, FakeClient, claude_reply
+from fakes import CLAUDE_URL, FakeClient, claude_reply, claude_scorer
 
 from hirejutsu import ai
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
+from hirejutsu.models import Job, Match, Profile
+from hirejutsu.store import Store
 
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+NOW = datetime(2026, 10, 17, 9, 0, tzinfo=timezone.utc)
+PROFILE = Profile(text="Python developer with five years of Django")
 
 
 class HeaderClient(FakeClient):
@@ -26,8 +31,22 @@ def api_keys(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
 
+@pytest.fixture
+def store(tmp_path):
+    with Store(tmp_path / "test.db") as store:
+        yield store
+
+
 def settings(**values):
     return ai.load_settings(Config({"ai": values}, Path(".")))
+
+
+def saved_matches(store, *scores):
+    """One saved job per heuristic score, returned as matches."""
+    jobs = [Job("demo", str(n), f"Engineer {n}", f"Company {n}", f"https://x/{n}", description="D" * 50)
+            for n in range(len(scores))]
+    store.upsert_jobs(jobs, NOW)
+    return [Match(job, score, ["Skills: python"]) for job, score in zip(store.find_jobs(), scores)]
 
 
 def test_settings_default_to_anthropic_and_off():
@@ -152,3 +171,66 @@ def test_parse_scores_skips_bad_entries():
 def test_parse_scores_without_usable_json():
     assert ai.parse_scores("Sorry, I can't help with that.", {1}) == {}
     assert ai.parse_scores('[{"id": 1, "score": 5', {1}) == {}
+
+
+def test_rerank_blends_ai_scores_and_reorders(store):
+    first, second = saved_matches(store, 0.8, 0.4)
+    client = FakeClient({CLAUDE_URL: claude_scorer({first.job.id: 2, second.job.id: 10})})
+    assert ai.rerank([first, second], PROFILE, settings(), store, client) == [
+        Match(second.job, 0.7, ["AI: Fit 10", "Skills: python"]),
+        Match(first.job, 0.5, ["AI: Fit 2", "Skills: python"]),
+    ]
+
+
+def test_rerank_sends_the_resume_and_jobs_in_batches(store):
+    matches = saved_matches(store, 0.9, 0.8, 0.7)
+    client = FakeClient({CLAUDE_URL: claude_scorer({match.job.id: 5 for match in matches})})
+    limits = settings(batch_size=2, max_resume_chars=10, max_description_chars=20)
+    ai.rerank(matches, Profile(text="R" * 50), limits, store, client)
+    prompts = [payload["messages"][0]["content"] for *_, payload in client.calls]
+    assert len(prompts) == 2
+    assert "Engineer 0" in prompts[0] and "Engineer 1" in prompts[0] and "Engineer 2" in prompts[1]
+    assert "R" * 10 in prompts[0] and "R" * 11 not in prompts[0]
+    assert "D" * 20 in prompts[0] and "D" * 21 not in prompts[0]
+
+
+def test_rerank_reuses_cached_scores(store):
+    matches = saved_matches(store, 0.5)
+    ai.rerank(matches, PROFILE, settings(), store, FakeClient({CLAUDE_URL: claude_scorer({matches[0].job.id: 8})}))
+    offline = FakeClient()
+    assert ai.rerank(matches, PROFILE, settings(), store, offline)[0].reasons[0] == "AI: Fit 8"
+    assert offline.calls == []
+
+
+def test_rerank_asks_again_for_a_new_resume_or_model(store):
+    matches = saved_matches(store, 0.5)
+    client = FakeClient({CLAUDE_URL: claude_scorer({matches[0].job.id: 8})})
+    ai.rerank(matches, PROFILE, settings(), store, client)
+    ai.rerank(matches, Profile(text="Go developer"), settings(), store, client)
+    ai.rerank(matches, PROFILE, settings(model="claude-sonnet-5-5"), store, client)
+    assert len(client.calls) == 3
+
+
+def test_rerank_keeps_usual_scores_when_requests_fail(store, caplog):
+    matches = saved_matches(store, 0.9, 0.5)
+    client = FakeClient({CLAUDE_URL: requests.ConnectionError("no network")})
+    assert ai.rerank(matches, PROFILE, settings(batch_size=1), store, client) == matches
+    assert len(client.calls) == 2
+    assert "no network" in caplog.text
+
+
+def test_rerank_survives_an_unexpected_answer(store, caplog):
+    matches = saved_matches(store, 0.9)
+    client = FakeClient({CLAUDE_URL: {"surprise": True}})
+    assert ai.rerank(matches, PROFILE, settings(), store, client) == matches
+    assert "AI scoring failed" in caplog.text
+
+
+def test_rerank_keeps_usual_scores_for_jobs_the_ai_skipped(store, caplog):
+    first, second = saved_matches(store, 0.9, 0.5)
+    client = FakeClient({CLAUDE_URL: claude_scorer({second.job.id: 10})})
+    assert ai.rerank([first, second], PROFILE, settings(), store, client) == [
+        first,
+        Match(second.job, 0.75, ["AI: Fit 10", "Skills: python"]),
+    ]
+    assert "1 of 2" in caplog.text
