@@ -21,6 +21,15 @@ MONTH = (
 DATE = rf"(?:\b(?:{MONTH})\.?,?\s*|\b(?:\d{{1,2}}[/.-])?(?:0?[1-9]|1[0-2])[/.-])?(?<!\d)(?:19|20)\d\d(?!\d)"
 UNTIL_NOW = r"(?:till\s+|to\s+)?(?:present|current(?:ly)?|now|today|date|ongoing)\b"
 DATE_RANGE = re.compile(rf"({DATE})\s*(?:[-\u2010-\u2015]+|to|till|until)\s*({DATE}|{UNTIL_NOW})", re.IGNORECASE)
+YEARS = r"(\d{1,2}(?:\.\d{1,2})?)\s*\+?\s*(?:years?|yrs?)\b"
+STATED_YEARS = [
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        rf"\b{YEARS}['\u2019]?\s+(?:of\s+)?(?:[\w-]+\s+){{0,3}}?exp(?:erience)?\b",
+        rf"\b(?:over|more than|nearly|almost|around|about)\s+{YEARS}",
+        rf"\bexperience\s*(?:of|:|-)?\s*{YEARS}",
+    )
+]
 EDUCATION = re.compile(
     r"\b(?:education|university|college|school|institute|academy|degree|diploma|bachelor\w*"
     r"|master(?:'|\u2019)?s|master of|b\.?\s?tech|m\.?\s?tech|b\.?\s?sc|m\.?\s?sc|b\.?\s?com|m\.?\s?com"
@@ -114,9 +123,12 @@ def _term_pattern(term: str, exact: bool) -> re.Pattern:
 
 
 def find_years(text: str, today: date) -> float | None:
-    """Years of work covered by the date ranges in the resume, to one decimal."""
+    """Years of experience: the larger of what the resume states and what its job dates cover."""
+    found = [float(match.group(1)) for pattern in STATED_YEARS for match in pattern.finditer(text)]
     months = _work_months(text, today)
-    return round(months / 12, 1) if months else None
+    if months:
+        found.append(months / 12)
+    return round(max(found), 1) if found else None
 
 
 def _work_months(text: str, today: date) -> int:
