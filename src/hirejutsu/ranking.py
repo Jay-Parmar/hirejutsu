@@ -12,7 +12,7 @@ from .models import Job, Match, Profile
 RANKING_DEFAULTS = {
     "top": 10,
     "per_company": 2,
-    "weights": {"skills": 0.35, "title": 0.2, "seniority": 0.1, "freshness": 0.1, "location": 0.05},
+    "weights": {"skills": 0.35, "text": 0.2, "title": 0.2, "seniority": 0.1, "freshness": 0.1, "location": 0.05},
     "half_life_days": 3,
     "seniority_tolerance": 2,
     "location_mode": "filter",
@@ -26,6 +26,9 @@ RANKING_DEFAULTS = {
     "salary_currency": "",
 }
 
+# Reading whole descriptions is slow on big job lists, so only this many of the best matches by
+# skills and title get compared with your resume and checked for the years they ask.
+SHORTLIST = 300
 # Score for a part that cannot be judged, such as skills when the profile lists none.
 NEUTRAL = 0.5
 # A skill named in the job title counts this many times.
@@ -101,6 +104,9 @@ class _Run:
     skill_weights: dict[str, float] = field(default_factory=dict)
     title_counts: Counter = field(default_factory=Counter)
     title_cache: dict[tuple, tuple[float, str]] = field(default_factory=dict)
+    shortlist: list[_Entry] = field(default_factory=list)
+    idf: dict[str, float] = field(default_factory=dict)
+    resume: dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self):
         self.skills = list(dict.fromkeys(skill.strip().lower() for skill in self.profile.skills if skill.strip()))
@@ -111,23 +117,8 @@ class _Run:
 
 def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None = None) -> list[Match]:
     """Best matches first, at most settings["top"] of them."""
-    run = _Run(profile, settings, now or datetime.now().astimezone())
-    pool = []
-    for job in jobs:
-        text = _text(job)
-        if not any(problem for _, problem in _checks(job, text, run)):
-            pool.append(_entry(job, text, run))
-    _learn(pool, run)
-    for entry in pool:
-        entry.parts = {
-            "skills": _skills_score(entry, run),
-            "title": _title_match(entry.words, run)[0],
-            "seniority": _seniority(entry, run),
-            "freshness": _freshness(entry.job, run),
-            "location": _location(entry.job, run),
-        }
-        entry.score = _combine(entry.parts, settings["weights"])
-    best = sorted((entry for entry in pool if _relevant(entry)), key=lambda entry: entry.score, reverse=True)
+    run = _prepare(jobs, profile, settings, now)
+    best = sorted(run.shortlist, key=lambda entry: entry.score, reverse=True)
     matches = [
         Match(entry.job, round(entry.score, 3), _reasons(entry, run))
         for entry in best
@@ -165,15 +156,23 @@ def pick(matches: list[Match], top: int, per_company: int) -> list[Match]:
     return chosen
 
 
-def _places(locations: list[str]) -> dict[str, str]:
-    """Each accepted place name, aliases included, mapped to the profile location it stands for."""
-    places = {}
-    for location in locations:
-        name = location.strip().lower()
-        if name and name != "remote":
-            for alias in next((group for group in PLACE_ALIASES if name in group), {name}):
-                places[alias] = location.strip()
-    return places
+def _prepare(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None) -> _Run:
+    """Filter and quickly score the candidates, then score the shortlist in full."""
+    run = _Run(profile, settings, now or datetime.now().astimezone())
+    pool = []
+    for job in jobs:
+        text = _text(job)
+        if not any(problem for _, problem in _checks(job, text, run)):
+            pool.append(_entry(job, text, run))
+    _learn(pool, run)
+    for entry in pool:
+        _score_quick(entry, run)
+    relevant = sorted((entry for entry in pool if _relevant(entry)), key=lambda entry: entry.score, reverse=True)
+    run.shortlist = relevant[:max(SHORTLIST, settings["top"])]
+    _learn_text(run)
+    for entry in run.shortlist:
+        _score_fully(entry, _text(entry.job), run)
+    return run
 
 
 def _text(job: Job) -> str:
@@ -230,7 +229,7 @@ def _yearly_salary(job: Job, currency: str) -> float | None:
 
 def _entry(job: Job, text: str, run: _Run) -> _Entry:
     found = [skill for skill in run.skills if has_term(text, skill)]
-    return _Entry(job, found, _title_words(job.title), _years_asked(text))
+    return _Entry(job, found, _title_words(job.title))
 
 
 def _learn(pool: list[_Entry], run: _Run) -> None:
@@ -239,6 +238,34 @@ def _learn(pool: list[_Entry], run: _Run) -> None:
     counts = Counter(skill for entry in pool for skill in entry.found)
     run.skill_weights = {skill: _rarity(counts[skill], run.size) for skill in run.skills}
     run.title_counts = Counter(word for entry in pool for word in set(_role_words(entry.words)))
+
+
+def _learn_text(run: _Run) -> None:
+    """Weigh words by how rare they are in the shortlisted descriptions, and turn your resume into a vector."""
+    docs = [_terms(_text(entry.job)) for entry in run.shortlist]
+    counts = Counter(word for doc in docs for word in doc)
+    run.idf = {word: _rarity(count, len(docs)) for word, count in counts.items()}
+    run.resume = _vector(_terms(run.profile.text.lower()), run.idf)
+
+
+def _score_quick(entry: _Entry, run: _Run) -> None:
+    """Score the parts that need only the title, the skills found and the job's fields."""
+    entry.parts = {
+        "skills": _skills_score(entry, run),
+        "title": _title_match(entry.words, run)[0],
+        "seniority": _seniority(entry, run),
+        "freshness": _freshness(entry.job, run),
+        "location": _location(entry.job, run),
+    }
+    entry.score = _combine(entry.parts, run.settings["weights"])
+
+
+def _score_fully(entry: _Entry, text: str, run: _Run) -> None:
+    """Add what needs the whole description: the years it asks for and how close it is to your resume."""
+    entry.asked = _years_asked(text)
+    entry.parts["seniority"] = _seniority(entry, run)
+    entry.parts["text"] = _similarity(_vector(_terms(text), run.idf), run.resume) if run.resume else NEUTRAL
+    entry.score = _combine(entry.parts, run.settings["weights"])
 
 
 def _rarity(count: int, total: int) -> float:
@@ -361,6 +388,17 @@ def _freshness(job: Job, run: _Run) -> float:
     return 0.5 ** (_age_days(posted, run) / run.settings["half_life_days"])
 
 
+def _places(locations: list[str]) -> dict[str, str]:
+    """Each accepted place name, aliases included, mapped to the profile location it stands for."""
+    places = {}
+    for location in locations:
+        name = location.strip().lower()
+        if name and name != "remote":
+            for alias in next((group for group in PLACE_ALIASES if name in group), {name}):
+                places[alias] = location.strip()
+    return places
+
+
 def _place(job: Job, run: _Run) -> str | None:
     """Which of your locations the job is in: "Remote" or a place, "" for none, None when it is unknown."""
     if not run.places and not run.wants_remote:
@@ -379,6 +417,26 @@ def _location(job: Job, run: _Run) -> float:
     if place is None:
         return NEUTRAL
     return 1.0 if place else 0.0
+
+
+def _terms(text: str) -> Counter:
+    """Word counts for comparing text, without stopwords, numbers and single letters."""
+    words = WORD.findall(text)
+    return Counter(word for word in words if len(word) > 1 and word[0].isalpha() and word not in STOPWORDS)
+
+
+def _vector(counts: Counter, idf: dict[str, float]) -> dict[str, float]:
+    """Unit length TF-IDF vector over the words in idf."""
+    vector = {word: (1 + math.log(count)) * idf[word] for word, count in counts.items() if word in idf}
+    norm = math.sqrt(sum(value * value for value in vector.values()))
+    return {word: value / norm for word, value in vector.items()} if norm else {}
+
+
+def _similarity(a: dict[str, float], b: dict[str, float]) -> float:
+    """Cosine similarity of two unit vectors."""
+    if len(a) > len(b):
+        a, b = b, a
+    return sum(value * b.get(word, 0.0) for word, value in a.items())
 
 
 def _relevant(entry: _Entry) -> bool:

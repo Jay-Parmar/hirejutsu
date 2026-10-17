@@ -383,6 +383,15 @@ def test_min_salary_counts_monthly_pay_per_year():
     assert [match.job.external_id for match in matches] == ["2"]
 
 
+def test_jobs_closer_to_your_resume_rank_higher():
+    profile = Profile(text="Built payment APIs with Django and Postgres, scaled Celery workers", skills=["python"])
+    jobs = [
+        job("1", "Engineer", company="A", description="python. You will plan marketing campaigns and brand content"),
+        job("2", "Engineer", company="B", description="python. You will build payment APIs on Django and Celery"),
+    ]
+    assert [match.job.external_id for match in rank(jobs, profile, settings())] == ["2", "1"]
+
+
 def test_min_score_drops_weak_matches():
     jobs = [
         job("1", "Backend Engineer", company="A", description="python django aws"),
