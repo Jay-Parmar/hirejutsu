@@ -25,6 +25,7 @@ class Job:
     tags: list[str] = field(default_factory=list)
     id: int | None = None
     status: str = "new"
+    status_at: datetime | None = None
     note: str = ""
     first_seen: datetime | None = None
     last_seen: datetime | None = None

@@ -157,6 +157,7 @@ class Store:
             **values,
             id=row["id"],
             status=row["status"],
+            status_at=_to_datetime(row["status_at"]),
             note=row["note"],
             first_seen=_to_datetime(row["first_seen"]),
             last_seen=_to_datetime(row["last_seen"]),
