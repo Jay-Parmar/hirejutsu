@@ -1,10 +1,12 @@
-from datetime import date, datetime
+import io
+from datetime import date, datetime, timedelta
 
 import pytest
+from rich.console import Console
 
 from hirejutsu.config import Config
 from hirejutsu.models import Job, Match
-from hirejutsu.report import age, markdown, salary, write_reports
+from hirejutsu.report import age, markdown, print_picks, salary, write_reports
 
 DAY = date(2026, 10, 17)
 
@@ -49,6 +51,17 @@ def test_salary_text(low, high, currency, period, expected):
 )
 def test_age(posted_at, expected):
     assert age(job("a", posted_at=posted_at), DAY) == expected
+
+
+def test_print_picks_shows_salary_age_and_links():
+    console = Console(file=io.StringIO(), width=200)
+    pick = job("a", id=7, salary_min=1800000.0, salary_max=2500000.0, salary_currency="INR", salary_period="year",
+               posted_at=datetime.now().astimezone() - timedelta(days=2))
+    print_picks(console, [Match(pick, 0.75)], title="Picks")
+    out = console.file.getvalue()
+    assert "INR 18,00,000 - 25,00,000 / year" in out
+    assert "2 days ago" in out
+    assert "1. https://x/a" in out
 
 
 def test_markdown_lists_jobs_with_links():
