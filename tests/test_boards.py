@@ -49,7 +49,11 @@ def sleeps(monkeypatch):
 
 
 def board(cls, tmp_path, keywords=("python developer",), locations=("Bengaluru",), **sources):
-    data = {"search": {"keywords": list(keywords)}, "profile": {"locations": list(locations)}, "sources": sources}
+    data = {
+        "search": {"keywords": list(keywords)},
+        "profile": {"locations": list(locations)},
+        "sources": sources,
+    }
     return cls(Config(data, tmp_path), FakeClient())
 
 
@@ -148,7 +152,9 @@ def test_indeed_rows_become_jobs(tmp_path, jobspy):
     assert job.location == "KA, India"
     assert job.remote is None
     assert job.posted_at == datetime(2026, 10, 16, tzinfo=timezone.utc)
-    assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (1000000.0, 1800000.0, "INR", "year")
+    assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (
+        1000000.0, 1800000.0, "INR", "year",
+    )
     assert job.employment_type == "fulltime"
     assert job.description.startswith("**Role:** Python Developer\n**Skills:** Python,Django")
     unpaid = jobs[2]
@@ -169,12 +175,14 @@ def test_nan_and_nat_cells_count_as_empty(tmp_path, jobspy):
     nan = float("nan")
     jobspy.answers = [[
         row(id="in-1", title=nan),
-        row(id="in-2", company=nan, location=nan, description=nan, date_posted=FakeNaT(2026, 1, 1), is_remote=nan,
-            min_amount=nan, max_amount=nan, currency=nan, interval=nan, job_type=nan, job_function=nan),
+        row(id="in-2", company=nan, location=nan, description=nan, date_posted=FakeNaT(2026, 1, 1),
+            is_remote=nan, min_amount=nan, max_amount=nan, currency=nan, interval=nan, job_type=nan,
+            job_function=nan),
     ]]
     [job] = board(boards.Indeed, tmp_path).fetch()
     assert job.external_id == "in-2"
-    assert (job.company, job.location, job.description, job.employment_type, job.department) == ("", "", "", "", "")
+    assert (job.company, job.location, job.description) == ("", "", "")
+    assert (job.employment_type, job.department) == ("", "")
     assert (job.posted_at, job.remote) == (None, None)
     assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (None, None, "", "")
 
@@ -250,9 +258,13 @@ def test_naukri_drops_jobs_older_than_max_age(tmp_path, jobspy):
 
 def test_naukri_rows_become_jobs(tmp_path):
     naukri = board(boards.Naukri, tmp_path)
-    office, hybrid, cities = (naukri.to_job(fixture("jobspy_naukri.json")[n]) for n in (0, 2, 3))
-    assert (office.source, office.external_id, office.title) == ("naukri", "nk-171026015301", "Walk-in || Software Developer")
-    assert office.tags == ["HTML", "Boot", "Fullstack Development", "Spring", "Spring Boot", "Python", "Angular", "React.js"]
+    rows = fixture("jobspy_naukri.json")
+    office, hybrid, cities = (naukri.to_job(rows[n]) for n in (0, 2, 3))
+    assert (office.source, office.external_id) == ("naukri", "nk-171026015301")
+    assert office.title == "Walk-in || Software Developer"
+    assert office.tags == [
+        "HTML", "Boot", "Fullstack Development", "Spring", "Spring Boot", "Python", "Angular", "React.js",
+    ]
     assert office.department == "Engineering - Software & QA"
     assert (office.salary_min, office.salary_max, office.salary_period) == (400000.0, 500000.0, "year")
     assert (office.remote, hybrid.remote) == (False, False)
