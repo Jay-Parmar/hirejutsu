@@ -1,0 +1,53 @@
+# Skills to look for in resumes, one per line: the name to show, then other
+# ways people write it, separated by |. Matching ignores case and only counts
+# whole words, so "java" is not found inside "javascript".
+
+# Programming languages
+Python
+Java
+JavaScript | JS | ECMAScript
+TypeScript
+C++ | CPP
+C# | C Sharp
+PHP
+Kotlin
+Scala
+SQL
+
+# Web and backend
+HTML | HTML5
+CSS | CSS3
+Node.js | NodeJS
+Django
+FastAPI
+GraphQL
+
+# Databases
+PostgreSQL | Postgres | psql
+MySQL
+MongoDB | Mongo
+Redis
+
+# Cloud and devops
+AWS | Amazon Web Services
+Microsoft Azure | Azure
+Google Cloud | GCP | Google Cloud Platform
+Docker
+Kubernetes | K8s
+Terraform
+Jenkins
+Git
+Linux
+CI/CD | CICD
+
+# Data and AI
+Machine Learning
+Pandas
+TensorFlow
+PyTorch
+
+# Business
+Product Management
+Scrum
+SEO | Search Engine Optimization
+Figma

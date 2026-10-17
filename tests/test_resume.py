@@ -5,7 +5,7 @@ from pypdf import PdfWriter
 
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
-from hirejutsu.resume import load_profile, read_text
+from hirejutsu.resume import find_skills, load_profile, read_text
 
 
 def test_load_profile_reads_text_resume(tmp_path):
@@ -86,3 +86,24 @@ def test_read_docx_that_is_not_a_docx(tmp_path):
     (tmp_path / "resume.docx").write_bytes(b"old word file")
     with pytest.raises(HirejutsuError, match="Cannot read"):
         read_text(tmp_path / "resume.docx")
+
+
+def test_find_skills_uses_main_names_in_order_of_mention():
+    text = "Built APIs with django and Postgres on AWS.\nPython since 2015."
+    assert find_skills(text) == ["Django", "PostgreSQL", "AWS", "Python"]
+
+
+def test_find_skills_counts_each_skill_once():
+    assert find_skills("JS, ECMAScript and JavaScript; k8s or Kubernetes") == ["JavaScript", "Kubernetes"]
+
+
+def test_find_skills_matches_whole_words_only():
+    assert find_skills("pythonic code, javascripts and laws") == []
+
+
+def test_find_skills_with_symbols_in_names():
+    assert find_skills("c++, c# and CI/CD pipelines") == ["C++", "C#", "CI/CD"]
+
+
+def test_find_skills_reads_js_libraries_as_javascript():
+    assert find_skills("APIs in node.js") == ["Node.js", "JavaScript"]
