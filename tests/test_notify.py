@@ -170,6 +170,11 @@ def test_missing_settings_are_reported(tmp_path, token):
     assert results == [("telegram", "notify.telegram needs chat_id in config.yaml")]
 
 
+def test_channel_can_be_switched_with_a_bool_like_sources(tmp_path):
+    results = send_all(config(tmp_path, ntfy=True, slack=False), Recorder(), MESSAGE)
+    assert results == [("ntfy", "notify.ntfy needs topic in config.yaml")]
+
+
 def test_missing_env_var_is_named(tmp_path, monkeypatch):
     monkeypatch.delenv("HIREJUTSU_TELEGRAM_TOKEN", raising=False)
     [(name, error)] = send_all(config(tmp_path, telegram=TELEGRAM), Recorder(), MESSAGE)
