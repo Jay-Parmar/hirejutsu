@@ -1,0 +1,417 @@
+[
+  {
+    "id": "87f791942b9c",
+    "friendly_id": "87f791942b9c-pick-pack-ship-receiving-warehouse",
+    "name": "Pick, Pack, Ship, Receiving Warehouse",
+    "url": "https://akt.breezy.hr/p/87f791942b9c-pick-pack-ship-receiving-warehouse",
+    "published_date": "2026-09-11T14:03:12.252Z",
+    "type": {
+      "id": "fullTime",
+      "name": "Full-Time"
+    },
+    "location": {
+      "country": {
+        "name": "United States",
+        "id": "US"
+      },
+      "state": {
+        "id": "FL",
+        "name": "Florida"
+      },
+      "city": "Orlando",
+      "name": "Orlando, FL",
+      "primary": true,
+      "streetAddress": {
+        "location": "6424 Forest City Rd, Orlando, FL 32810, USA",
+        "components": [
+          {
+            "long_name": "6424",
+            "short_name": "6424",
+            "types": [
+              "street_number"
+            ]
+          },
+          {
+            "long_name": "Forest City Road",
+            "short_name": "Forest City Rd",
+            "types": [
+              "route"
+            ]
+          },
+          {
+            "long_name": "Orlando",
+            "short_name": "Orlando",
+            "types": [
+              "locality",
+              "political"
+            ]
+          },
+          {
+            "long_name": "Orange County",
+            "short_name": "Orange County",
+            "types": [
+              "administrative_area_level_2",
+              "political"
+            ]
+          },
+          {
+            "long_name": "Florida",
+            "short_name": "FL",
+            "types": [
+              "administrative_area_level_1",
+              "political"
+            ]
+          },
+          {
+            "long_name": "United States",
+            "short_name": "US",
+            "types": [
+              "country",
+              "political"
+            ]
+          },
+          {
+            "long_name": "32810",
+            "short_name": "32810",
+            "types": [
+              "postal_code"
+            ]
+          },
+          {
+            "long_name": "4322",
+            "short_name": "4322",
+            "types": [
+              "postal_code_suffix"
+            ]
+          }
+        ]
+      },
+      "is_remote": false,
+      "id": "21cda3ca7e9e"
+    },
+    "department": "Production",
+    "salary": "$15 \u2013 $17 / hour",
+    "company": {
+      "name": "AKT Enterprises",
+      "logo_url": null,
+      "friendly_id": "akt",
+      "isMultipleLocationsEnabled": false
+    },
+    "locations": [
+      {
+        "country": {
+          "name": "United States",
+          "id": "US"
+        },
+        "state": {
+          "id": "FL",
+          "name": "Florida"
+        },
+        "city": "Orlando",
+        "name": "Orlando, FL",
+        "primary": true,
+        "streetAddress": {
+          "location": "6424 Forest City Rd, Orlando, FL 32810, USA",
+          "components": [
+            {
+              "long_name": "6424",
+              "short_name": "6424",
+              "types": [
+                "street_number"
+              ]
+            },
+            {
+              "long_name": "Forest City Road",
+              "short_name": "Forest City Rd",
+              "types": [
+                "route"
+              ]
+            },
+            {
+              "long_name": "Orlando",
+              "short_name": "Orlando",
+              "types": [
+                "locality",
+                "political"
+              ]
+            },
+            {
+              "long_name": "Orange County",
+              "short_name": "Orange County",
+              "types": [
+                "administrative_area_level_2",
+                "political"
+              ]
+            },
+            {
+              "long_name": "Florida",
+              "short_name": "FL",
+              "types": [
+                "administrative_area_level_1",
+                "political"
+              ]
+            },
+            {
+              "long_name": "United States",
+              "short_name": "US",
+              "types": [
+                "country",
+                "political"
+              ]
+            },
+            {
+              "long_name": "32810",
+              "short_name": "32810",
+              "types": [
+                "postal_code"
+              ]
+            },
+            {
+              "long_name": "4322",
+              "short_name": "4322",
+              "types": [
+                "postal_code_suffix"
+              ]
+            }
+          ]
+        },
+        "is_remote": false,
+        "id": "21cda3ca7e9e"
+      }
+    ],
+    "description": "<p><strong>Compensation:</strong><br>$14-17/hr depending on relevant experience<br></p>\n<p><strong>Job Description:</strong></p>\n<p>AKT is a leader in the merchandising industry. The ideal \ncandidate is focused on the customer experience, quality, safety, \nteamwork and productivity. We are seeking seasonal employees to start in\n our production and fulfillment operation immediately. Previous wareho..."
+  },
+  {
+    "id": "79e8cc35f5c2",
+    "friendly_id": "79e8cc35f5c2-pick-pack-ship-receiving-warehouse",
+    "name": "Pick, Pack, Ship, Receiving Warehouse",
+    "url": "https://akt.breezy.hr/p/79e8cc35f5c2-pick-pack-ship-receiving-warehouse",
+    "published_date": "2026-04-15T16:10:20.967Z",
+    "type": {
+      "id": "fullTime",
+      "name": "Full-Time"
+    },
+    "location": {
+      "country": {
+        "name": "United States",
+        "id": "US"
+      },
+      "state": {
+        "id": "NV",
+        "name": "Nevada"
+      },
+      "city": "Las Vegas",
+      "primary": true,
+      "is_remote": false,
+      "name": "Las Vegas, NV",
+      "id": "addf70c4ac67"
+    },
+    "department": "Production",
+    "salary": "$12 \u2013 $17 / hour",
+    "company": {
+      "name": "AKT Enterprises",
+      "logo_url": null,
+      "friendly_id": "akt",
+      "isMultipleLocationsEnabled": false
+    },
+    "locations": [
+      {
+        "country": {
+          "name": "United States",
+          "id": "US"
+        },
+        "state": {
+          "id": "NV",
+          "name": "Nevada"
+        },
+        "city": "Las Vegas",
+        "primary": true,
+        "is_remote": false,
+        "name": "Las Vegas, NV",
+        "id": "addf70c4ac67"
+      }
+    ],
+    "description": "<p><strong>Compensation:</strong><br>$12-17/hr depending on relevant experience<br></p>\n<p><strong>Job Description:</strong></p>\n<p>AKT is a leader in the merchandising industry. The ideal \ncandidate is focused on the customer experience, quality, safety, \nteamwork and productivity. We are seeking seasonal employees to start in\n our production and fulfillment operation immediately. Previous wareho..."
+  },
+  {
+    "id": "84a39a2dcdc0",
+    "friendly_id": "84a39a2dcdc0-screen-printing-press-operator",
+    "name": "Screen Printing Press Operator",
+    "url": "https://akt.breezy.hr/p/84a39a2dcdc0-screen-printing-press-operator",
+    "published_date": "2026-09-11T14:02:51.363Z",
+    "type": {
+      "id": "fullTime",
+      "name": "Full-Time"
+    },
+    "location": {
+      "country": {
+        "name": "United States",
+        "id": "US"
+      },
+      "state": {
+        "id": "FL",
+        "name": "Florida"
+      },
+      "city": "Orlando",
+      "name": "Orlando, FL",
+      "primary": true,
+      "streetAddress": {
+        "location": "6424 Forest City Rd, Orlando, FL 32810, USA",
+        "components": [
+          {
+            "long_name": "6424",
+            "short_name": "6424",
+            "types": [
+              "street_number"
+            ]
+          },
+          {
+            "long_name": "Forest City Road",
+            "short_name": "Forest City Rd",
+            "types": [
+              "route"
+            ]
+          },
+          {
+            "long_name": "Orlando",
+            "short_name": "Orlando",
+            "types": [
+              "locality",
+              "political"
+            ]
+          },
+          {
+            "long_name": "Orange County",
+            "short_name": "Orange County",
+            "types": [
+              "administrative_area_level_2",
+              "political"
+            ]
+          },
+          {
+            "long_name": "Florida",
+            "short_name": "FL",
+            "types": [
+              "administrative_area_level_1",
+              "political"
+            ]
+          },
+          {
+            "long_name": "United States",
+            "short_name": "US",
+            "types": [
+              "country",
+              "political"
+            ]
+          },
+          {
+            "long_name": "32810",
+            "short_name": "32810",
+            "types": [
+              "postal_code"
+            ]
+          },
+          {
+            "long_name": "4322",
+            "short_name": "4322",
+            "types": [
+              "postal_code_suffix"
+            ]
+          }
+        ]
+      },
+      "is_remote": false
+    },
+    "department": "Production",
+    "salary": "$17 \u2013 $20 / hour",
+    "company": {
+      "name": "AKT Enterprises",
+      "logo_url": null,
+      "friendly_id": "akt",
+      "isMultipleLocationsEnabled": false
+    },
+    "locations": [
+      {
+        "country": {
+          "name": "United States",
+          "id": "US"
+        },
+        "state": {
+          "id": "FL",
+          "name": "Florida"
+        },
+        "city": "Orlando",
+        "name": "Orlando, FL",
+        "primary": true,
+        "streetAddress": {
+          "location": "6424 Forest City Rd, Orlando, FL 32810, USA",
+          "components": [
+            {
+              "long_name": "6424",
+              "short_name": "6424",
+              "types": [
+                "street_number"
+              ]
+            },
+            {
+              "long_name": "Forest City Road",
+              "short_name": "Forest City Rd",
+              "types": [
+                "route"
+              ]
+            },
+            {
+              "long_name": "Orlando",
+              "short_name": "Orlando",
+              "types": [
+                "locality",
+                "political"
+              ]
+            },
+            {
+              "long_name": "Orange County",
+              "short_name": "Orange County",
+              "types": [
+                "administrative_area_level_2",
+                "political"
+              ]
+            },
+            {
+              "long_name": "Florida",
+              "short_name": "FL",
+              "types": [
+                "administrative_area_level_1",
+                "political"
+              ]
+            },
+            {
+              "long_name": "United States",
+              "short_name": "US",
+              "types": [
+                "country",
+                "political"
+              ]
+            },
+            {
+              "long_name": "32810",
+              "short_name": "32810",
+              "types": [
+                "postal_code"
+              ]
+            },
+            {
+              "long_name": "4322",
+              "short_name": "4322",
+              "types": [
+                "postal_code_suffix"
+              ]
+            }
+          ]
+        },
+        "is_remote": false,
+        "id": "d668138bd586"
+      }
+    ],
+    "description": "<p><strong>Compensation:</strong></p>\n<p>$16-20/hour depending on experience!&nbsp;Let's talk!<br></p>\n<p><strong>We are seeking Experienced automatic Screen Printing Press\n Operators.<br></strong></p>\n<p>If you are currently a screen printer looking to push your skills or \nready to learn an exciting new skill, this job is right for you!</p>\n<p>AKT is a full service merchandising company with a fo..."
+  }
+]
