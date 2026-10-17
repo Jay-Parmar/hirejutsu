@@ -90,5 +90,17 @@ def test_start_keeps_the_newest_30_logs(tmp_path, headless):
     assert (tmp_path / "notes.txt").exists()
 
 
+def test_latest_log_and_its_tail(tmp_path):
+    (tmp_path / "run-2026-10-16.log").write_text("older run\n", encoding="utf-8")
+    (tmp_path / "run-2026-10-17.log").write_text("".join(f"line {n}\n" for n in range(20)), encoding="utf-8")
+    latest = runlog.latest(tmp_path)
+    assert latest == tmp_path / "run-2026-10-17.log"
+    assert runlog.tail(latest, 3) == ["line 17", "line 18", "line 19"]
+
+
+def test_latest_without_logs(tmp_path):
+    assert runlog.latest(tmp_path / "logs") is None
+
+
 def test_run_without_console_or_log(home, headless):
     assert main(["--home", str(home), "run"]) == 0

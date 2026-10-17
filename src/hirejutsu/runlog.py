@@ -20,3 +20,12 @@ def start(folder: Path) -> None:
 def run_logs(folder: Path) -> list[Path]:
     """Run logs, oldest first."""
     return sorted(folder.glob("run-*.log"))
+
+
+def latest(folder: Path) -> Path | None:
+    logs = run_logs(folder)
+    return logs[-1] if logs else None
+
+
+def tail(path: Path, count: int = 10) -> list[str]:
+    return path.read_text(encoding="utf-8", errors="replace").splitlines()[-count:]

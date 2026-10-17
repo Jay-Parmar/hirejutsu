@@ -5,7 +5,7 @@ from datetime import datetime, time
 
 from rich.text import Text
 
-from .. import schedule
+from .. import runlog, schedule
 
 
 def clock(value: str) -> time:
@@ -51,6 +51,11 @@ def status(app, args) -> int:
         return 1
     for label, value in rows:
         app.console.print(Text(f"{label:<12}{value}"))
+    log = runlog.latest(app.config.logs_dir)
+    if log:
+        app.console.print(Text(f"\nLast lines of {log}:"))
+        for line in runlog.tail(log):
+            app.console.print(Text(line))
     return 0
 
 

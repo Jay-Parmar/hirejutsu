@@ -78,6 +78,22 @@ def test_status_shows_the_next_and_last_run(tmp_path, run, capsys):
     assert "0" in next(line for line in lines if line.startswith("Last result"))
 
 
+def test_status_shows_the_end_of_the_latest_run_log(tmp_path, run, capsys):
+    run.replies["schtasks /Query"] = (0, LISTING, "")
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    (logs / "run-2026-10-16.log").write_text("older run\n", encoding="utf-8")
+    (logs / "run-2026-10-17.log").write_text(
+        "--- 2026-10-17 09:00:04 ---\nWARNING hirejutsu.pipeline: lever failed: [Errno 11001] getaddrinfo failed\n",
+        encoding="utf-8",
+    )
+    assert main(["--home", str(tmp_path), "schedule", "status"]) == 0
+    out = capsys.readouterr().out
+    assert "run-2026-10-17.log" in out
+    assert "lever failed: [Errno 11001] getaddrinfo failed" in out
+    assert "older run" not in out
+
+
 def test_status_when_not_installed(tmp_path, run, capsys):
     run.replies["schtasks /Query"] = MISSING
     assert main(["--home", str(tmp_path), "schedule", "status"]) == 1
