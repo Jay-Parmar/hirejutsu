@@ -1,28 +1,11 @@
 """Breezy HR job boards."""
 
-import re
-
 from ..companies import Company
 from ..models import Job
+from ..salary import parse_salary
 from ..text import clean, html_to_text, parse_date
 from . import register
-from .ats import AtsSource, pay_period, remote_from
-
-CURRENCIES = {"$": "USD", "\N{EURO SIGN}": "EUR", "\N{POUND SIGN}": "GBP", "\N{INDIAN RUPEE SIGN}": "INR"}
-
-
-def salary(text: str | None) -> dict:
-    """Job salary fields from pay written like "$75,000 - $100,000 / year"."""
-    text = (text or "").strip()
-    amounts = [float(number.replace(",", "")) for number in re.findall(r"\d[\d,]*(?:\.\d+)?", text)]
-    if not amounts:
-        return {}
-    return {
-        "salary_min": amounts[0],
-        "salary_max": amounts[-1],
-        "salary_currency": CURRENCIES.get(text[:1], ""),
-        "salary_period": pay_period(text),
-    }
+from .ats import AtsSource, remote_from
 
 
 @register
@@ -51,5 +34,5 @@ class Breezy(AtsSource):
             posted_at=parse_date(item.get("published_date")),
             employment_type=clean((item.get("type") or {}).get("name")),
             department=clean(item.get("department")),
-            **salary(item.get("salary")),
+            **parse_salary(item.get("salary") or ""),
         )
