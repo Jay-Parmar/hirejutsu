@@ -176,6 +176,32 @@ def test_webhook_url_written_in_config_works(tmp_path, monkeypatch, caplog):
     assert "webhook_url_env" in caplog.text
 
 
+def test_ntfy_posts_plain_text_with_title_and_click(tmp_path):
+    client = Recorder()
+    message = Message("hirejutsu: 2 picks for 2026-10-17", "1. Caf\u00e9 owner", "", link="https://x/a")
+    assert send_all(config(tmp_path, ntfy={"enabled": True, "topic": "my-picks"}), client, message) == [("ntfy", "")]
+    [post] = client.posts
+    assert post["url"] == "https://ntfy.sh/my-picks"
+    assert post["data"] == b"1. Caf\xc3\xa9 owner"
+    assert post["headers"] == {"Title": "hirejutsu: 2 picks for 2026-10-17", "Click": "https://x/a"}
+
+
+def test_ntfy_uses_own_server_and_token(tmp_path, monkeypatch):
+    monkeypatch.setenv("MY_NTFY_TOKEN", "tk_abc")
+    client = Recorder()
+    settings = {"enabled": True, "server": "https://ntfy.example.com/", "topic": "jobs", "token_env": "MY_NTFY_TOKEN"}
+    send_all(config(tmp_path, ntfy=settings), client, MESSAGE)
+    [post] = client.posts
+    assert post["url"] == "https://ntfy.example.com/jobs"
+    assert post["headers"]["Authorization"] == "Bearer tk_abc"
+    assert "Click" not in post["headers"]
+
+
+def test_ntfy_needs_a_topic(tmp_path):
+    results = send_all(config(tmp_path, ntfy={"enabled": True}), Recorder(), MESSAGE)
+    assert results == [("ntfy", "notify.ntfy needs topic in config.yaml")]
+
+
 def test_a_failing_channel_does_not_stop_the_others(tmp_path, webhooks):
     client = Recorder()
     channels = {"telegram": {"enabled": True}, "discord": {"enabled": True}, "slack": {"enabled": True}}
