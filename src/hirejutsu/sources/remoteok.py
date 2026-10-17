@@ -1,5 +1,6 @@
 """Remote OK: the newest 100 or so remote jobs in one JSON feed."""
 
+import html
 from urllib.parse import urlsplit, urlunsplit
 
 from ..models import Job
@@ -29,10 +30,10 @@ def to_job(item: dict) -> Job:
     return Job(
         source="remoteok",
         external_id=str(item["id"]),
-        title=clean(fix_text(item["position"])),
-        company=clean(fix_text(item["company"])),
+        title=plain(item["position"]),
+        company=plain(item["company"]),
         url=urlunsplit(url._replace(netloc=url.netloc.lower())),
-        location=clean(fix_text(item.get("location"))),
+        location=plain(item.get("location")),
         remote=True,
         description=html_to_text(fix_text(item.get("description"))),
         posted_at=parse_date(item.get("date")),
@@ -43,6 +44,11 @@ def to_job(item: dict) -> Job:
         salary_period=("hour" if top < 1000 else "year") if top else "",
         tags=item.get("tags") or [],
     )
+
+
+def plain(value: str | None) -> str:
+    """Short fields like the company can hold entities such as "&amp;"."""
+    return clean(html.unescape(fix_text(value)))
 
 
 def fix_text(value: str | None) -> str:
