@@ -72,6 +72,12 @@ def test_get_text():
     assert client.get_text("https://example.com/feed") == "<rss/>"
 
 
+def test_get_bytes_keeps_the_raw_body():
+    client = Client()
+    stub(client, body="<a>M\xfcnchen</a>".encode("utf-8"))
+    assert client.get_bytes("https://example.com/feed") == b"<a>M\xc3\xbcnchen</a>"
+
+
 def test_post_json_sends_payload():
     client = Client()
     adapter = stub(client)
