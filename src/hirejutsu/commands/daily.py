@@ -16,6 +16,7 @@ def register(sub) -> None:
     parser.add_argument("--no-fetch", action="store_true", help="rank the jobs already saved")
     parser.add_argument("--open", action="store_true", help="open the HTML report in your browser")
     parser.add_argument("--no-notify", action="store_true", help="do not send the picks to your notify channels")
+    parser.add_argument("--log", action="store_true", help="write all output to logs/run-YYYY-MM-DD.log instead")
     parser.set_defaults(func=run)
 
     parser = sub.add_parser("today", help="show the jobs picked today")
