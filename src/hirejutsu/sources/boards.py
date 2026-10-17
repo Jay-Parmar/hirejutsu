@@ -207,3 +207,21 @@ class LinkedIn(Board):
                 "LinkedIn can only search cities when logged out. Add a city to profile.locations."
             )
         return cities
+
+
+@register
+class Glassdoor(Board):
+    name = "glassdoor"
+    label = "Glassdoor"
+    site = "glassdoor"
+    defaults = {**Board.defaults, "results": 30, "country": "India"}
+
+
+@register
+class ZipRecruiter(Board):
+    """Lists jobs in the US and Canada only."""
+
+    name = "ziprecruiter"
+    label = "ZipRecruiter"
+    site = "zip_recruiter"
+    defaults = {**Board.defaults, "results": 20}
