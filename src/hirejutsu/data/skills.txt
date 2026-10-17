@@ -1,14 +1,23 @@
 # Skills to look for in resumes, one per line: the name to show, then other
 # ways people write it, separated by |. Matching ignores case and only counts
 # whole words, so "java" is not found inside "javascript".
+#
+# A leading ! means that spelling only counts in exactly this case and as a
+# word of its own. It is for names that are also plain English or a single
+# letter: "Go" is a skill but "go" is not, and neither is the C in C-suite.
 
 # Programming languages
 Python
 Java
 JavaScript | JS | ECMAScript
 TypeScript
+!Go | Golang
+!C
 C++ | CPP
 C# | C Sharp
+!R | RStudio
+!Rust
+!Swift
 PHP
 Kotlin
 Scala
@@ -17,7 +26,9 @@ SQL
 # Web and backend
 HTML | HTML5
 CSS | CSS3
-Node.js | NodeJS
+!React | React.js | ReactJS
+Node.js | NodeJS | !Node
+!Spring | Spring Framework
 Django
 FastAPI
 GraphQL
@@ -47,6 +58,7 @@ TensorFlow
 PyTorch
 
 # Business
+!Excel | Microsoft Excel | MS Excel
 Product Management
 Scrum
 SEO | Search Engine Optimization
