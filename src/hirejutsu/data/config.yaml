@@ -26,6 +26,44 @@ sources: {}
 ranking:
   # How many jobs to pick each day.
   top: 10
+  # Most picks from one company on the same day.
+  per_company: 2
+  # How much each part of the score counts. They are scaled to add up to 1.
+  weights:
+    # Your skills the job mentions. Rare ones and ones in the title count more.
+    skills: 0.35
+    # How close the description is to your resume text.
+    text: 0.2
+    # How close the job title is to the titles you want.
+    title: 0.2
+    # How well the level and years asked fit profile years.
+    seniority: 0.1
+    # Newer jobs score higher.
+    freshness: 0.1
+    # Remote or in one of your locations.
+    location: 0.05
+  # Days after which the freshness score halves.
+  half_life_days: 3
+  # Years a job may ask above or below yours before it scores lower.
+  seniority_tolerance: 2
+  # "filter" skips jobs outside your locations, "score" ranks them lower instead.
+  location_mode: filter
+  # Skip jobs that mention any of these words.
+  exclude_keywords: []
+  # Skip jobs with any of these words in the title, like intern or sales.
+  exclude_title_words: []
+  # Skip jobs from these companies.
+  exclude_companies: []
+  # Keep only jobs that mention at least one of these words.
+  require_keywords: []
+  # Skip jobs that score below this, from 0 to 1.
+  min_score: 0
+  # Skip jobs posted more than this many days ago. Empty uses search max_age_days.
+  max_age_days:
+  # Skip jobs whose top salary per year is below this. Jobs without a salary are kept.
+  min_salary:
+  # Currency of min_salary, like INR or USD. Salaries in other currencies are kept.
+  salary_currency: ""
 
 # Where daily reports are written.
 reports_dir: reports
