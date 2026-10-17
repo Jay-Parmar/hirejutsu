@@ -41,6 +41,17 @@ def test_fetch_named_source_reports_error(tmp_path, capsys):
     assert "site is down" in capsys.readouterr().out
 
 
+def test_errors_keep_square_brackets(tmp_path, capsys, monkeypatch):
+    def fail(self):
+        raise RuntimeError("needs [extra]")
+
+    monkeypatch.setattr(Broken, "fetch", fail)
+    main(["--home", str(tmp_path), "fetch", "-s", "broken"])
+    assert "[extra]" in capsys.readouterr().out
+    main(["--home", str(tmp_path), "sources"])
+    assert "[extra]" in capsys.readouterr().out
+
+
 def test_fetch_unknown_source(tmp_path, capsys):
     assert main(["--home", str(tmp_path), "fetch", "-s", "nope"]) == 2
     assert "Unknown source" in capsys.readouterr().out

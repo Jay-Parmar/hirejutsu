@@ -1,6 +1,7 @@
 """fetch and sources commands."""
 
 from rich.table import Table
+from rich.text import Text
 
 from ..pipeline import FetchResult, fetch_all
 from ..sources import available, load_sources
@@ -30,7 +31,7 @@ def fetch_jobs(app, names: list[str] | None = None) -> list[FetchResult]:
 def print_results(console, results: list[FetchResult]) -> None:
     table = Table("Source", "Found", "New", "Seconds", "Error")
     for result in sorted(results, key=lambda r: r.source):
-        table.add_row(result.source, str(result.found), str(result.added), f"{result.seconds:.1f}", result.error)
+        table.add_row(result.source, str(result.found), str(result.added), f"{result.seconds:.1f}", Text(result.error))
     console.print(table)
 
 
@@ -51,7 +52,7 @@ def list_sources(app, args) -> int:
         row = last.get(name)
         if row:
             table.add_row(name, "yes" if enabled else "no", row["started_at"][:16].replace("T", " "),
-                          str(row["found"]), str(row["added"]), row["error"])
+                          str(row["found"]), str(row["added"]), Text(row["error"]))
         else:
             table.add_row(name, "yes" if enabled else "no", "never", "", "", "")
     app.console.print(table)
