@@ -4,10 +4,11 @@ from pathlib import Path
 
 import pytest
 import requests
+import yaml
 from fakes import CLAUDE_URL, FakeClient, claude_reply, claude_scorer
 
 from hirejutsu import ai
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job, Match, Profile
 from hirejutsu.store import Store
@@ -67,6 +68,12 @@ def test_settings_fill_in_openai_defaults():
 def test_settings_keep_values_from_the_config():
     ollama = settings(provider="openai", base_url="http://localhost:11434/v1", model="llama3.1", candidates=12)
     assert (ollama["base_url"], ollama["model"], ollama["candidates"]) == ("http://localhost:11434/v1", "llama3.1", 12)
+
+
+def test_starter_config_has_the_ai_section_off():
+    section = yaml.safe_load(template())["ai"]
+    assert section == {key: ai.AI_DEFAULTS[key] for key in section}
+    assert section["enabled"] is False
 
 
 def test_ai_client_uses_the_ai_timeout():
