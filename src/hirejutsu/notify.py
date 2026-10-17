@@ -24,6 +24,7 @@ NOTIFY_DEFAULTS = {
     "telegram": {"enabled": False, "bot_token_env": "HIREJUTSU_TELEGRAM_TOKEN", "bot_token": "", "chat_id": ""},
     "discord": {"enabled": False, "webhook_url_env": "HIREJUTSU_DISCORD_WEBHOOK", "webhook_url": ""},
     "slack": {"enabled": False, "webhook_url_env": "HIREJUTSU_SLACK_WEBHOOK", "webhook_url": ""},
+    "ntfy": {"enabled": False, "server": "https://ntfy.sh", "topic": "", "token_env": "", "token": ""},
 }
 
 
@@ -153,4 +154,15 @@ def send_slack(settings: dict, client, message: Message) -> None:
     client.post(url, json={"text": text})
 
 
-SENDERS = {"telegram": send_telegram, "discord": send_discord, "slack": send_slack}
+def send_ntfy(settings: dict, client, message: Message) -> None:
+    require(settings, "ntfy", "topic")
+    headers = {"Title": message.subject}
+    if message.link:
+        headers["Click"] = message.link
+    if settings["token"] or settings["token_env"]:
+        headers["Authorization"] = f"Bearer {secret(settings, 'token', 'ntfy')}"
+    url = f"{settings['server'].rstrip('/')}/{settings['topic']}"
+    client.post(url, data=message.text.encode("utf-8"), headers=headers)
+
+
+SENDERS = {"telegram": send_telegram, "discord": send_discord, "slack": send_slack, "ntfy": send_ntfy}
