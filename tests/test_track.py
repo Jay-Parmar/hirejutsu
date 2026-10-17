@@ -3,14 +3,15 @@ from datetime import datetime, timezone
 import pytest
 
 from hirejutsu.cli import main
-from hirejutsu.models import Job
+from hirejutsu.models import Job, Match
 from hirejutsu.store import Store
 
 NOW = datetime(2026, 10, 17, 9, 0, tzinfo=timezone.utc)
 
 
 def job(external_id, **kwargs):
-    fields = {"title": f"Engineer {external_id}", "company": f"Company {external_id}", "url": f"https://x/{external_id}"}
+    fields = {"title": f"Engineer {external_id}", "company": f"Company {external_id}",
+              "url": f"https://x/{external_id}"}
     fields.update(kwargs)
     return Job("demo", external_id, **fields)
 
@@ -29,6 +30,12 @@ def hj(home, *args) -> int:
 def statuses(home) -> dict[int, str]:
     with Store(home / "hirejutsu.db") as store:
         return {stored.id: stored.status for stored in store.find_jobs()}
+
+
+def pick_today(home, *job_ids):
+    with Store(home / "hirejutsu.db") as store:
+        matches = [Match(store.get_job(job_id), 0.5, ["Skills: python"]) for job_id in job_ids]
+        store.record_picks(datetime.now().astimezone().date(), matches)
 
 
 def test_applied_marks_several_jobs(home, capsys):
@@ -62,4 +69,23 @@ def test_status_rejects_unknown_status(home, capsys):
     with pytest.raises(SystemExit):
         hj(home, "status", "1", "maybe")
     assert "invalid choice: 'maybe'" in capsys.readouterr().err
+    assert statuses(home)[1] == "new"
+
+
+def test_today_flag_uses_pick_numbers(home):
+    pick_today(home, 3, 1)
+    assert hj(home, "applied", "-t", "1", "2") == 0
+    assert statuses(home) == {1: "applied", 2: "new", 3: "applied"}
+
+
+def test_today_flag_reports_missing_pick(home, capsys):
+    pick_today(home, 3)
+    assert hj(home, "skip", "--today", "1", "4") == 1
+    assert "No pick #4 today" in capsys.readouterr().out
+    assert statuses(home)[3] == "skipped"
+
+
+def test_today_flag_without_picks(home, capsys):
+    assert hj(home, "applied", "-t", "1") == 2
+    assert "hirejutsu run" in capsys.readouterr().out
     assert statuses(home)[1] == "new"
