@@ -78,7 +78,23 @@ hirejutsu top -n 30        # rank everything saved without recording picks
 ```
 
 `run` picks `ranking.top` jobs (10 by default) and never shows a job again on a later day.
-Each day's picks are also saved as a Markdown file in the `reports` folder.
+Each day's picks are also saved in the `reports` folder, see below.
+
+## Reports
+
+`run` writes the day's picks to `reports/YYYY-MM-DD.md` and `reports/YYYY-MM-DD.html` in the
+data folder. The HTML page works offline and loads nothing from the internet. Use
+`hirejutsu run --open` to open it in your browser when the run is done.
+
+```
+hirejutsu report                          # rebuild today's report files
+hirejutsu report --day 2026-10-16 --open  # rebuild another day and open it
+hirejutsu report --format csv json        # write only CSV and JSON
+```
+
+The `report` section of the config sets the `formats` to write (md, html, csv, json), `open`
+to open the HTML page after every run, and `keep_days`: reports older than that many days
+(60 by default) are deleted when new ones are written, 0 keeps them all.
 
 ## Ranking
 
