@@ -1,3 +1,5 @@
+import logging
+import logging.handlers
 import sys
 from datetime import datetime, timezone
 
@@ -18,7 +20,18 @@ class FakeJobSpy:
 
     def __call__(self, **search):
         self.searches.append(search)
-        return self.answers.pop(0) if self.answers else []
+        answer = self.answers.pop(0) if self.answers else []
+        return answer() if callable(answer) else answer
+
+
+def logs(message, level=logging.ERROR, rows=(), board="Indeed"):
+    """An answer that logs the way jobspy reports a board's trouble."""
+
+    def answer():
+        logging.getLogger(f"JobSpy:{board}").log(level, message)
+        return list(rows)
+
+    return answer
 
 
 @pytest.fixture
@@ -164,6 +177,30 @@ def test_nan_and_nat_cells_count_as_empty(tmp_path, jobspy):
     assert (job.company, job.location, job.description, job.employment_type, job.department) == ("", "", "", "", "")
     assert (job.posted_at, job.remote) == (None, None)
     assert (job.salary_min, job.salary_max, job.salary_currency, job.salary_period) == (None, None, "", "")
+
+
+def test_board_error_is_raised_when_nothing_was_found(tmp_path, jobspy):
+    jobspy.answers = [logs("Indeed response status code 403")]
+    with pytest.raises(HirejutsuError, match="Indeed response status code 403"):
+        board(boards.Indeed, tmp_path).fetch()
+
+
+def test_board_error_after_some_jobs_is_a_warning(tmp_path, jobspy, caplog):
+    jobspy.answers = [[row()], logs("Indeed: timed out")]
+    assert len(board(boards.Indeed, tmp_path, locations=["Pune", "Delhi"]).fetch()) == 1
+    warnings = [record.getMessage() for record in caplog.records
+                if record.name == boards.__name__ and record.levelno == logging.WARNING]
+    assert warnings == ["Some indeed searches failed: Indeed: timed out"]
+
+
+def test_jobspy_handlers_are_muted_during_a_search_and_put_back(tmp_path, jobspy, monkeypatch):
+    logger = logging.getLogger("JobSpy:Indeed")
+    printer = logging.handlers.BufferingHandler(100)
+    monkeypatch.setattr(logger, "handlers", [printer])
+    jobspy.answers = [logs("Indeed: timed out", rows=[row()])]
+    board(boards.Indeed, tmp_path).fetch()
+    assert printer.buffer == []
+    assert logger.handlers == [printer]
 
 
 def test_rows_without_title_or_url_are_dropped(tmp_path, jobspy):
