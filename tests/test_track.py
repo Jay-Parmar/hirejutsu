@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from hirejutsu.cli import main
+from hirejutsu.commands import track
 from hirejutsu.models import Job, Match
 from hirejutsu.store import Store
 
@@ -125,3 +126,12 @@ def test_show_prints_details_history_and_start_of_description(home, capsys):
                  "applied since", "referred by Sam", "recruiter called", "line 40", "10 more lines"):
         assert text in out, text
     assert "line 41" not in out
+
+
+def test_open_launches_the_browser(home, monkeypatch):
+    opened = []
+    monkeypatch.setattr(track, "open_url", opened.append)
+    pick_today(home, 2, 3)
+    assert hj(home, "open", "1") == 0
+    assert hj(home, "open", "-t", "2") == 0
+    assert opened == ["https://x/a", "https://x/c"]

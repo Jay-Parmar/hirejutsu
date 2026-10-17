@@ -7,6 +7,7 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
+from ..desktop import open_url
 from ..errors import HirejutsuError
 from ..models import Job, Match
 from ..store import STATUSES, Store
@@ -39,6 +40,10 @@ def register(sub) -> None:
     parser = sub.add_parser("show", help="show everything saved about a job")
     add_ids(parser)
     parser.set_defaults(func=show)
+
+    parser = sub.add_parser("open", help="open job links in your browser")
+    add_ids(parser)
+    parser.set_defaults(func=open_links)
 
 
 def add_ids(parser, nargs="+") -> None:
@@ -155,3 +160,11 @@ def print_section(console, title: str, lines: list[str]) -> None:
         console.print()
         console.print(Text(title, style="bold"))
         console.print(Text("\n".join(lines)))
+
+
+def open_links(app, args) -> int:
+    jobs = named_jobs(app, args)
+    for job in jobs:
+        app.console.print(Text(f"Opening job {job.id}: {job.url}"))
+        open_url(job.url)
+    return 0 if len(jobs) == len(args.ids) else 1
