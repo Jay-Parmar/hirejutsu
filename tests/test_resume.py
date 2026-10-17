@@ -7,7 +7,7 @@ from pypdf import PdfWriter
 
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
-from hirejutsu.resume import find_skills, find_titles, find_years, load_profile, read_text, skill_terms
+from hirejutsu.resume import find_skills, find_titles, find_years, load_profile, read_text, skill_terms, spellings
 
 TODAY = date(2026, 10, 17)
 
@@ -249,3 +249,12 @@ def test_find_titles_skips_sentences_bullets_and_labels():
         "Developer Tools: Git, Docker"
     )
     assert find_titles(text) == []
+
+
+def test_spellings_of_a_skill_by_any_name():
+    assert ("Postgres", False) in spellings("postgresql")
+    assert spellings("Golang") == [("Go", True), ("Golang", False)]
+
+
+def test_spellings_of_an_unknown_skill():
+    assert spellings("Frobnicate") == [("Frobnicate", False)]

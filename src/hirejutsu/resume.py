@@ -115,13 +115,23 @@ def find_skills(text: str) -> list[str]:
         # A plain substring test skips most terms without running a regex.
         if term.lower() not in lowered:
             continue
-        match = _term_pattern(term, exact).search(text)
+        match = term_pattern(term, exact).search(text)
         if match and match.start() < first.get(name, len(text)):
             first[name] = match.start()
     return sorted(first, key=first.get)
 
 
-def _term_pattern(term: str, exact: bool) -> re.Pattern:
+def spellings(skill: str) -> list[tuple[str, bool]]:
+    """Every way to write a skill as (spelling, exact case only), looked up by its name or any alias."""
+    wanted = skill.strip().lower()
+    main = next((name for term, name, _ in skill_terms() if term.lower() == wanted), None)
+    if main is None:
+        return [(skill.strip(), False)]
+    return [(term, exact) for term, name, exact in skill_terms() if name == main]
+
+
+@cache
+def term_pattern(term: str, exact: bool) -> re.Pattern:
     if exact:
         # These names are short or plain words, so they must not touch - & . + or #
         # either: that rules out C-suite, R&D, Go-live, C++ and initials like R.
