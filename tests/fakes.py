@@ -66,3 +66,18 @@ class FakeRun:
 def claude_reply(text: str) -> dict:
     """What the Anthropic Messages API returns for a plain text answer."""
     return {"content": [{"type": "text", "text": text}], "stop_reason": "end_turn"}
+
+
+def claude_scorer(scores: dict):
+    """A FakeClient route that rates the jobs in each prompt from scores, a dict of job id to 0..10."""
+
+    def answer(payload):
+        prompt = payload["messages"][0]["content"]
+        rated = [
+            {"id": job_id, "score": score, "reason": f"Fit {score}"}
+            for job_id, score in scores.items()
+            if f'<job id="{job_id}">' in prompt
+        ]
+        return claude_reply(json.dumps(rated))
+
+    return answer
