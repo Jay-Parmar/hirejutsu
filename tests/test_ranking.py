@@ -351,3 +351,41 @@ def test_require_keywords_keep_jobs_that_mention_one():
     ]
     matches = rank(jobs, Profile(skills=["python"]), settings(require_keywords=["Go", "rust"]))
     assert [match.job.external_id for match in matches] == ["1", "2"]
+
+
+def test_max_age_days_drops_old_posts_and_keeps_undated_ones():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", posted_at=NOW - timedelta(days=20)),
+        job("2", "Engineer", company="B", description="python", posted_at=NOW - timedelta(days=5)),
+        job("3", "Engineer", company="C", description="python", first_seen=NOW - timedelta(days=30)),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(max_age_days=14), now=NOW)
+    assert [match.job.external_id for match in matches] == ["2", "3"]
+
+
+def test_min_salary_drops_known_lower_pay_in_your_currency():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", salary_max=1_200_000, salary_currency="INR"),
+        job("2", "Engineer", company="B", description="python", salary_max=3_000_000, salary_currency="INR"),
+        job("3", "Engineer", company="C", description="python"),
+        job("4", "Engineer", company="D", description="python", salary_max=90_000, salary_currency="USD"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(min_salary=1_500_000, salary_currency="inr"))
+    assert [match.job.external_id for match in matches] == ["2", "3", "4"]
+
+
+def test_min_salary_counts_monthly_pay_per_year():
+    jobs = [
+        job("1", "Engineer", company="A", description="python", salary_max=100_000, salary_period="month"),
+        job("2", "Engineer", company="B", description="python", salary_max=150_000, salary_period="month"),
+    ]
+    matches = rank(jobs, Profile(skills=["python"]), settings(min_salary=1_500_000))
+    assert [match.job.external_id for match in matches] == ["2"]
+
+
+def test_min_score_drops_weak_matches():
+    jobs = [
+        job("1", "Backend Engineer", company="A", description="python django aws"),
+        job("2", "Analyst", company="B", description="python"),
+    ]
+    assert [match.job.external_id for match in rank(jobs, PROFILE, settings(min_score=0.5))] == ["1"]

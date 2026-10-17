@@ -20,6 +20,10 @@ RANKING_DEFAULTS = {
     "exclude_title_words": [],
     "exclude_companies": [],
     "require_keywords": [],
+    "min_score": 0,
+    "max_age_days": None,
+    "min_salary": None,
+    "salary_currency": "",
 }
 
 # Score for a part that cannot be judged, such as skills when the profile lists none.
@@ -60,6 +64,8 @@ PLACE_ALIASES = [
     {"bengaluru", "bangalore"}, {"gurugram", "gurgaon"}, {"mumbai", "bombay"}, {"delhi", "ncr"},
     {"chennai", "madras"}, {"kolkata", "calcutta"}, {"us", "usa", "united states"}, {"uk", "united kingdom"},
 ]
+# Pay periods per year, to compare salaries with min_salary.
+SALARY_PERIODS = {"hour": 2080, "day": 260, "week": 52, "month": 12}
 STOPWORDS = frozenset(
     "a about after all also an and any are as at be been but by can could do does each for from had has have he "
     "her here his how i if in into is its just may me more most my no not of on only or other our out over she "
@@ -122,7 +128,11 @@ def rank(jobs: list[Job], profile: Profile, settings: dict, now: datetime | None
         }
         entry.score = _combine(entry.parts, settings["weights"])
     best = sorted((entry for entry in pool if _relevant(entry)), key=lambda entry: entry.score, reverse=True)
-    matches = [Match(entry.job, round(entry.score, 3), _reasons(entry, run)) for entry in best]
+    matches = [
+        Match(entry.job, round(entry.score, 3), _reasons(entry, run))
+        for entry in best
+        if entry.score >= settings["min_score"]
+    ]
     return pick(matches, settings["top"], settings["per_company"])
 
 
@@ -186,6 +196,14 @@ def _checks(job: Job, text: str, run: _Run) -> list[tuple[str, str]]:
     if settings["require_keywords"]:
         hit = _first_term(text, settings["require_keywords"])
         checks.append(("require_keywords", "" if hit else "mentions none of them"))
+    if settings["max_age_days"] is not None:
+        # Jobs without a post date are kept.
+        age = _age_days(job.posted_at, run) if job.posted_at else 0.0
+        checks.append(("max_age_days", f"posted {age:.0f} days ago" if age > settings["max_age_days"] else ""))
+    if settings["min_salary"] is not None:
+        pay = _yearly_salary(job, settings["salary_currency"])
+        low = pay is not None and pay < settings["min_salary"]
+        checks.append(("min_salary", f"pays up to {pay:,.0f} a year" if low else ""))
     if settings["location_mode"] == "filter" and (run.places or run.wants_remote):
         outside = _place(job, run) == ""
         checks.append(("location", f"{job.location or 'Remote'} is not one of your locations" if outside else ""))
@@ -195,6 +213,19 @@ def _checks(job: Job, text: str, run: _Run) -> list[tuple[str, str]]:
 def _first_term(text: str, terms: list[str]) -> str | None:
     """The first of terms that text has as a whole word, or None."""
     return next((term for term in terms if has_term(text, term.lower())), None)
+
+
+def _age_days(when: datetime, run: _Run) -> float:
+    return max(0.0, (run.now - when).total_seconds() / 86400)
+
+
+def _yearly_salary(job: Job, currency: str) -> float | None:
+    """The job's top salary per year, or None when it is not listed or is in another currency."""
+    if not job.salary_max:
+        return None
+    if currency and job.salary_currency and job.salary_currency.upper() != currency.upper():
+        return None
+    return job.salary_max * SALARY_PERIODS.get(job.salary_period.lower(), 1)
 
 
 def _entry(job: Job, text: str, run: _Run) -> _Entry:
@@ -327,8 +358,7 @@ def _freshness(job: Job, run: _Run) -> float:
     posted = job.posted_at or job.first_seen
     if posted is None:
         return NEUTRAL
-    age = max(0.0, (run.now - posted).total_seconds() / 86400)
-    return 0.5 ** (age / run.settings["half_life_days"])
+    return 0.5 ** (_age_days(posted, run) / run.settings["half_life_days"])
 
 
 def _place(job: Job, run: _Run) -> str | None:
