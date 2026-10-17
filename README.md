@@ -159,6 +159,61 @@ hirejutsu export           # CSV of tracked jobs in the data folder
 `status` takes new, saved, applied, interview, offer, rejected or skipped. Jobs you mark are left
 out of later picks.
 
+## Notifications
+
+`run` can send the day's picks to you by email, Telegram, Discord, Slack or ntfy. Nothing is sent
+until you set `enabled: true` on a channel under `notify` in the config.
+
+Keep passwords, tokens and webhook URLs in environment variables. The config only holds the
+variable's name (`password_env`, `bot_token_env`, `webhook_url_env`, `token_env`). Writing the
+secret itself in the config works too, but hirejutsu warns you every time.
+
+Gmail example: turn on 2-Step Verification for your Google account, create an app password at
+https://myaccount.google.com/apppasswords and use it as `HIREJUTSU_SMTP_PASSWORD`.
+
+```yaml
+notify:
+  email:
+    enabled: true
+    host: smtp.gmail.com
+    security: starttls
+    port: 587
+    username: you@gmail.com
+    password_env: HIREJUTSU_SMTP_PASSWORD
+    to: [you@gmail.com]
+    attach: true
+```
+
+Set the variable on Windows, then open a new terminal (`setx` does not change the one you are in):
+
+```
+setx HIREJUTSU_SMTP_PASSWORD abcdefghijklmnop
+```
+
+On macOS or Linux add this line to `~/.zshrc` or `~/.bashrc`, then open a new terminal:
+
+```
+export HIREJUTSU_SMTP_PASSWORD=abcdefghijklmnop
+```
+
+The other channels:
+
+- Telegram: create a bot with @BotFather and put its token in `HIREJUTSU_TELEGRAM_TOKEN`. Send the
+  bot a message, open `https://api.telegram.org/bot<token>/getUpdates` and copy `chat.id` into
+  `chat_id`.
+- Discord: Server Settings > Integrations > Webhooks. Put the webhook URL in `HIREJUTSU_DISCORD_WEBHOOK`.
+- Slack: add an incoming webhook to your workspace and put its URL in `HIREJUTSU_SLACK_WEBHOOK`.
+- ntfy: set `topic` to a name that is hard to guess and subscribe to it in the ntfy app.
+
+```
+hirejutsu notify --test              # send a test message to every enabled channel
+hirejutsu notify                     # send today's picks again
+hirejutsu notify --day 2026-10-16 --channel telegram
+hirejutsu run --no-notify            # pick without sending anything
+```
+
+A channel that fails is reported and the others still get the picks.
+
 ## Development
 
 ```
