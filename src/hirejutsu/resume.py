@@ -210,13 +210,17 @@ def _title_in(line: str) -> str | None:
     return None
 
 
-def load_profile(config: Config) -> Profile:
-    """The profile from the resume, where anything set in the config wins."""
-    settings = config.section("profile", PROFILE_DEFAULTS)
+def resume_path(config: Config) -> Path:
     path = config.path(config.get("resume", "resume.pdf"))
     if not path.exists():
         raise HirejutsuError(f"Resume not found at {path}. Set 'resume' in the config.")
-    text = read_text(path)
+    return path
+
+
+def load_profile(config: Config) -> Profile:
+    """The profile from the resume, where anything set in the config wins."""
+    settings = config.section("profile", PROFILE_DEFAULTS)
+    text = read_text(resume_path(config))
     years = settings["years"]
     return Profile(
         text=text,
