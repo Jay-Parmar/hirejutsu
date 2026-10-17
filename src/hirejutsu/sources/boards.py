@@ -88,7 +88,7 @@ class Board(Source):
         if errors and not jobs:
             raise HirejutsuError("; ".join(errors))
         if errors:
-            log.warning("Some %s searches failed: %s", self.name, "; ".join(errors))
+            log.warning("Some %s results may be missing: %s", self.name, "; ".join(errors))
         return jobs
 
     def run(self, search: dict) -> tuple[list[dict], list[logging.LogRecord]]:
