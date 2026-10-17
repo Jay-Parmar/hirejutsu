@@ -2,12 +2,47 @@
 
 Finds the best job openings for your resume every morning, so you can apply to them yourself.
 
-## Requirements
+hirejutsu reads jobs from company career pages and job boards, scores them against your resume and
+shows you the 10 best each day. Everything stays on your computer, and it never logs in or applies
+anywhere for you.
 
-- Python 3.10 or newer
-- Windows, macOS or Linux
+- 448 company career pages on Greenhouse, Lever, Ashby, Workday and 7 more applicant tracking
+  systems, plus any company you add
+- 9 remote job boards and Hacker News "Who is hiring?"
+- Optional: LinkedIn, Indeed, Naukri, Glassdoor and ZipRecruiter
+- Reads PDF, DOCX, TXT and MD resumes for skills, titles and years of experience
+- Explains every pick, writes a daily HTML report and tracks what you applied to
+- Runs by itself every morning and can send the picks by email, Telegram, Discord, Slack or ntfy
+- Optional AI second opinion with Claude, OpenAI or a local Ollama model
 
-## Install
+## Quick start on Windows
+
+Install Python 3.10 or newer from https://www.python.org/downloads/ (tick "Add python.exe to PATH"),
+then:
+
+```
+git clone https://github.com/Jay-Parmar/hirejutsu.git
+cd hirejutsu
+setup.bat
+```
+
+`setup.bat` creates a `.venv` folder, installs hirejutsu into it and creates the data folder
+`C:\Users\<you>\.hirejutsu`. Copy your resume there, then:
+
+```
+.venv\Scripts\activate
+hirejutsu config --edit      # set resume, profile.locations and ranking.remote_from
+hirejutsu doctor             # check the setup
+hirejutsu run --open         # first run, opens the report
+hirejutsu schedule install   # run every day at 09:00
+```
+
+Each morning open the report (or run `hirejutsu today`), apply on the company sites and record it
+with `hirejutsu review`. Run `setup.bat` again after pulling new changes.
+
+## Install by hand
+
+Needs Python 3.10 or newer on Windows, macOS or Linux.
 
 ```
 git clone https://github.com/Jay-Parmar/hirejutsu.git
@@ -17,7 +52,8 @@ py -m venv .venv
 pip install -e .
 ```
 
-On macOS or Linux use `python3 -m venv .venv` and `source .venv/bin/activate`.
+On macOS or Linux use `python3 -m venv .venv` and `source .venv/bin/activate`. For LinkedIn,
+Indeed and Naukri also install the optional extra: `pip install -e ".[jobspy]"`.
 
 Check that it works:
 
@@ -42,6 +78,22 @@ Copy your resume into the data folder and open the config:
 ```
 hirejutsu config --edit
 ```
+
+Settings worth checking first:
+
+- `resume`: the file name of your resume in the data folder, or a full path.
+- `profile.locations`: where you can work, like `[remote, Bengaluru]`.
+- `ranking.remote_from`: places that include you, like `[India, APAC, Asia]`, so remote jobs open
+  only to other countries are skipped.
+
+Then check that everything is in place:
+
+```
+hirejutsu doctor
+```
+
+`doctor` looks at Python, the config, your resume, the sources, the last fetch, the schedule,
+notifications and AI, and says what to fix.
 
 ## Resume
 
@@ -207,6 +259,10 @@ rank outside jobs lower instead. Jobs posted more than `max_age_days` ago are sk
 `exclude_title_words`, `exclude_companies`, `require_keywords`, `min_score` and `min_salary` with
 `salary_currency`.
 
+Remote jobs often say who may apply, like "Remote (USA)" or "LATAM". Set `remote_from` to the
+places that include you, such as `[India, APAC, Asia]`, and remote jobs open only to other places
+are skipped. Remote jobs that name no place, like "Remote" or "Anywhere in the World", are kept.
+
 Only the best 300 jobs by skills and title get the slower resume text comparison, so ranking stays
 quick on big job lists.
 
@@ -367,6 +423,31 @@ ai:
   batch_size: 3
   timeout: 300
 ```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `init`, `config --edit`, `doctor` | create the data folder, edit the config, check the setup |
+| `resume` | show what was read from your resume |
+| `sources`, `fetch`, `companies` | list sources, download jobs, manage company career pages |
+| `run`, `today`, `top` | pick today's jobs, show them again, rank without recording |
+| `explain <id>` | show how one job scored |
+| `report` | rebuild a day's report files |
+| `review`, `applied`, `skip`, `save`, `status`, `note` | record what you did with a job |
+| `show`, `open`, `list`, `stats`, `export` | look back at tracked jobs |
+| `notify` | send the picks again or test your channels |
+| `schedule install`, `schedule status`, `schedule remove` | the daily run |
+| `ai test`, `ai explain <id>` | the optional AI second opinion |
+
+Every command takes `--home <folder>` for another data folder and `-v` for debug logs. Run
+`hirejutsu <command> --help` to see its options.
+
+## Privacy
+
+Your resume, the jobs, your picks and your application history live in the data folder and nowhere
+else. hirejutsu sends nothing anywhere unless you turn on notifications or the AI second opinion,
+and it only reads job listings: it never logs in to a job site or applies for you.
 
 ## Development
 
