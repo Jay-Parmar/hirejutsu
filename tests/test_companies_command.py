@@ -1,6 +1,6 @@
 import pytest
 import yaml
-from fakes import FakeClient, fixture
+from fakes import FakeClient, fixture, http_error
 
 from hirejutsu.app import App
 from hirejutsu.cli import main
@@ -102,3 +102,44 @@ def test_remove_an_added_company(tmp_path, client):
 def test_remove_unknown_company(tmp_path, client, capsys):
     assert run(tmp_path, "remove", "greenhouse:nobody") == 2
     assert "not in the list" in capsys.readouterr().out
+
+
+def own_companies_only(home, text):
+    (home / "config.yaml").write_text("companies:\n  builtin: false\n", encoding="utf-8")
+    (home / "companies.yaml").write_text(text, encoding="utf-8")
+
+
+def three_lever_boards(home, client):
+    own_companies_only(home, "lever:\n  zoox: Zoox\n  gone: Gone\n  flaky: Flaky\n")
+    client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
+    client.routes[f"{LEVER}/flaky"] = http_error(503)
+
+
+def test_check_lists_dead_boards(tmp_path, client, capsys):
+    three_lever_boards(tmp_path, client)
+    assert run(tmp_path, "check") == 1
+    out = capsys.readouterr().out
+    assert "1 live, 1 dead, 1 could not be checked" in out
+    assert "lever:gone" in out and "lever:flaky" in out
+    assert "check --prune" in out
+
+
+def test_check_prune_removes_only_dead_boards(tmp_path, client, capsys):
+    three_lever_boards(tmp_path, client)
+    assert run(tmp_path, "check", "--ats", "lever", "--prune") == 0
+    assert "Stopped fetching 1 dead board" in capsys.readouterr().out
+    assert user_file(tmp_path) == {"lever": {"flaky": "Flaky", "zoox": "Zoox"}, "removed": ["lever:gone"]}
+
+
+def test_check_counts_an_empty_board_as_dead(tmp_path, client, capsys):
+    own_companies_only(tmp_path, "smartrecruiters:\n  Nobody: Nobody\n")
+    client.routes["https://api.smartrecruiters.com/v1/companies/Nobody/postings"] = {"totalFound": 0, "content": []}
+    assert run(tmp_path, "check") == 1
+    assert "no open jobs" in capsys.readouterr().out
+
+
+def test_check_with_every_board_live(tmp_path, client, capsys):
+    own_companies_only(tmp_path, "lever:\n  zoox: Zoox\n")
+    client.routes[f"{LEVER}/zoox"] = fixture("lever.json")
+    assert run(tmp_path, "check") == 0
+    assert "1 live, 0 dead, 0 could not be checked" in capsys.readouterr().out

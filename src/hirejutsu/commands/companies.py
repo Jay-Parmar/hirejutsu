@@ -1,6 +1,7 @@
 """companies command: the company career pages that the ATS sources read."""
 
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from xml.etree import ElementTree
 
 import requests
@@ -13,6 +14,7 @@ from ..sources import available
 
 # HTTP errors that mean the board is gone. Workday answers 422 for closed sites.
 GONE = {400, 404, 410, 422}
+CHECK_WORKERS = 8
 
 
 def register(sub) -> None:
@@ -33,6 +35,11 @@ def register(sub) -> None:
     action = actions.add_parser("remove", help="stop fetching a company, built-in ones too")
     action.add_argument("board", help="careers page URL or ats:board like greenhouse:stripe")
     action.set_defaults(func=remove)
+
+    action = actions.add_parser("check", help="check that every board is live and list the dead ones")
+    action.add_argument("--ats", choices=ATSES, help="only boards on this ATS")
+    action.add_argument("--prune", action="store_true", help="stop fetching the dead boards")
+    action.set_defaults(func=check)
 
 
 def companies_text(count: int) -> str:
@@ -78,6 +85,35 @@ def remove(app, args) -> int:
     path = drop_companies(app.home, [found])
     app.console.print(Text(f"Removed {found.name} ({found.key}). It is listed under removed in {path}."))
     return 0
+
+
+def check(app, args) -> int:
+    companies = [company for company in load_companies(app.config) if not args.ats or company.ats == args.ats]
+    with app.console.status(f"Checking {companies_text(len(companies))}..."):
+        states = check_boards(app, companies)
+    counts = Counter(state for state, _, _ in states)
+    if counts["dead"] or counts["unknown"]:
+        table = Table("Company", "Board", "State", "Why")
+        for company, (state, _, note) in zip(companies, states):
+            if state != "live":
+                table.add_row(Text(company.name), Text(company.key), state, Text(note))
+        app.console.print(table)
+    app.console.print(f"{counts['live']} live, {counts['dead']} dead, {counts['unknown']} could not be checked")
+    dead = [company for company, (state, _, _) in zip(companies, states) if state == "dead"]
+    if dead and args.prune:
+        path = drop_companies(app.home, dead)
+        boards = "board" if len(dead) == 1 else "boards"
+        app.console.print(Text(f"Stopped fetching {len(dead)} dead {boards}. They are listed under removed in {path}."))
+    elif dead:
+        app.console.print("Run 'hirejutsu companies check --prune' to stop fetching the dead ones.")
+        return 1
+    return 0
+
+
+def check_boards(app, companies: list[Company]) -> list[tuple[str, int, str]]:
+    sources = {ats: source_for(app, ats) for ats in {company.ats for company in companies}}
+    with ThreadPoolExecutor(max_workers=CHECK_WORKERS) as pool:
+        return list(pool.map(lambda company: board_state(sources[company.ats], company), companies))
 
 
 def board_from(text: str) -> Company:
