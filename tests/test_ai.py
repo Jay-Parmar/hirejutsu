@@ -140,6 +140,15 @@ def test_ask_error_includes_the_api_message():
         ai.ask("s", "p", settings(model="claude-nope"), client)
 
 
+def test_explain_asks_about_one_job_and_returns_the_answer():
+    job = Job("demo", "1", "Data Engineer", "Acme", "https://x/1", location="Pune", remote=True, description="Spark", id=7)
+    client = FakeClient({CLAUDE_URL: claude_reply("  7/10. Spark fits, Airflow is missing.  ")})
+    assert ai.explain(job, PROFILE, settings(), client) == "7/10. Spark fits, Airflow is missing."
+    prompt = client.calls[0][3]["messages"][0]["content"]
+    assert PROFILE.text in prompt
+    assert '<job id="7">' in prompt and "Location: Pune" in prompt and "Remote: yes" in prompt
+
+
 def test_parse_scores_reads_a_json_list():
     reply = '[{"id": 1, "score": 8, "reason": "Python fits"}, {"id": 2, "score": 3.5, "reason": "Needs Go"}]'
     assert ai.parse_scores(reply, {1, 2}) == {1: (8.0, "Python fits"), 2: (3.5, "Needs Go")}
