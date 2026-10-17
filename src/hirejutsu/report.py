@@ -11,7 +11,20 @@ from rich.table import Table
 from rich.text import Text
 
 from .config import Config
+from .errors import HirejutsuError
 from .models import Job, Match
+
+REPORT_DEFAULTS = {"formats": ["md", "html"]}
+FORMATS = ("md", "html")
+
+
+def report_settings(config: Config) -> dict:
+    """The report section of the config over its defaults. Unknown formats are an error."""
+    settings = config.section("report", REPORT_DEFAULTS)
+    unknown = [name for name in settings["formats"] if name not in FORMATS]
+    if unknown:
+        raise HirejutsuError(f"Unknown report format: {', '.join(unknown)}. Use one of: {', '.join(FORMATS)}")
+    return settings
 
 
 def where(match: Match) -> str:
@@ -145,9 +158,19 @@ def _web_link(url: str) -> str:
     return url if url.lower().startswith(("http://", "https://")) else "#"
 
 
+def render(fmt: str, matches: list[Match], day: date) -> str:
+    if fmt == "html":
+        return html_page(matches, day)
+    return markdown(matches, day)
+
+
 def write_reports(matches: list[Match], config: Config, day: date) -> list[Path]:
+    """Save the day's picks in each configured format. Returns the files written."""
     folder = config.reports_dir
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / f"{day.isoformat()}.md"
-    path.write_text(markdown(matches, day), encoding="utf-8")
-    return [path]
+    paths = []
+    for fmt in report_settings(config)["formats"]:
+        path = folder / f"{day.isoformat()}.{fmt}"
+        path.write_text(render(fmt, matches, day), encoding="utf-8")
+        paths.append(path)
+    return paths
