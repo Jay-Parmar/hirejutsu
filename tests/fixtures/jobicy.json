@@ -1,0 +1,81 @@
+{
+  "apiVersion": "2.2.19",
+  "documentationUrl": "https://jobi.cy/apidocs",
+  "friendlyNotice": "Thanks for using Jobicy API! Please ensure Jobicy is clearly credited with a direct link to the source, and all application buttons redirect to the original job URL provided in this feed. That\u2019s all! You might be building something amazing, we wish you the best of luck!",
+  "jobCount": 200,
+  "lastUpdate": "2026-10-17T08:33:08+00:00",
+  "nextCursor": "AgAAAABq02pgAAAAAGrSJicAAAAAAAJfGJGStyjVOt7ULMvdFdHp_0xjGsH--7hP_G6cSgT0AUpI6FVjbC8Lt3KRYqgQHL9WAuHoA9wCIppo7G3GbpqwJSM",
+  "hasMore": true,
+  "appliedFilters": {
+    "count": 200
+  },
+  "jobs": [
+    {
+      "id": 155586,
+      "url": "https://jobicy.com/jobs/155586-director-of-product-design-2",
+      "jobSlug": "155586-director-of-product-design-2",
+      "jobTitle": "Director of Product Design",
+      "companyName": "Monzo",
+      "companyLogo": "https://jobicy.com/data/server-nyc0409/galaxy/mercury/2025/06/5b4c0ec3-221.jpg",
+      "jobIndustry": [
+        "Web, UI & UX Design"
+      ],
+      "jobType": [
+        "Full-Time"
+      ],
+      "jobGeo": "UK",
+      "jobLevel": "Director",
+      "jobExcerpt": "We\u2019re on a mission to make money work for everyone. We\u2019re waving goodbye to the complicated and confusing ways of traditional banking. After starting as a prepaid card, our product offering has grown a lot in the last 10 years in the UK. As well as personal and business bank accounts, we offer joint&hellip;",
+      "jobDescription": "<p><strong><em> We\u2019re on a mission to make money work for everyone.</em></strong></p>\n<p>We\u2019re waving goodbye to the complicated and confusing ways of traditional banking.</p>\n<p>After starting as a prepaid card, our product offering has grown a lot in the last 10 years in the UK. As well as <a href=\"https://monzo.com/current-account/personal\" rel=\"nofollow ugc noopener\" target=\"_blank\">personal [...]",
+      "pubDate": "2026-10-17T08:33:08+00:00",
+      "salaryMin": 140000,
+      "salaryMax": 165000,
+      "salaryCurrency": "GBP",
+      "salaryPeriod": "yearly"
+    },
+    {
+      "id": 155582,
+      "url": "https://jobicy.com/jobs/155582-collaborative-ld-specialist",
+      "jobSlug": "155582-collaborative-ld-specialist",
+      "jobTitle": "Collaborative L&D Specialist",
+      "companyName": "Laminar Projects",
+      "companyLogo": "https://jobicy.com/data/server-nyc0409/galaxy/mercury/2025/06/5bd8df6b-221.png",
+      "jobIndustry": [
+        "Education & E-learning"
+      ],
+      "jobType": [
+        "Full-Time"
+      ],
+      "jobGeo": "Czechia,  Hungary,  Poland,  Romania,  Slovakia",
+      "jobLevel": "Senior",
+      "jobExcerpt": "Ready to make a real difference in how our people grow? Join our small, collaborative L&amp;D team, where you'll have the autonomy to shape learning that makes a real difference. From the moment a stakeholder says, \"We need something on this,\" you'll own the journey - challenging the brief, designing engaging solutions, testing what works&hellip;",
+      "jobDescription": "<p><em>Ready to make a real difference in how our people grow? </em></p>\n<p><em>Join our small, collaborative L&amp;D team, where you'll have the autonomy to shape learning that makes a real difference. From the moment a stakeholder says, \"We need something on this,\" you'll own the journey - challenging the brief, designing engaging solutions, testing what works and continuously improving the expe [...]",
+      "pubDate": "2026-10-17T08:33:07+00:00"
+    },
+    {
+      "id": 155565,
+      "url": "https://jobicy.com/jobs/155565-1140-lead-developer-architect-web3",
+      "jobSlug": "155565-1140-lead-developer-architect-web3",
+      "jobTitle": "Lead Developer / Architect Web3",
+      "companyName": "GoFasti",
+      "companyLogo": "https://jobicy.com/data/server-nyc0409/galaxy/mercury/2025/07/aeda8301-221.jpeg",
+      "jobIndustry": [
+        "Software Engineering"
+      ],
+      "jobType": [
+        "Contract"
+      ],
+      "jobGeo": "Anywhere",
+      "jobLevel": "Senior",
+      "jobExcerpt": "We Make Remote Work Remarkable \u2022 TopTalent from LatAm Hello! We are GoFasti, a Talent-as-a-Service. GoFasti bridges the gap between world-class developers and designers from LatAm and first-class companies around the globe. We need an English-proficient PART-TIME Lead Developer / Architect Web3, based in no, available to work remotely. We are looking for someone with&hellip;",
+      "jobDescription": "<p><strong>We Make Remote Work Remarkable</strong><strong> \u2022 TopTalent from LatAm</strong></p>\r\n<p>Hello! We are <strong><a href=\"https://jobicy.com/company/gofasti\" target=\"_blank\" rel=\"noopener\">GoFasti</a>, </strong>a Talent-as-a-Service. GoFasti bridges the gap between world-class developers and designers from LatAm and first-class companies around the globe. </p>\r\n<p>We need an English-profic [...]",
+      "pubDate": "2026-10-17T06:55:52+00:00",
+      "salaryMin": 2000,
+      "salaryMax": 3000,
+      "salaryCurrency": "USD",
+      "salaryPeriod": "monthly"
+    }
+  ],
+  "statusCode": 200,
+  "success": true
+}
