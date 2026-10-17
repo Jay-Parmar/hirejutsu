@@ -2,9 +2,11 @@
 
 from datetime import datetime, timedelta
 
+from . import ai
 from .config import Config
+from .http import Client
 from .models import Job, Match, Profile
-from .ranking import RANKING_DEFAULTS, rank
+from .ranking import RANKING_DEFAULTS, pick, rank
 from .sources.base import SEARCH_DEFAULTS
 from .store import Store
 
@@ -26,7 +28,16 @@ def ranking_settings(config: Config) -> dict:
     return settings
 
 
-def pick_today(store: Store, config: Config, profile: Profile, now: datetime) -> list[Match]:
-    matches = rank(candidates(store, now), profile, ranking_settings(config), now)
+def pick_today(store: Store, config: Config, profile: Profile, now: datetime, client: Client | None = None) -> list[Match]:
+    """Rank today's candidates and record them. With ai.enabled an AI rescores a longer shortlist first."""
+    settings = ranking_settings(config)
+    ai_settings = ai.load_settings(config)
+    jobs = candidates(store, now)
+    if ai_settings["enabled"]:
+        shortlist = rank(jobs, profile, {**settings, "top": ai_settings["candidates"]}, now)
+        rescored = ai.rerank(shortlist, profile, ai_settings, store, client or ai.make_client(ai_settings))
+        matches = pick(rescored, settings["top"], settings["per_company"])
+    else:
+        matches = rank(jobs, profile, settings, now)
     store.record_picks(now.date(), matches)
     return matches
