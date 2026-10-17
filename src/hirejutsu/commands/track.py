@@ -1,10 +1,12 @@
 """Commands for keeping track of what you did with each job."""
 
+from datetime import datetime
+
 from rich.markup import escape
 from rich.text import Text
 
 from ..errors import HirejutsuError
-from ..models import Job
+from ..models import Job, Match
 from ..store import STATUSES, Store
 
 
@@ -27,14 +29,28 @@ def register(sub) -> None:
 
 
 def add_ids(parser) -> None:
-    parser.add_argument("ids", nargs="+", type=int, metavar="ID", help="job id, as shown in the ID column")
+    parser.add_argument("ids", nargs="+", type=int, metavar="ID", help="job ids, or pick numbers with -t")
+    parser.add_argument("-t", "--today", action="store_true", help="numbers refer to today's picks (the # column)")
 
 
 def print_error(console, exc: Exception) -> None:
     console.print(f"[red]error:[/red] {escape(str(exc))}")
 
 
-def find_job(store: Store, number: int) -> Job:
+def todays_picks(store: Store) -> list[Match]:
+    day = datetime.now().astimezone().date()
+    picks = store.picks(day)
+    if not picks:
+        raise HirejutsuError(f"No picks for {day}. Run 'hirejutsu run' first.")
+    return picks
+
+
+def find_job(store: Store, number: int, picks: list[Match] | None = None) -> Job:
+    """The job with this id, or the job at this place in picks when picks are given."""
+    if picks is not None:
+        if not 1 <= number <= len(picks):
+            raise HirejutsuError(f"No pick #{number} today. See 'hirejutsu today'.")
+        return picks[number - 1].job
     job = store.get_job(number)
     if job is None:
         raise HirejutsuError(f"No job with id {number}")
@@ -43,10 +59,11 @@ def find_job(store: Store, number: int) -> Job:
 
 def named_jobs(app, args) -> list[Job]:
     """The jobs given on the command line. Each number that matches nothing is reported."""
+    picks = todays_picks(app.store) if args.today else None
     jobs = []
     for number in args.ids:
         try:
-            jobs.append(find_job(app.store, number))
+            jobs.append(find_job(app.store, number, picks))
         except HirejutsuError as exc:
             print_error(app.console, exc)
     return jobs
