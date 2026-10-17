@@ -113,7 +113,39 @@ def test_skills_reason_names_the_rarest_three():
 
 
 def test_rank_matches_whole_words_only():
-    assert rank([job("1", "Engineer", description="awesome pythonic code")], PROFILE, settings()) == []
+    assert rank([job("1", "Analyst", description="awesome pythonic code")], PROFILE, settings()) == []
+
+
+def test_close_titles_rank_higher():
+    jobs = [
+        job("1", "Sales Engineer", company="A", description="python"),
+        job("2", "Senior Backend Engineer", company="B", description="python"),
+    ]
+    matches = rank(jobs, PROFILE, settings())
+    assert [match.job.external_id for match in matches] == ["2", "1"]
+    assert "Title close to Backend Engineer" in matches[0].reasons
+
+
+def test_title_spells_out_abbreviations():
+    profile = Profile(skills=["python"], titles=["Backend Engineer", "Full Stack Developer"])
+    jobs = [
+        job("1", "Sr. Backend Eng", company="A", description="python"),
+        job("2", "Fullstack Dev II", company="B", description="python"),
+    ]
+    assert [match.score for match in rank(jobs, profile, settings(weights={"title": 1}))] == [1.0, 1.0]
+
+
+def test_close_title_counts_without_skills():
+    jobs = [job("1", "Backend Engineer", company="A"), job("2", "Data Analyst", company="B")]
+    assert [match.job.external_id for match in rank(jobs, PROFILE, settings())] == ["1"]
+
+
+def test_shared_common_words_do_not_make_titles_close():
+    titles = ["Backend Engineer", "Frontend Engineer", "Sales Engineer", "Data Engineer"]
+    jobs = [job(str(n), title, company=title, description="python") for n, title in enumerate(titles, start=1)]
+    matches = rank(jobs, PROFILE, settings())
+    close = [match.job.title for match in matches if any(reason.startswith("Title") for reason in match.reasons)]
+    assert close == ["Backend Engineer"]
 
 
 def test_rank_limits_jobs_per_company():
