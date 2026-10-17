@@ -30,6 +30,13 @@ STATED_YEARS = [
         rf"\bexperience\s*(?:of|:|-)?\s*{YEARS}",
     )
 ]
+TITLE_WORDS = re.compile(
+    r"\b(?:engineer|developer|programmer|manager|analyst|designer|consultant|scientist|architect|lead"
+    r"|intern|administrator|specialist|director|accountant|officer|associate|coordinator|tester"
+    r"|recruiter|writer|founder|trainee|sde)\b",
+    re.IGNORECASE,
+)
+TITLE_SEPARATORS = re.compile(r"\s+(?:at|[-\u2013\u2014])\s+|[|,;()@\t]|\s{3,}")
 EDUCATION = re.compile(
     r"\b(?:education|university|college|school|institute|academy|degree|diploma|bachelor\w*"
     r"|master(?:'|\u2019)?s|master of|b\.?\s?tech|m\.?\s?tech|b\.?\s?sc|m\.?\s?sc|b\.?\s?com|m\.?\s?com"
@@ -174,6 +181,33 @@ def _is_education(lines: list[str], index: int) -> bool:
     if index and not DATE_RANGE.search(lines[index - 1]):
         nearby += "\n" + lines[index - 1]
     return EDUCATION.search(nearby) is not None
+
+
+def find_titles(text: str, limit: int = 3) -> list[str]:
+    """Job titles in the order they appear, which in most resumes is most recent first."""
+    titles: list[str] = []
+    for line in text.splitlines():
+        line = DATE_RANGE.sub(" ", line).strip()
+        # Bullets describe the work rather than name the role.
+        if not line[:1].isalpha():
+            continue
+        # Text before a colon is a label, as in "Role:" or "Developer Tools:".
+        title = _title_in(line.split(":", 1)[-1])
+        if title and title.lower() not in [known.lower() for known in titles]:
+            titles.append(title)
+        if len(titles) == limit:
+            break
+    return titles
+
+
+def _title_in(line: str) -> str | None:
+    """The first part of a line that is short, capitalized and has a title word in it."""
+    for part in TITLE_SEPARATORS.split(line):
+        part = part.strip(" .")
+        word = TITLE_WORDS.search(part)
+        if word and word.group()[0].isupper() and part[0].isupper() and len(part.split()) <= 6:
+            return part
+    return None
 
 
 def load_profile(config: Config) -> Profile:

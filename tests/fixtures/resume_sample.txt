@@ -1,0 +1,28 @@
+Priya Sharma
+Senior Software Engineer
+Pune, India | priya.sharma@example.com | +91 98765 43210
+
+SUMMARY
+Backend engineer with 6+ years of experience building payment APIs in Python and Go.
+
+EXPERIENCE
+Senior Software Engineer | Acme Payments | Jan 2021 - Present
+- Built payment services in Go and Python on AWS (EKS, RDS, SQS).
+- Led the move from MySQL to PostgreSQL and cut query times by 40%.
+
+Software Engineer, Globex Corp                      Jul 2018 - Dec 2020
+- Developed REST APIs with Django and Celery, backed by Redis.
+- Set up CI/CD with Jenkins and Docker; wrote unit tests with pytest.
+
+Software Engineering Intern, Initech                May 2017 - Jul 2017
+- Built internal dashboards with React and Node.js.
+
+Freelance Web Developer                             2016 - 2017
+- Built WordPress sites for local shops.
+
+EDUCATION
+B.E. Computer Engineering, University of Mumbai     2014 - 2018
+
+SKILLS
+Languages: Python, Go, SQL, JavaScript
+Developer Tools: Git, Docker, Kubernetes, Linux, Jira

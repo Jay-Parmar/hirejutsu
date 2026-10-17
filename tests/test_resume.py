@@ -2,12 +2,12 @@ from datetime import date
 
 import pytest
 from docx import Document
-from fakes import FIXTURES
+from fakes import FIXTURES, fixture
 from pypdf import PdfWriter
 
 from hirejutsu.config import Config
 from hirejutsu.errors import HirejutsuError
-from hirejutsu.resume import find_skills, find_years, load_profile, read_text, skill_terms
+from hirejutsu.resume import find_skills, find_titles, find_years, load_profile, read_text, skill_terms
 
 TODAY = date(2026, 10, 17)
 
@@ -198,3 +198,26 @@ def test_find_years_ignores_other_year_counts():
 def test_find_years_takes_the_larger_of_stated_and_dated():
     assert find_years("5+ years of experience\nAcme, Jan 2015 - Present", TODAY) == 11.8
     assert find_years("12 years of experience\nAcme, Jan 2020 - Present", TODAY) == 12
+
+
+def test_find_titles_in_a_sample_resume():
+    assert find_titles(fixture("resume_sample.txt")) == [
+        "Senior Software Engineer",
+        "Software Engineer",
+        "Software Engineering Intern",
+    ]
+
+
+def test_find_titles_splits_off_companies_and_labels():
+    text = "Product Manager at Google, 2019 - 2021\nAcme Corp - Lead Data Scientist\nRole: Senior Accountant"
+    assert find_titles(text) == ["Product Manager", "Lead Data Scientist", "Senior Accountant"]
+
+
+def test_find_titles_skips_sentences_bullets_and_labels():
+    text = (
+        "Data analyst with a passion for numbers\n"
+        "- Lead Developer on the billing team\n"
+        "Worked closely with the Engineering Manager and the sales team\n"
+        "Developer Tools: Git, Docker"
+    )
+    assert find_titles(text) == []
