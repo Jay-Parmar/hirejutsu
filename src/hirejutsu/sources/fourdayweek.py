@@ -40,9 +40,9 @@ def to_job(item: dict) -> Job:
         source="fourdayweek",
         external_id=item["id"],
         title=clean(item["title"]),
-        company=clean(item["company"]["name"]),
+        company=clean((item.get("company") or {}).get("name")),
         url=item["url"],
-        location="; ".join(place(location) for location in item.get("locations") or []),
+        location="; ".join(filter(None, map(place, item.get("locations") or []))),
         remote=item.get("work_arrangement") == "remote",
         description=plain_text(item.get("description") or ""),
         posted_at=parse_date(item.get("posted_at")),
@@ -57,7 +57,8 @@ def to_job(item: dict) -> Job:
 
 
 def place(location: dict) -> str:
-    return ", ".join(part for part in (location.get("city"), location.get("state"), location.get("country")) if part)
+    parts = [location.get("city"), location.get("state"), location.get("country")]
+    return ", ".join(part for part in parts if part) or location.get("continent") or ""
 
 
 def plain_text(markdown: str) -> str:
