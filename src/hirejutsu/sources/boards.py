@@ -14,8 +14,10 @@ PERIODS = {"yearly": "year", "monthly": "month", "weekly": "week", "daily": "day
 
 def _scrape(**search) -> list[dict]:
     """Run one jobspy search and return its rows."""
-    from jobspy import scrape_jobs
-
+    try:
+        from jobspy import scrape_jobs
+    except ImportError as exc:
+        raise HirejutsuError('python-jobspy is not installed. Run: pip install -e ".[jobspy]"') from exc
     return scrape_jobs(**search).to_dict(orient="records")
 
 
