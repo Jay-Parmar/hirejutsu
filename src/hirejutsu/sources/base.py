@@ -44,6 +44,8 @@ class Source:
     name = ""
     label = ""
     defaults: dict = {}
+    # Set by fetch() when part of the source failed but the rest worked, like "3 of 160 boards failed".
+    warning = ""
 
     def __init__(self, config: Config, client: Client):
         self.config = config

@@ -31,7 +31,8 @@ def fetch_jobs(app, names: list[str] | None = None) -> list[FetchResult]:
 def print_results(console, results: list[FetchResult]) -> None:
     table = Table("Source", "Found", "New", "Seconds", "Error")
     for result in sorted(results, key=lambda r: r.source):
-        table.add_row(result.source, str(result.found), str(result.added), f"{result.seconds:.1f}", Text(result.error))
+        table.add_row(result.source, str(result.found), str(result.added), f"{result.seconds:.1f}",
+                      Text(result.error or result.warning))
     console.print(table)
 
 

@@ -10,10 +10,11 @@ NOW = datetime(2026, 10, 17, 9, 0, tzinfo=timezone.utc)
 
 
 class StaticSource:
-    def __init__(self, name, jobs=None, error=None):
+    def __init__(self, name, jobs=None, error=None, warning=""):
         self.name = name
         self.jobs = jobs or []
         self.error = error
+        self.warning = warning
 
     def fetch(self):
         if self.error:
@@ -60,6 +61,12 @@ def test_fetch_all_logs_each_source(store):
     fetch_all([StaticSource("a", [job("a", "1")]), StaticSource("b", error=ValueError("x"))], store, now=NOW)
     rows = {row["source"]: (row["found"], row["error"]) for row in store.last_fetches()}
     assert rows == {"a": (1, ""), "b": (0, "ValueError: x")}
+
+
+def test_partial_failure_is_kept_as_warning(store):
+    results = fetch_all([StaticSource("a", [job("a", "1")], warning="1 of 2 boards failed")], store, now=NOW)
+    assert (results[0].added, results[0].error, results[0].warning) == (1, "", "1 of 2 boards failed")
+    assert store.last_fetches()[0]["error"] == "1 of 2 boards failed"
 
 
 def test_fetch_all_drops_duplicates_and_incomplete_jobs(store):

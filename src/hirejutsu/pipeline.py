@@ -19,6 +19,7 @@ class FetchResult:
     seconds: float = 0.0
     error: str = ""
     added: int = 0
+    warning: str = ""
 
     @property
     def found(self) -> int:
@@ -32,7 +33,7 @@ def fetch_all(sources: list, store: Store, workers: int = 8, now: datetime | Non
         results = list(pool.map(_fetch_one, sources))
     for result in results:
         result.added = store.upsert_jobs(result.jobs, now)
-        store.log_fetch(result.source, now, result.seconds, result.found, result.added, result.error)
+        store.log_fetch(result.source, now, result.seconds, result.found, result.added, result.error or result.warning)
     return results
 
 
@@ -44,7 +45,7 @@ def _fetch_one(source) -> FetchResult:
     except Exception as exc:
         log.warning("%s failed: %s", source.name, exc, exc_info=log.isEnabledFor(logging.DEBUG))
         jobs, error = [], f"{type(exc).__name__}: {exc}"
-    return FetchResult(source.name, jobs, round(time.monotonic() - started, 2), error)
+    return FetchResult(source.name, jobs, round(time.monotonic() - started, 2), error, warning=source.warning)
 
 
 def _usable(jobs: list[Job]) -> list[Job]:
