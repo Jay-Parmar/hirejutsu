@@ -3,9 +3,10 @@ from pathlib import Path
 
 import pytest
 import requests
+import yaml
 
 from hirejutsu import notify
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.models import Job, Match
 from hirejutsu.notify import Message, picks_message, send_all, split_text
 
@@ -132,6 +133,16 @@ def test_nothing_is_sent_by_default(tmp_path, token):
     client = Recorder()
     assert send_all(Config({}, tmp_path), client, MESSAGE) == []
     assert client.posts == []
+
+
+def test_starter_config_lists_every_channel_turned_off(tmp_path, token, webhooks, smtp):
+    channels = yaml.safe_load(template())["notify"]
+    assert list(channels) == list(notify.SENDERS)
+    for name, settings in channels.items():
+        assert set(settings) <= set(notify.NOTIFY_DEFAULTS[name]), name
+    client = Recorder()
+    assert send_all(Config({"notify": channels}, tmp_path), client, MESSAGE) == []
+    assert client.posts == [] and smtp == []
 
 
 def test_telegram_sends_plain_text(tmp_path, token):
