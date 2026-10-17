@@ -54,5 +54,7 @@ class Lever(AtsSource):
             salary_period=pay_period(salary.get("interval")),
             employment_type=clean(categories.get("commitment")),
             department=clean(categories.get("department") or categories.get("team")),
-            tags=tags(categories.get("team"), categories.get("department"), item.get("workplaceType"), item.get("country")),
+            tags=tags(
+                categories.get("team"), categories.get("department"), item.get("workplaceType"), item.get("country"),
+            ),
         )
