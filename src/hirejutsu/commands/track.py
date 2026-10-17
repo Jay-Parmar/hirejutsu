@@ -1,10 +1,10 @@
 """Commands for keeping track of what you did with each job."""
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from rich.markup import escape
 from rich.style import Style
-from rich.table import Table
+from rich.table import Column, Table
 from rich.text import Text
 
 from ..desktop import open_url
@@ -13,6 +13,7 @@ from ..models import Job, Match
 from ..store import STATUSES, Store
 
 DESCRIPTION_LINES = 40
+TRACKED = tuple(status for status in STATUSES if status != "new")
 
 
 def register(sub) -> None:
@@ -45,10 +46,24 @@ def register(sub) -> None:
     add_ids(parser)
     parser.set_defaults(func=open_links)
 
+    parser = sub.add_parser("list", help="list tracked jobs, latest change first")
+    add_status_filter(parser)
+    parser.add_argument("--since", type=int, metavar="DAYS", help="only jobs changed in the last DAYS days")
+    parser.add_argument("--company", metavar="TEXT", help="only companies whose name contains TEXT")
+    parser.add_argument("-n", type=int, default=50, metavar="LIMIT", help="how many to show (default 50)")
+    parser.set_defaults(func=list_jobs)
+
 
 def add_ids(parser, nargs="+") -> None:
     parser.add_argument("ids", nargs=nargs, type=int, metavar="ID", help="job id, or pick number with -t")
     parser.add_argument("-t", "--today", action="store_true", help="numbers refer to today's picks (the # column)")
+
+
+def add_status_filter(parser) -> None:
+    parser.add_argument(
+        "--status", nargs="+", action="extend", choices=STATUSES, metavar="STATUS",
+        help="only jobs with these statuses (default: all but new)",
+    )
 
 
 def print_error(console, exc: Exception) -> None:
@@ -168,3 +183,40 @@ def open_links(app, args) -> int:
         app.console.print(Text(f"Opening job {job.id}: {job.url}"))
         open_url(job.url)
     return 0 if len(jobs) == len(args.ids) else 1
+
+
+def place(job: Job) -> str:
+    return job.location or ("Remote" if job.remote else "")
+
+
+def changed_at(job: Job) -> datetime:
+    """When the job got its current status. New jobs count from when they were first seen."""
+    return job.status_at or job.first_seen
+
+
+def tracked_jobs(store: Store, statuses: list[str] | None) -> list[Job]:
+    """Jobs with these statuses, or with any status but new, latest change first."""
+    return sorted(store.find_jobs(statuses=statuses or TRACKED), key=changed_at, reverse=True)
+
+
+def list_jobs(app, args) -> int:
+    jobs = tracked_jobs(app.store, args.status)
+    if args.since is not None:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=args.since)
+        jobs = [job for job in jobs if changed_at(job) >= cutoff]
+    if args.company:
+        jobs = [job for job in jobs if args.company.lower() in job.company.lower()]
+    if not jobs:
+        app.console.print("No matching jobs.")
+        return 0
+    fixed = [Column(header, no_wrap=True) for header in ("ID", "Status", "Since")]
+    table = Table(*fixed, "Job", "Company", "Location", "Note")
+    for job in jobs[:args.n]:
+        table.add_row(
+            str(job.id), job.status, local(changed_at(job)), Text(job.title, style=Style(link=job.url)),
+            Text(job.company), Text(place(job)), Text(job.note),
+        )
+    app.console.print(table)
+    if len(jobs) > args.n:
+        app.console.print(f"Showing {args.n} of {len(jobs)}. Use -n to see more.")
+    return 0

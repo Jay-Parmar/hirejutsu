@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -37,6 +37,20 @@ def pick_today(home, *job_ids):
     with Store(home / "hirejutsu.db") as store:
         matches = [Match(store.get_job(job_id), 0.5, ["Skills: python"]) for job_id in job_ids]
         store.record_picks(datetime.now().astimezone().date(), matches)
+
+
+def set_statuses(home, *changes):
+    """(job id, status, days ago) for each change."""
+    now = datetime.now(timezone.utc)
+    with Store(home / "hirejutsu.db") as store:
+        for job_id, status, days_ago in changes:
+            store.set_status(job_id, status, at=now - timedelta(days=days_ago))
+
+
+def listed(home, capsys, *args) -> list[str]:
+    assert hj(home, "list", *args) == 0
+    out = capsys.readouterr().out
+    return [title for title in ("Engineer a", "Engineer b", "Engineer c") if title in out]
 
 
 def test_applied_marks_several_jobs(home, capsys):
@@ -135,3 +149,23 @@ def test_open_launches_the_browser(home, monkeypatch):
     assert hj(home, "open", "1") == 0
     assert hj(home, "open", "-t", "2") == 0
     assert opened == ["https://x/a", "https://x/c"]
+
+
+def test_list_shows_tracked_jobs_latest_change_first(home, capsys):
+    set_statuses(home, (1, "applied", 5), (2, "skipped", 1))
+    assert hj(home, "list") == 0
+    out = capsys.readouterr().out
+    assert out.index("Engineer b") < out.index("Engineer a")
+    assert "Engineer c" not in out
+
+
+def test_list_filters(home, capsys):
+    set_statuses(home, (1, "applied", 10), (2, "applied", 2), (3, "interview", 1))
+    assert listed(home, capsys, "--status", "applied", "--since", "7") == ["Engineer b"]
+    assert listed(home, capsys, "--status", "applied", "interview", "--company", "company C") == ["Engineer c"]
+    assert listed(home, capsys, "-n", "2") == ["Engineer b", "Engineer c"]
+
+
+def test_list_without_tracked_jobs(home, capsys):
+    assert hj(home, "list") == 0
+    assert "No matching jobs" in capsys.readouterr().out
