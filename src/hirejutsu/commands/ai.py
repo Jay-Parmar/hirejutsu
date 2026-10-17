@@ -5,6 +5,7 @@ from rich.text import Text
 
 from .. import ai
 from ..errors import HirejutsuError
+from ..resume import load_profile
 
 
 def register(sub) -> None:
@@ -13,6 +14,10 @@ def register(sub) -> None:
 
     parser = actions.add_parser("test", help="check the ai config with one tiny request")
     parser.set_defaults(func=check)
+
+    parser = actions.add_parser("explain", help="ask how well one saved job fits your resume")
+    parser.add_argument("job_id", type=int, help="the job's ID, as shown in the picks table")
+    parser.set_defaults(func=explain)
 
 
 def check(app, args) -> int:
@@ -26,4 +31,15 @@ def check(app, args) -> int:
     app.console.print(Text(f"It works. The model said: {reply.strip()}"))
     if not settings["enabled"]:
         app.console.print("Set ai.enabled to true in the config to use it in 'hirejutsu run'.")
+    return 0
+
+
+def explain(app, args) -> int:
+    job = app.store.get_job(args.job_id)
+    if job is None:
+        raise HirejutsuError(f"No job with id {args.job_id}")
+    profile = load_profile(app.config)
+    settings = ai.load_settings(app.config)
+    app.console.print(Text(f"{job.title} at {job.company}", style="bold"))
+    app.console.print(Text(ai.explain(job, profile, settings, ai.make_client(settings))))
     return 0
