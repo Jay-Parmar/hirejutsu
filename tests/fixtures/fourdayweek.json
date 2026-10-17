@@ -1,0 +1,260 @@
+{
+  "data": [
+    {
+      "id": "01a13faf-cf62-7aa9-9d3c-156f35fd9d2c",
+      "slug": "manager-solutions-consulting-at-nexthink-1b40cc62",
+      "title": "Manager, Solutions Consulting",
+      "description": "#### Company Description\n\nNexthink is a global leader in Digital Employee Experience. Our product allows enterprises to create highly productive digital workplaces for their employees by delivering optimal end-user experience. Through a unique combination of real-time analytics, automation and employee feedback across all endpoints, Nexthink helps IT teams meet the needs of the modern digital [...]",
+      "url": "https://4dayweek.io/job/manager-solutions-consulting-at-nexthink-1b40cc62",
+      "category": "sales",
+      "role": "Solutions Consulting Manager",
+      "level": "lead",
+      "schedule_type": "unlimited_pto",
+      "hours_per_week_min": 40,
+      "hours_per_week_max": 40,
+      "work_arrangement": "remote",
+      "locations": [
+        {
+          "city": "Boston",
+          "state": "Massachusetts",
+          "country": "United States",
+          "continent": "North America",
+          "latitude": 42.3555076,
+          "longitude": -71.0565364,
+          "work_arrangement": "remote",
+          "is_primary": true
+        }
+      ],
+      "timezones": [
+        "EST"
+      ],
+      "salary_min": 22800000,
+      "salary_max": 28000000,
+      "salary_currency": "USD",
+      "salary_period": "year",
+      "skills": [
+        {
+          "name": "Business Acumen",
+          "slug": "business-acumen"
+        },
+        {
+          "name": "Coaching",
+          "slug": "coaching"
+        },
+        {
+          "name": "Performance Reviews",
+          "slug": "performance-reviews"
+        },
+        {
+          "name": "Pre-sales",
+          "slug": "pre-sales"
+        },
+        {
+          "name": "Sales Strategy",
+          "slug": "sales-strategy"
+        },
+        {
+          "name": "Solution Consulting",
+          "slug": "solution-consulting"
+        },
+        {
+          "name": "Stakeholder Management",
+          "slug": "stakeholder-management"
+        },
+        {
+          "name": "Team Leadership",
+          "slug": "team-leadership"
+        }
+      ],
+      "posted_at": "2026-10-15T13:10:49Z",
+      "company": {
+        "id": "019f6bfe-7113-7341-b1c9-7b67ebfd61f6",
+        "slug": "nexthink",
+        "name": "Nexthink",
+        "url": "https://4dayweek.io/company/nexthink",
+        "website": "https://www.nexthink.com",
+        "logo_url": "https://media.4dayweek.io/files/1784208750142_68ba3a6257a6b195.jpg",
+        "short_description": "Digital employee experience (DEX) platform \u2014 real-time visibility and automated fixes for the IT environments employees actually experience.",
+        "country": "Switzerland",
+        "employees": 1200,
+        "schedule_type": "unlimited_pto",
+        "hours_full_time": 40,
+        "remote_level": "hybrid",
+        "hires_worldwide": false
+      }
+    },
+    {
+      "id": "01a13fad-8509-7228-9f76-d2c795e0c5f5",
+      "slug": "scaled-account-manager-at-doit-11d0030c",
+      "title": "Scaled Account Manager",
+      "description": "**Location**\n\nOur Scaled Account Manager will be an integral part of DoiT\u2019s Account Management organization in AMER. This role is remote and open to candidates located in North America and Canada.\n\n**Who We Are**\n\nDoiT is a global technology company that works with cloud-driven organizations to leverage the cloud to drive business growth and innovation. We combine data, technology, and human [...]",
+      "url": "https://4dayweek.io/job/scaled-account-manager-at-doit-11d0030c",
+      "category": "sales",
+      "role": "Account Manager",
+      "level": "mid",
+      "schedule_type": "unlimited_pto",
+      "hours_per_week_min": 40,
+      "hours_per_week_max": 40,
+      "work_arrangement": "remote",
+      "locations": [
+        {
+          "country": "Canada",
+          "continent": "North America",
+          "latitude": 56.13,
+          "longitude": -106.35,
+          "work_arrangement": "remote",
+          "is_primary": true
+        }
+      ],
+      "skills": [
+        {
+          "name": "Account Management",
+          "slug": "account-management"
+        },
+        {
+          "name": "Commercial negotiation",
+          "slug": "commercial-negotiation"
+        },
+        {
+          "name": "Communication",
+          "slug": "communication"
+        },
+        {
+          "name": "Customer Success",
+          "slug": "customer-success"
+        },
+        {
+          "name": "Forecasting",
+          "slug": "forecasting"
+        },
+        {
+          "name": "Stakeholder Management",
+          "slug": "stakeholder-management"
+        }
+      ],
+      "tools": [
+        {
+          "name": "AWS",
+          "slug": "aws"
+        },
+        {
+          "name": "Azure",
+          "slug": "azure"
+        },
+        {
+          "name": "Google Cloud",
+          "slug": "google-cloud"
+        },
+        {
+          "name": "Salesforce",
+          "slug": "salesforce"
+        }
+      ],
+      "posted_at": "2026-10-15T13:08:19Z",
+      "company": {
+        "id": "019e0e23-83ff-7cb7-8184-407fac45e388",
+        "slug": "doit",
+        "name": "DoiT",
+        "url": "https://4dayweek.io/company/doit",
+        "website": "https://www.doit.com",
+        "logo_url": "https://media.4dayweek.io/files/1778333896020_b1a92bfb1e8a42f0.jpg",
+        "short_description": "Cloud cost optimisation, expertise, and AWS/GCP/Azure reseller",
+        "country": "United States",
+        "employees": 640,
+        "schedule_type": "unlimited_pto",
+        "hours_full_time": 40,
+        "remote_level": "fully-remote",
+        "hires_worldwide": false
+      }
+    },
+    {
+      "id": "01a13fab-bb1f-7454-bafd-50518ab04d87",
+      "slug": "post-doctoral-research-associate-at-university-of-edinburgh-957bd67b",
+      "title": "Post-Doctoral Research Associate",
+      "description": "**Grade UE07: \u00a341,064 - \u00a348,822\u00a0per annum pro-rata if part-time**\n\n**Institute of Genetics and Cancer**\n\n**Full-time: 35 hours per week**\n\n**Fixed term: for 24 months in the first instance**\n\n**The Opportunity:**\n\nCancer Grand Challenges \u2013 from DNA damage to the mechanisms of mutagenesis\n\nWe are looking to employ a post-doctoral researcher to join the group of Professor Martin Taylor at the [...]",
+      "url": "https://4dayweek.io/job/post-doctoral-research-associate-at-university-of-edinburgh-957bd67b",
+      "category": "other",
+      "role": "Research Associate",
+      "level": "mid",
+      "contract_type": "contract",
+      "schedule_type": "generous_pto",
+      "hours_per_week_min": 35,
+      "hours_per_week_max": 35,
+      "work_arrangement": "hybrid",
+      "locations": [
+        {
+          "city": "Edinburgh",
+          "country": "United Kingdom",
+          "continent": "Europe",
+          "latitude": 55.95206,
+          "longitude": -3.19648,
+          "work_arrangement": "hybrid",
+          "is_primary": true
+        }
+      ],
+      "timezones": [
+        "GMT"
+      ],
+      "salary_min": 4106400,
+      "salary_max": 4882200,
+      "salary_currency": "GBP",
+      "salary_period": "year",
+      "skills": [
+        {
+          "name": "Biochemistry",
+          "slug": "biochemistry"
+        },
+        {
+          "name": "Collaboration",
+          "slug": "collaboration"
+        },
+        {
+          "name": "Molecular Biology",
+          "slug": "molecular-biology"
+        },
+        {
+          "name": "Nucleic Acid Work",
+          "slug": "nucleic-acid-work"
+        },
+        {
+          "name": "Project Ownership",
+          "slug": "project-ownership"
+        },
+        {
+          "name": "protein purification",
+          "slug": "protein-purification"
+        }
+      ],
+      "tools": [
+        {
+          "name": "Mass spectrometry",
+          "slug": "mass-spectrometry"
+        },
+        {
+          "name": "high throughput seq",
+          "slug": "high-throughput-seq"
+        }
+      ],
+      "posted_at": "2026-10-15T13:06:22Z",
+      "company": {
+        "id": "01a121fb-e75b-7875-9553-5da8055dde6e",
+        "slug": "university-of-edinburgh",
+        "name": "University of Edinburgh",
+        "url": "https://4dayweek.io/company/university-of-edinburgh",
+        "website": "https://www.ed.ac.uk",
+        "logo_url": "https://media.4dayweek.io/files/1791570011239_c43e71987ead6abe.jpg",
+        "short_description": "A Scottish research university with more than four centuries of history that offers staff 36 days of annual leave plus four public holidays, flexible and [...]",
+        "country": "United Kingdom",
+        "employees": 16000,
+        "schedule_type": "generous_pto",
+        "hours_full_time": 35,
+        "remote_level": "hybrid",
+        "hires_worldwide": false
+      }
+    }
+  ],
+  "page": 1,
+  "limit": 25,
+  "total": 25107,
+  "has_more": true
+}
