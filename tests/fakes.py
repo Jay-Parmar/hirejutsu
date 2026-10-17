@@ -43,16 +43,20 @@ class FakeClient:
 
 
 class FakeRun:
-    """Stands in for subprocess.run. Replies are (returncode, stdout, stderr) keyed by the first two words."""
+    """Stands in for subprocess.run. Replies, keyed by the first two words, are (code, stdout, stderr) or an error."""
 
     def __init__(self, replies: dict | None = None):
         self.replies = replies or {}
         self.calls: list[list[str]] = []
+        self.inputs: list[str | None] = []
         self.task_file = b""
 
-    def __call__(self, args, **kwargs):
+    def __call__(self, args, input=None, **kwargs):
         self.calls.append(list(args))
+        self.inputs.append(input)
         if "/XML" in args:
             self.task_file = Path(args[args.index("/XML") + 1]).read_bytes()
-        returncode, stdout, stderr = self.replies.get(" ".join(args[:2]), (0, "", ""))
-        return subprocess.CompletedProcess(args, returncode, stdout, stderr)
+        reply = self.replies.get(" ".join(args[:2]), (0, "", ""))
+        if isinstance(reply, Exception):
+            raise reply
+        return subprocess.CompletedProcess(args, *reply)
