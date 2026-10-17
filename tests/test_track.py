@@ -89,3 +89,24 @@ def test_today_flag_without_picks(home, capsys):
     assert hj(home, "applied", "-t", "1") == 2
     assert "hirejutsu run" in capsys.readouterr().out
     assert statuses(home)[1] == "new"
+
+
+def test_note_keeps_status(home, capsys):
+    hj(home, "applied", "1")
+    assert hj(home, "note", "1", "recruiter", "called", "back") == 0
+    assert "Added a note to job 1" in capsys.readouterr().out
+    with Store(home / "hirejutsu.db") as store:
+        stored = store.get_job(1)
+        assert (stored.status, stored.note) == ("applied", "recruiter called back")
+
+
+def test_note_on_todays_pick(home):
+    pick_today(home, 2)
+    assert hj(home, "note", "-t", "1", "ask about visa") == 0
+    with Store(home / "hirejutsu.db") as store:
+        assert store.get_job(2).note == "ask about visa"
+
+
+def test_note_on_unknown_job(home, capsys):
+    assert hj(home, "note", "99", "hello") == 1
+    assert "No job with id 99" in capsys.readouterr().out
