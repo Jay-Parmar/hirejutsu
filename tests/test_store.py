@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import date, datetime, timedelta, timezone
 
 import pytest
@@ -5,7 +6,7 @@ import pytest
 from hirejutsu import store as store_module
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job, Match
-from hirejutsu.store import Store
+from hirejutsu.store import MIGRATIONS, Store
 
 NOW = datetime(2026, 10, 17, 9, 0, tzinfo=timezone.utc)
 
@@ -235,3 +236,38 @@ def test_reopening_keeps_data(tmp_path):
         store.upsert_jobs([make_job()], NOW)
     with Store(path) as store:
         assert len(store.find_jobs()) == 1
+
+
+def test_ai_scores_are_kept_per_job_model_and_resume(store):
+    store.upsert_jobs([make_job()], NOW)
+    job_id = store.find_jobs()[0].id
+    store.save_ai_scores("model-a", "resume-1", {job_id: (8.0, "Good fit")})
+    assert store.ai_score(job_id, "model-a", "resume-1") == (8.0, "Good fit")
+    assert store.ai_score(job_id, "model-b", "resume-1") is None
+    assert store.ai_score(job_id, "model-a", "resume-2") is None
+
+
+def test_save_ai_scores_replaces_an_older_score(store):
+    store.upsert_jobs([make_job()], NOW)
+    job_id = store.find_jobs()[0].id
+    store.save_ai_scores("m", "r", {job_id: (3.0, "Old")})
+    store.save_ai_scores("m", "r", {job_id: (6.0, "New")})
+    assert store.ai_score(job_id, "m", "r") == (6.0, "New")
+
+
+def test_prune_also_drops_ai_scores(store):
+    store.upsert_jobs([make_job("stale")], NOW - timedelta(days=60))
+    job_id = store.find_jobs()[0].id
+    store.save_ai_scores("m", "r", {job_id: (5.0, "")})
+    assert store.prune(NOW - timedelta(days=30)) == 1
+    assert store.ai_score(job_id, "m", "r") is None
+
+
+def test_older_database_gets_the_ai_scores_table(tmp_path):
+    path = tmp_path / "old.db"
+    conn = sqlite3.connect(path)
+    conn.executescript(MIGRATIONS[0])
+    conn.execute("PRAGMA user_version = 1")
+    conn.close()
+    with Store(path) as store:
+        assert store.ai_score(1, "m", "r") is None
