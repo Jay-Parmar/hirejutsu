@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
+from hirejutsu.app import App
 from hirejutsu.cli import main
 from hirejutsu.commands import track
 from hirejutsu.models import Job, Match
@@ -222,3 +223,55 @@ def test_export_defaults_to_the_data_folder(home):
 def test_export_reports_unwritable_path(home, capsys):
     assert hj(home, "export", "--output", str(home)) == 2
     assert "Cannot write" in capsys.readouterr().out
+
+
+def answers(*replies):
+    """Stands in for input(), giving these replies in order."""
+    replies = list(replies)
+    return lambda prompt: replies.pop(0)
+
+
+def review(home, ask) -> int:
+    app = App(home)
+    return track.review_picks(app, track.todays_picks(app.store), ask)
+
+
+def test_review_records_each_choice(home, monkeypatch, capsys):
+    opened = []
+    monkeypatch.setattr(track, "open_url", opened.append)
+    pick_today(home, 1, 2, 3)
+    assert review(home, answers("a", "o", "S", "what", "l")) == 0
+    assert statuses(home) == {1: "applied", 2: "skipped", 3: "saved"}
+    assert opened == ["https://x/b"]
+    out = capsys.readouterr().out
+    for text in ("Pick 1 of 3", "Engineer a", "Company a", "score 0.50", "Skills: python", "https://x/a"):
+        assert text in out, text
+
+
+def test_review_next_and_quit_leave_picks_new(home):
+    pick_today(home, 1, 2, 3)
+    assert review(home, answers("n", "q")) == 0
+    assert statuses(home) == {1: "new", 2: "new", 3: "new"}
+
+
+def test_review_leaves_out_picks_that_have_a_status(home, capsys):
+    pick_today(home, 1, 2)
+    hj(home, "applied", "1")
+    assert review(home, answers("s")) == 0
+    assert statuses(home) == {1: "applied", 2: "skipped", 3: "new"}
+    out = capsys.readouterr().out
+    assert "Pick 2 of 2" in out and "Pick 1 of 2" not in out
+
+
+def test_review_stops_at_end_of_input(home):
+    def closed(prompt):
+        raise EOFError
+
+    pick_today(home, 1)
+    assert review(home, closed) == 0
+    assert statuses(home)[1] == "new"
+
+
+def test_review_without_picks(home, capsys):
+    assert hj(home, "review") == 2
+    assert "hirejutsu run" in capsys.readouterr().out
