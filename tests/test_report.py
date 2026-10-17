@@ -6,6 +6,7 @@ import pytest
 from rich.console import Console
 
 from hirejutsu.config import Config
+from hirejutsu.errors import HirejutsuError
 from hirejutsu.models import Job, Match
 from hirejutsu.report import age, html_page, markdown, print_picks, salary, write_reports
 
@@ -130,7 +131,22 @@ def test_html_page_links_only_to_web_addresses():
     assert "javascript:" not in page
 
 
-def test_write_reports_saves_markdown(tmp_path):
+def test_write_reports_saves_markdown_and_html_by_default(tmp_path):
     paths = write_reports([Match(job("a", id=1), 0.5)], Config({}, tmp_path), DAY)
-    assert paths == [tmp_path / "reports" / "2026-10-17.md"]
-    assert "Python Engineer a" in paths[0].read_text(encoding="utf-8")
+    folder = tmp_path / "reports"
+    assert paths == [folder / "2026-10-17.md", folder / "2026-10-17.html"]
+    assert "# Job picks for 2026-10-17" in paths[0].read_text(encoding="utf-8")
+    assert "<!doctype html>" in paths[1].read_text(encoding="utf-8")
+
+
+def test_write_reports_uses_configured_formats(tmp_path):
+    config = Config({"report": {"formats": ["html"]}}, tmp_path)
+    paths = write_reports([Match(job("a", id=1), 0.5)], config, DAY)
+    assert paths == [tmp_path / "reports" / "2026-10-17.html"]
+    assert not (tmp_path / "reports" / "2026-10-17.md").exists()
+
+
+def test_unknown_report_format_is_an_error(tmp_path):
+    config = Config({"report": {"formats": ["md", "pdf"]}}, tmp_path)
+    with pytest.raises(HirejutsuError, match="pdf"):
+        write_reports([Match(job("a", id=1), 0.5)], config, DAY)
