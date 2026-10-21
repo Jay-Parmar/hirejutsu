@@ -40,6 +40,8 @@ hirejutsu schedule install   # run every day at 09:00
 Each morning open the report (or run `hirejutsu today`), apply on the company sites and record it
 with `hirejutsu review`. Run `setup.bat` again after pulling new changes.
 
+For a step by step first day with real output, see the [playthrough](docs/playthrough.md).
+
 ## Install by hand
 
 Needs Python 3.10 or newer on Windows, macOS or Linux.
