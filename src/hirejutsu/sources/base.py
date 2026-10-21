@@ -1,0 +1,65 @@
+"""Base class for job sources."""
+
+import hashlib
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+
+from ..config import Config, deep_merge
+from ..http import Client
+from ..models import Job
+
+SEARCH_DEFAULTS = {"keywords": [], "max_age_days": 14}
+
+
+@dataclass
+class Query:
+    """What to look for on sites that need a search term."""
+
+    keywords: list[str] = field(default_factory=list)
+    locations: list[str] = field(default_factory=list)
+    max_age_days: int = 14
+
+    @classmethod
+    def from_config(cls, config: Config) -> "Query":
+        search = config.section("search", SEARCH_DEFAULTS)
+        profile = config.section("profile")
+        return cls(
+            keywords=list(search["keywords"] or profile.get("titles") or []),
+            locations=list(profile.get("locations") or []),
+            max_age_days=int(search["max_age_days"]),
+        )
+
+    @property
+    def wants_remote(self) -> bool:
+        return any(location.strip().lower() == "remote" for location in self.locations)
+
+    def is_recent(self, posted_at: datetime | None) -> bool:
+        """False for jobs posted more than max_age_days ago. Undated jobs count as recent."""
+        return posted_at is None or posted_at >= datetime.now(timezone.utc) - timedelta(days=self.max_age_days)
+
+
+class Source:
+    """A place jobs come from. Subclasses set name and implement fetch()."""
+
+    name = ""
+    label = ""
+    defaults: dict = {}
+    # Set by fetch() when part of the source failed but the rest worked, like "3 of 160 boards failed".
+    warning = ""
+
+    def __init__(self, config: Config, client: Client):
+        self.config = config
+        self.client = client
+        self.query = Query.from_config(config)
+        user = config.section("sources").get(self.name)
+        if isinstance(user, bool):
+            user = {"enabled": user}
+        self.settings = deep_merge({"enabled": True, **self.defaults}, user or {})
+
+    def fetch(self) -> list[Job]:
+        raise NotImplementedError
+
+
+def url_id(url: str) -> str:
+    """A short stable id for jobs on boards that give them no id of their own."""
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]

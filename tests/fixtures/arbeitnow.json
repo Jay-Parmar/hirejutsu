@@ -1,0 +1,68 @@
+{
+  "data": [
+    {
+      "slug": "remote-account-executive-enterprise-sports-specialist-3930",
+      "company_name": "ElevenLabs",
+      "title": "Account Executive - Enterprise - Sports Specialist",
+      "description": "<h2>About ElevenLabs</h2><p style=\"min-height:1.5em\">ElevenLabs is an AI research and product company transforming how we interact with technology.</p><p style=\"min-height:1.5em\">We launched in January 2023 with the first human-like AI voice model. Today, we serve millions of users and thousands of businesses - from fast-growing startups to large enterprises like Deutsche Telekom and Meta. Our inv [...]",
+      "remote": true,
+      "url": "https://www.arbeitnow.com/jobs/companies/elevenlabs/remote-account-executive-enterprise-sports-specialist-3930",
+      "tags": [
+        "Revenue"
+      ],
+      "job_types": [
+        "Full Time"
+      ],
+      "location": "Remote",
+      "created_at": 1792237217
+    },
+    {
+      "slug": "account-executive-enterprise-366148",
+      "company_name": "conga",
+      "title": "Account Executive, Enterprise",
+      "description": "&lt;div class=&quot;content-intro&quot;&gt;&lt;p&gt;&lt;strong&gt;&lt;span data-olk-copy-source=&quot;MessageBody&quot;&gt;A career that\u2019s the whole package!&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;At Conga, we\u2019ve built a community where our colleagues can thrive. Here you\u2019ll find opportunities to innovate and support growth through individual and team development, all within an environment [...]",
+      "remote": false,
+      "url": "https://www.arbeitnow.com/jobs/companies/conga/account-executive-enterprise-366148",
+      "tags": [
+        "Sales"
+      ],
+      "job_types": [],
+      "location": "",
+      "created_at": 1792238116
+    },
+    {
+      "slug": "business-development-intern-gtm-cologne-177243",
+      "company_name": "Ordio GmbH",
+      "title": "Business Development Intern (GTM) (m/f/d)",
+      "description": "<h2>About Ordio</h2><p>80% of the world\u2019s workforce doesn\u2019t sit at a desk, yet most software is built for the 20% who do. Ordio is the AI-native workforce management (WFM) system for deskless workforces: shift planning, time tracking and payroll for the people who keep restaurants, shops and services running.</p><h2>The role</h2><p>This is not a \u201csupport the team and update spreadsheets\u201d internshi [...]",
+      "remote": false,
+      "url": "https://www.arbeitnow.com/jobs/companies/ordio-gmbh/business-development-intern-gtm-cologne-177243",
+      "tags": [
+        "Business Development"
+      ],
+      "job_types": [
+        "Internship (praktikum)",
+        "internship",
+        "no experience required / student"
+      ],
+      "location": "Cologne",
+      "created_at": 1792238465
+    }
+  ],
+  "links": {
+    "first": "https://www.arbeitnow.com/api/job-board-api?page=1",
+    "last": null,
+    "prev": null,
+    "next": "https://www.arbeitnow.com/api/job-board-api?page=2"
+  },
+  "meta": {
+    "current_page": 1,
+    "current_page_url": "https://www.arbeitnow.com/api/job-board-api?page=1",
+    "from": 1,
+    "path": "https://www.arbeitnow.com/api/job-board-api",
+    "per_page": 300,
+    "to": 300,
+    "terms": "This is a free public API for jobs, please do not abuse. I would appreciate linking back to the site. By using the API, you agree to the terms of service present on Arbeitnow.com",
+    "info": "Jobs are updated every hour and order by the `created_at` timestamp. Use `?page=` to paginate. Read more information here: https://www.arbeitnow.com/blog/job-board-api"
+  }
+}

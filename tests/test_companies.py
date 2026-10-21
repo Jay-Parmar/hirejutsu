@@ -1,0 +1,190 @@
+from collections import Counter
+from importlib import resources
+
+import pytest
+import yaml
+
+from hirejutsu.companies import (
+    Company,
+    builtin,
+    companies_for,
+    detect,
+    drop_companies,
+    find_boards,
+    load_companies,
+    read_user,
+    save_companies,
+)
+from hirejutsu.config import Config, template
+from hirejutsu.errors import HirejutsuError
+
+
+def write_user_file(home, text):
+    (home / "companies.yaml").write_text(text, encoding="utf-8")
+
+
+def test_builtin_list_covers_every_seed_board():
+    counts = Counter(company.ats for company in builtin())
+    assert counts == {
+        "greenhouse": 160, "lever": 80, "ashby": 100, "smartrecruiters": 30,
+        "recruitee": 23, "workable": 25, "workday": 30,
+    }
+    assert Company("greenhouse", "stripe", "Stripe") in builtin()
+    assert Company("workday", "nvidia.wd5/NVIDIAExternalCareerSite", "NVIDIA") in builtin()
+
+
+def test_builtin_file_is_ascii():
+    raw = resources.files("hirejutsu").joinpath("data", "companies.yaml").read_bytes()
+    assert raw.isascii()
+
+
+def test_key_ignores_case():
+    assert Company("lever", "GoToGroup").key == "lever:gotogroup"
+
+
+def test_load_companies_merges_user_file(tmp_path):
+    write_user_file(tmp_path, (
+        "greenhouse:\n"
+        "  acme: Acme Inc\n"
+        "  stripe: Stripe Payments\n"
+        "workday:\n"
+        "  - name: Big Corp\n"
+        "    url: https://bigcorp.wd3.myworkdayjobs.com/en-US/External\n"
+        "removed:\n"
+        "  - lever:gotogroup\n"
+    ))
+    companies = {company.key: company for company in load_companies(Config({}, tmp_path))}
+    assert companies["greenhouse:acme"].name == "Acme Inc"
+    assert companies["greenhouse:stripe"].name == "Stripe Payments"
+    assert companies["workday:bigcorp.wd3/external"].slug == "bigcorp.wd3/External"
+    assert "lever:gotogroup" not in companies
+    assert len(companies) == 448 + 2 - 1
+
+
+def test_starter_config_uses_the_builtin_list(tmp_path):
+    data = yaml.safe_load(template())
+    assert data["companies"] == {"builtin": True}
+    assert len(load_companies(Config(data, tmp_path))) == 448
+
+
+def test_builtin_list_can_be_turned_off(tmp_path):
+    write_user_file(tmp_path, "lever:\n  acme: Acme\n")
+    config = Config({"companies": {"builtin": False}}, tmp_path)
+    assert load_companies(config) == [Company("lever", "acme", "Acme")]
+
+
+def test_companies_for_one_ats(tmp_path):
+    lever = companies_for(Config({}, tmp_path), "lever")
+    assert len(lever) == 80
+    assert {company.ats for company in lever} == {"lever"}
+
+
+def test_company_without_name_uses_its_board(tmp_path):
+    write_user_file(tmp_path, "ashby:\n  acme:\n")
+    assert read_user(tmp_path)[0] == [Company("ashby", "acme", "acme")]
+
+
+def test_user_file_with_unknown_ats(tmp_path):
+    write_user_file(tmp_path, "greenhose:\n  acme: Acme\n")
+    with pytest.raises(HirejutsuError, match="greenhose"):
+        load_companies(Config({}, tmp_path))
+
+
+def test_user_file_must_be_a_mapping(tmp_path):
+    write_user_file(tmp_path, "- acme\n")
+    with pytest.raises(HirejutsuError):
+        read_user(tmp_path)
+
+
+def test_save_companies_writes_user_file(tmp_path):
+    write_user_file(tmp_path, "removed:\n  - lever:acme\n")
+    path = save_companies(tmp_path, [
+        Company("lever", "acme", "Acme"),
+        Company("workday", "bigcorp.wd3/External", "Big Corp"),
+    ])
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert data == {
+        "lever": {"acme": "Acme"},
+        "workday": [{"name": "Big Corp", "url": "https://bigcorp.wd3.myworkdayjobs.com/External"}],
+    }
+    assert path.read_text(encoding="utf-8").startswith("#")
+
+
+def test_save_companies_replaces_same_board(tmp_path):
+    save_companies(tmp_path, [Company("lever", "acme", "Acme")])
+    save_companies(tmp_path, [Company("lever", "ACME", "Acme Corp")])
+    assert read_user(tmp_path) == ([Company("lever", "ACME", "Acme Corp")], [])
+
+
+def test_drop_companies_removes_and_remembers(tmp_path):
+    save_companies(tmp_path, [Company("lever", "acme", "Acme")])
+    drop_companies(tmp_path, [Company("lever", "acme", "Acme"), Company("greenhouse", "Stripe", "Stripe")])
+    assert read_user(tmp_path) == ([], ["greenhouse:stripe", "lever:acme"])
+    keys = {company.key for company in load_companies(Config({}, tmp_path))}
+    assert "greenhouse:stripe" not in keys
+
+
+@pytest.mark.parametrize("url, expected", [
+    ("https://job-boards.greenhouse.io/stripe/jobs/8262032", ("greenhouse", "stripe")),
+    ("https://boards.greenhouse.io/stripe", ("greenhouse", "stripe")),
+    ("https://job-boards.eu.greenhouse.io/polyai/jobs/4567", ("greenhouse", "polyai")),
+    ("https://boards.greenhouse.io/embed/job_board?for=airbnb", ("greenhouse", "airbnb")),
+    ("https://boards.greenhouse.io/embed/job_app?for=airbnb&token=123", ("greenhouse", "airbnb")),
+    ("https://boards-api.greenhouse.io/v1/boards/stripe/jobs", ("greenhouse", "stripe")),
+    ("https://jobs.lever.co/palantir/0b5a6c1e-7d9b-4c0e-9f1a-2b3c4d5e6f70/apply", ("lever", "palantir")),
+    ("https://jobs.eu.lever.co/diabolocom/0b5a6c1e", ("lever", "diabolocom")),
+    ("https://api.lever.co/v0/postings/zoox?mode=json", ("lever", "zoox")),
+    ("https://jobs.lever.co/v0/postings/zoox?mode=json", ("lever", "zoox")),
+    ("https://jobs.ashbyhq.com/ramp/d84bbf19-572a-499c-9c87-0c154ce85caf", ("ashby", "ramp")),
+    ("https://jobs.ashbyhq.com/hippocratic%20ai/123/application", ("ashby", "hippocratic ai")),
+    ("https://jobs.ashbyhq.com/mistral.ai", ("ashby", "mistral.ai")),
+    ("https://jobs.smartrecruiters.com/ServiceNow/744000156093019-principal-engineer", ("smartrecruiters", "ServiceNow")),
+    ("https://careers.smartrecruiters.com/LinkedIn3", ("smartrecruiters", "LinkedIn3")),
+    ("https://channable.recruitee.com/o/talent-acquisition-partner", ("recruitee", "channable")),
+    ("https://apply.workable.com/huggingface/j/81B46579FE/", ("workable", "huggingface")),
+    ("https://apply.workable.com/api/v1/widget/accounts/huggingface", ("workable", "huggingface")),
+    ("https://huggingface.workable.com/j/81B46579FE", ("workable", "huggingface")),
+    ("https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite", ("workday", "nvidia.wd5/NVIDIAExternalCareerSite")),
+    ("https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/US-CA-Santa-Clara/Engineer_JR1",
+     ("workday", "nvidia.wd5/NVIDIAExternalCareerSite")),
+    ("https://wd5.myworkdaysite.com/en-US/recruiting/microchiphr/External/job/AZ/Engineer_R1",
+     ("workday", "microchiphr.wd5/External")),
+    ("https://tado.jobs.personio.de/job/2502124", ("personio", "tado")),
+    ("https://tado.jobs.personio.com/", ("personio", "tado")),
+    ("https://breezy.breezy.hr/p/98323abf2296-employee-12", ("breezy", "breezy")),
+    ("https://nomadic.bamboohr.com/careers/27", ("bamboohr", "nomadic")),
+    ("https://quinyx.teamtailor.com/jobs/8505736-product-marketing-director", ("teamtailor", "quinyx")),
+    ("jobs.lever.co/palantir", ("lever", "palantir")),
+])
+def test_detect_board_from_url(url, expected):
+    assert detect(url) == expected
+
+
+@pytest.mark.parametrize("url", [
+    "https://boards.greenhouse.io/embed/job_app?token=123",
+    "https://stripe.com/jobs/search?gh_jid=8172510",
+    "https://apply.workable.com/j/81B46579FE",
+    "https://www.bamboohr.com/pricing",
+    "http://app.greenhouse.io/ai_opt_out_request/job_post/8262032/ai_opt_out",
+    "https://jobs.lever.co/",
+    "https://example.com/careers",
+    "stripe",
+])
+def test_detect_ignores_urls_without_a_board(url):
+    assert detect(url) is None
+
+
+def test_detect_ats_and_board_text():
+    assert detect("greenhouse:stripe") == ("greenhouse", "stripe")
+    assert detect(" Lever:Palantir ") == ("lever", "Palantir")
+    assert detect("workday:nvidia.wd5/NVIDIAExternalCareerSite") == ("workday", "nvidia.wd5/NVIDIAExternalCareerSite")
+    assert detect("monster:acme") is None
+    assert detect("greenhouse:") is None
+
+
+def test_find_boards_in_text():
+    text = (
+        "Apply at https://jobs.lever.co/acme/123. Or see https://acme.breezy.hr/p/1-dev, "
+        "and https://example.com/about (not a board)."
+    )
+    assert find_boards(text) == {("lever", "acme"), ("breezy", "acme")}

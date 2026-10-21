@@ -1,0 +1,92 @@
+{
+  "author": "whoishiring",
+  "children": [
+    {
+      "author": "leishman",
+      "children": [
+        {
+          "author": "ejanus",
+          "children": [],
+          "created_at": "2026-10-04T12:48:04.000Z",
+          "created_at_i": 1791118084,
+          "id": 49953472,
+          "options": [],
+          "parent_id": 49923010,
+          "points": null,
+          "story_id": 49922569,
+          "text": "Why not going global? What is the difference between your app and wallet with swap facilities?",
+          "title": null,
+          "type": "comment",
+          "url": null
+        }
+      ],
+      "created_at": "2026-10-01T15:30:44.000Z",
+      "created_at_i": 1790868644,
+      "id": 49923010,
+      "options": [],
+      "parent_id": 49922569,
+      "points": null,
+      "story_id": 49922569,
+      "text": "River | Staff Engineers (Elixir) | NYC or REMOTE (US, Europe, South America) | Full-Time | $200K-$250K + equity | <a href=\"https:&#x2F;&#x2F;jobs.ashbyhq.com&#x2F;river?utm_source=Zp9nJyqvd4\" rel=\"nofollow\">https:&#x2F;&#x2F;jobs.ashbyhq.com&#x2F;river?utm_source=Zp9nJyqvd4</a>\nI&#x27;m Alex, founder and CEO of River. I also wrote the first line of code and still ship PRs.<p>River is a client-first Bitcoin-only  [...]",
+      "title": null,
+      "type": "comment",
+      "url": null
+    },
+    {
+      "author": "openrent",
+      "children": [],
+      "created_at": "2026-10-01T15:08:45.000Z",
+      "created_at_i": 1790867325,
+      "id": 49922695,
+      "options": [],
+      "parent_id": 49922569,
+      "points": null,
+      "story_id": 49922569,
+      "text": "OpenRent | London, UK | Full-Time | ONSITE+PART REMOTE | <a href=\"https:&#x2F;&#x2F;www.openrent.co.uk\" rel=\"nofollow\">https:&#x2F;&#x2F;www.openrent.co.uk</a><p>What sucked the last time you rented a house or flat? Come and fix it. OpenRent is force for good in an industry tarnished by rip-off agencies and one of the biggest UK websites by traffic. Enabled by an unrelenting focus on technology, w [...]",
+      "title": null,
+      "type": "comment",
+      "url": null
+    },
+    {
+      "author": "mwest1066",
+      "children": [],
+      "created_at": "2026-10-01T15:02:37.000Z",
+      "created_at_i": 1790866957,
+      "id": 49922584,
+      "options": [],
+      "parent_id": 49922569,
+      "points": null,
+      "story_id": 49922569,
+      "text": "PrairieLearn (Remote US) \u2014 Full-Stack Software Engineer \u2014 TypeScript &#x2F; Postgres &#x2F; React &#x2F; AI<p>PrairieLearn (<a href=\"https:&#x2F;&#x2F;www.prairielearn.com\" rel=\"nofollow\">https:&#x2F;&#x2F;www.prairielearn.com</a>) is an open-source assessment platform used by universities across the US (Berkeley, Princeton, Michigan, Illinois, and others). We power mastery-based learning and larg [...]",
+      "title": null,
+      "type": "comment",
+      "url": null
+    },
+    {
+      "author": "anorphirith",
+      "children": [],
+      "created_at": "2026-10-01T17:51:07.000Z",
+      "created_at_i": 1790877067,
+      "id": 49924849,
+      "options": [],
+      "parent_id": 49922569,
+      "points": null,
+      "story_id": 49922569,
+      "text": "there used to be 800+ posts here :(",
+      "title": null,
+      "type": "comment",
+      "url": null
+    }
+  ],
+  "created_at": "2026-10-01T15:02:07.000Z",
+  "created_at_i": 1790866927,
+  "id": 49922569,
+  "options": [],
+  "parent_id": null,
+  "points": 277,
+  "story_id": 49922569,
+  "text": "Please state the location and include REMOTE for remote work, REMOTE (US)\nor similar if the country is restricted, and ONSITE when remote work is <i>not</i> an option.<p>Please only post if you personally are part of the hiring company\u2014no\nrecruiting firms or job boards. One post per company. If it isn&#x27;t a household name,\nexplain what your company does.<p>Please only post if you are actively f [...]",
+  "title": "Ask HN: Who is hiring? (October 2026)",
+  "type": "story",
+  "url": null
+}

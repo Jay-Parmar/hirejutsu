@@ -1,0 +1,184 @@
+# hirejutsu config
+# Paths can use ~ and env vars. Relative paths are relative to this folder.
+
+# Your resume: pdf, docx, txt or md. Run "hirejutsu resume" to see what is read from it.
+resume: resume.pdf
+
+profile:
+  # Roles you want. Leave empty to use the titles found in your resume.
+  titles: []
+  # Extra skills to count on top of the ones found in your resume.
+  skills: []
+  # Years of experience. Leave empty to work it out from your resume.
+  years:
+  # Where you can work. "remote" matches remote jobs.
+  locations: [remote]
+
+search:
+  # Search words for sites that need one. Empty means your target titles.
+  keywords: []
+  # Ignore jobs posted more than this many days ago.
+  max_age_days: 14
+
+# Turn sources on or off and change their settings. Run "hirejutsu sources"
+# to see them all. Uncomment a line to use it.
+sources:
+  # Company career pages have one source per ATS: greenhouse, lever, ashby, smartrecruiters,
+  # recruitee, workable, workday, personio, breezy, bamboohr and teamtailor.
+  # They all take these settings, shown here with their defaults:
+  # greenhouse:
+  #   enabled: true
+  #   # How many boards to read at the same time.
+  #   workers: 4
+  #   # Keep only jobs whose title has a word from your keywords, so "Backend Engineer"
+  #   # also keeps "Engineering Manager". Without keywords every job is kept.
+  #   title_filter: true
+  #   # Greenhouse, SmartRecruiters, Workday and BambooHR need one more request per job
+  #   # for its description. This caps them per fetch, newest jobs first, and the rest
+  #   # get theirs on the next fetch.
+  #   max_details: 300
+  # workday:
+  #   # Workday lists 20 jobs a page, newest first. Pages to read per company.
+  #   max_pages: 10
+  # remoteok: false
+  # arbeitnow:            # off by default, mostly onsite jobs in Germany
+  #   enabled: true
+  #   max_pages: 3        # up to 300 jobs a page
+  # himalayas:
+  #   max_pages: 3        # 20 jobs a page, for each search keyword
+  # jobicy:
+  #   max_pages: 5        # 200 jobs a page
+  # fourdayweek:
+  #   max_pages: 3        # 100 jobs a page
+  # weworkremotely:
+  #   categories: [remote-full-stack-programming-jobs, remote-back-end-programming-jobs]
+  # hackernews:
+  #   months: 1           # how many monthly "Who is hiring?" threads to read
+  # Big job boards. Their terms forbid scraping, so they stay off unless you turn them on.
+  # They need: pip install -e ".[jobspy]"
+  # indeed: {enabled: true, country: India, results: 50}
+  # naukri: {enabled: true, results: 20}
+  # linkedin: {enabled: true, results: 25, descriptions: false, delay_seconds: 30}
+  # glassdoor: {enabled: true, country: India, results: 30}
+  # ziprecruiter: {enabled: true, results: 20}   # US and Canada only
+  # Each board makes at most max_searches searches a run (3), delay_seconds apart (15).
+
+# The companies whose career pages are read. See "hirejutsu companies".
+companies:
+  # Use the built-in list. Set to false to read only the companies you add.
+  builtin: true
+
+ranking:
+  # How many jobs to pick each day.
+  top: 10
+  # Most picks from one company on the same day.
+  per_company: 2
+  # How much each part of the score counts. They are scaled to add up to 1.
+  weights:
+    # Your skills the job mentions. Rare ones and ones in the title count more.
+    skills: 0.35
+    # How close the description is to your resume text.
+    text: 0.2
+    # How close the job title is to the titles you want.
+    title: 0.2
+    # How well the level and years asked fit profile years.
+    seniority: 0.1
+    # Newer jobs score higher.
+    freshness: 0.1
+    # Remote or in one of your locations.
+    location: 0.05
+  # Days after which the freshness score halves.
+  half_life_days: 3
+  # Years a job may ask above or below yours before it scores lower.
+  seniority_tolerance: 2
+  # "filter" skips jobs outside your locations, "score" ranks them lower instead.
+  location_mode: filter
+  # Remote jobs often say who may apply, like "Remote (USA)". List the places that include you,
+  # such as [India, APAC, Asia], to skip remote jobs open only to other places. Empty keeps them all.
+  remote_from: []
+  # Skip jobs that mention any of these words.
+  exclude_keywords: []
+  # Skip jobs with any of these words in the title, like intern or sales.
+  exclude_title_words: []
+  # Skip jobs from these companies.
+  exclude_companies: []
+  # Keep only jobs that mention at least one of these words.
+  require_keywords: []
+  # Skip jobs that score below this, from 0 to 1.
+  min_score: 0
+  # Skip jobs posted more than this many days ago. Empty uses search max_age_days.
+  max_age_days:
+  # Skip jobs whose top salary per year is below this. Jobs without a salary are kept.
+  min_salary:
+  # Currency of min_salary, like INR or USD. Salaries in other currencies are kept.
+  salary_currency: ""
+
+# AI second opinion, off by default. When on, your resume and the job details go to the provider.
+ai:
+  enabled: false
+  # anthropic, or openai for any OpenAI compatible API: OpenAI, Ollama, LM Studio, OpenRouter, Groq.
+  provider: anthropic
+  # Empty means the provider default: claude-haiku-5-5 or gpt-5-mini.
+  model: ""
+  # Empty means the provider default. Ollama runs at http://localhost:11434/v1
+  base_url: ""
+  # Environment variable holding the API key. Empty means ANTHROPIC_API_KEY or OPENAI_API_KEY.
+  api_key_env: ""
+  # How many of the best matches to send each day.
+  candidates: 30
+  # How many jobs go in one request.
+  batch_size: 10
+  # How much the AI score counts in the final score, from 0 to 1.
+  weight: 0.5
+  # Longest resume and job description to send, in characters.
+  max_resume_chars: 8000
+  max_description_chars: 3000
+  # Seconds to wait for an answer. Raise it for slow local models.
+  timeout: 120
+
+# Where daily reports are written.
+reports_dir: reports
+
+report:
+  # Files to write each day: md, html, csv or json.
+  formats: [md, html]
+  # Open the HTML report in your browser after "hirejutsu run".
+  open: false
+  # Delete reports older than this many days. 0 keeps them all.
+  keep_days: 60
+
+# Send the daily picks to you. Nothing is sent until you set enabled: true on a channel.
+# Passwords, tokens and webhook URLs are read from the environment variables named by *_env.
+notify:
+  email:
+    enabled: false
+    host: smtp.gmail.com
+    # starttls with port 587, ssl with port 465, or none.
+    security: starttls
+    port: 587
+    username: you@gmail.com
+    # For Gmail this holds an app password, not your account password.
+    password_env: HIREJUTSU_SMTP_PASSWORD
+    # Sender address. Empty means the username.
+    from: ""
+    to: [you@gmail.com]
+    # Attach the day's report files.
+    attach: false
+  telegram:
+    enabled: false
+    bot_token_env: HIREJUTSU_TELEGRAM_TOKEN
+    # Your chat id, see the README.
+    chat_id: ""
+  discord:
+    enabled: false
+    webhook_url_env: HIREJUTSU_DISCORD_WEBHOOK
+  slack:
+    enabled: false
+    webhook_url_env: HIREJUTSU_SLACK_WEBHOOK
+  ntfy:
+    enabled: false
+    server: https://ntfy.sh
+    # Anyone who knows the topic can read it, so pick one that is hard to guess.
+    topic: ""
+    # Only needed for topics that require a login.
+    token_env: ""

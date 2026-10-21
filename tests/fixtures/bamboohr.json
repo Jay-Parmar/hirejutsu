@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "totalCount": 1
+  },
+  "result": [
+    {
+      "id": "27",
+      "jobOpeningName": "Clerical Support Specialist",
+      "departmentId": "18589",
+      "departmentLabel": "Clerical",
+      "employmentStatusLabel": "Part-Time",
+      "employmentType": null,
+      "location": {
+        "city": "Pocatello",
+        "state": "Idaho"
+      },
+      "atsLocation": {
+        "country": null,
+        "state": null,
+        "province": null,
+        "city": null
+      },
+      "isRemote": null,
+      "locationType": "0"
+    }
+  ]
+}

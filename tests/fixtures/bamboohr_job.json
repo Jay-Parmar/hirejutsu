@@ -1,0 +1,214 @@
+{
+  "meta": {},
+  "result": {
+    "jobOpening": {
+      "jobOpeningShareUrl": "https://nomadic.bamboohr.com/careers/27",
+      "jobOpeningName": "Clerical Support Specialist",
+      "jobOpeningStatus": "Open",
+      "jobCategoryId": null,
+      "departmentId": "18589",
+      "departmentLabel": "Clerical",
+      "employmentStatusLabel": "Part-Time",
+      "employmentType": null,
+      "location": {
+        "city": "Pocatello",
+        "state": "Idaho",
+        "postalCode": "83204",
+        "addressCountry": "United States"
+      },
+      "atsLocation": {
+        "country": null,
+        "countryId": null,
+        "state": null,
+        "city": null
+      },
+      "description": "<p><span style=\"font-size: 16px\">Are you ready to turn up the heat on your career? We're on the lookout for a dynamic, tech-savvy and detail-oriented Fire Season Administrative Specialist to become the vital support system for our fast-paced wildfire response team. This is your chance to make a real difference and play a crucial role in keeping communities safe during fire season. If you're eager...",
+      "compensation": "Up to $28.25 per hour DOE",
+      "datePosted": "2026-08-12",
+      "minimumExperience": "Mid-level",
+      "locationType": "0",
+      "seekPromoted": false,
+      "aiProcessingDisclosureEnabled": false
+    },
+    "formFields": {
+      "firstName": {
+        "isRequired": true,
+        "value": "",
+        "label": "First Name"
+      },
+      "lastName": {
+        "isRequired": true,
+        "value": "",
+        "label": "Last Name"
+      },
+      "email": {
+        "isRequired": true,
+        "value": "",
+        "label": "Email"
+      },
+      "phone": {
+        "isRequired": true,
+        "value": "",
+        "label": "Phone"
+      },
+      "streetAddress": {
+        "isRequired": true,
+        "value": "",
+        "label": "Address"
+      },
+      "city": {
+        "isRequired": true,
+        "value": "",
+        "label": "City"
+      },
+      "state": {
+        "isRequired": true,
+        "value": "",
+        "label": "State",
+        "options": [
+          {
+            "id": "2",
+            "text": "AK"
+          },
+          {
+            "id": "1",
+            "text": "AL"
+          },
+          {
+            "id": "4",
+            "text": "AR"
+          },
+          {
+            "id": "361",
+            "text": "AS"
+          },
+          {
+            "id": "3",
+            "text": "AZ"
+          },
+          {
+            "id": "5",
+            "text": "CA"
+          }
+        ]
+      },
+      "zip": {
+        "isRequired": true,
+        "value": "",
+        "label": "ZIP"
+      },
+      "countryId": {
+        "isRequired": true,
+        "value": "1",
+        "label": "Country",
+        "options": [
+          {
+            "id": "1",
+            "text": "United States"
+          },
+          {
+            "id": "2",
+            "text": "Canada"
+          },
+          {
+            "id": "3",
+            "text": "Australia"
+          },
+          {
+            "id": "4",
+            "text": "Afghanistan"
+          },
+          {
+            "id": "5",
+            "text": "Albania"
+          },
+          {
+            "id": "6",
+            "text": "Algeria"
+          }
+        ]
+      },
+      "linkedinUrl": {
+        "isRequired": false,
+        "value": "",
+        "label": "LinkedIn URL"
+      },
+      "dateAvailable": {
+        "isRequired": true,
+        "value": "",
+        "label": "Date Available"
+      },
+      "resumeFileId": {
+        "isRequired": true,
+        "value": "",
+        "label": "Resume"
+      },
+      "customQuestions": [
+        {
+          "id": "78",
+          "isRequired": false,
+          "question": "Do you understand that this is an as-needed and temporary position that requires travel to remote locations. There are no guaranteed hours and work schedules are determined based on the frequency and duration of wildfires.",
+          "type": "yes_no",
+          "value": "",
+          "isValueOther": false,
+          "hasOther": "no",
+          "options": []
+        },
+        {
+          "id": "79",
+          "isRequired": false,
+          "question": "Why do you think this role is a good fit for you, and how do your personal values align with this type of work?",
+          "type": "long",
+          "value": "",
+          "isValueOther": false,
+          "hasOther": "no",
+          "options": []
+        },
+        {
+          "id": "80",
+          "isRequired": false,
+          "question": "On a scale from 1 to 10, how would you rate your technical skills relevant to operating office equipment and softwares (ie. Microsoft Word and Adobe Acrobat)? Can you provide an example that demonstrates your level of expertise?",
+          "type": "long",
+          "value": "",
+          "isValueOther": false,
+          "hasOther": "no",
+          "options": []
+        },
+        {
+          "id": "81",
+          "isRequired": false,
+          "question": "This job requires operating in unique and rapidly changing environments. Can you share an experience where you successfully adapted to a unique or unfamiliar work setting?",
+          "type": "long",
+          "value": "",
+          "isValueOther": false,
+          "hasOther": "no",
+          "options": []
+        },
+        {
+          "id": "82",
+          "isRequired": false,
+          "question": "Can you provide an example of a challenging communication situation you faced and how you managed it?",
+          "type": "long",
+          "value": "",
+          "isValueOther": false,
+          "hasOther": "no",
+          "options": []
+        },
+        {
+          "id": "83",
+          "isRequired": false,
+          "question": "Along with the dynamic and fast paced nature of this job, come periods of lulls and slow periods. How do you manage your time effectively during less busy periods, and can you provide an example of how you have productively utilized such downtime in a previous position?",
+          "type": "long",
+          "value": "",
+          "isValueOther": false,
+          "hasOther": "no",
+          "options": []
+        }
+      ],
+      "genderId": [],
+      "ethnicityId": [],
+      "veteranStatusId": [],
+      "disabilityId": []
+    }
+  }
+}

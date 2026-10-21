@@ -1,0 +1,82 @@
+import pytest
+
+from hirejutsu import sources
+from hirejutsu.cli import main
+from hirejutsu.models import Job
+from hirejutsu.sources import Source
+from hirejutsu.store import Store
+
+
+class Demo(Source):
+    name = "demo"
+
+    def fetch(self):
+        return [Job("demo", str(n), f"Engineer {n}", "Acme", f"https://x/{n}") for n in range(3)]
+
+
+class Broken(Source):
+    name = "broken"
+    defaults = {"enabled": False}
+
+    def fetch(self):
+        raise RuntimeError("site is down")
+
+
+class Partial(Source):
+    name = "partial"
+    defaults = {"enabled": False}
+
+    def fetch(self):
+        self.warning = "1 of 2 boards failed"
+        return [Job("partial", "1", "Engineer", "Acme", "https://x/1")]
+
+
+@pytest.fixture(autouse=True)
+def registry(monkeypatch):
+    monkeypatch.setattr(sources, "SOURCES", {"demo": Demo, "broken": Broken, "partial": Partial})
+    monkeypatch.setattr(sources.pkgutil, "iter_modules", lambda path: [])
+
+
+def test_fetch_saves_jobs(tmp_path, capsys):
+    assert main(["--home", str(tmp_path), "fetch"]) == 0
+    out = capsys.readouterr().out
+    assert "demo" in out
+    with Store(tmp_path / "hirejutsu.db") as store:
+        assert len(store.find_jobs()) == 3
+
+
+def test_fetch_named_source_reports_error(tmp_path, capsys):
+    assert main(["--home", str(tmp_path), "fetch", "--source", "broken"]) == 1
+    assert "site is down" in capsys.readouterr().out
+
+
+def test_errors_keep_square_brackets(tmp_path, capsys, monkeypatch):
+    def fail(self):
+        raise RuntimeError("needs [extra]")
+
+    monkeypatch.setattr(Broken, "fetch", fail)
+    main(["--home", str(tmp_path), "fetch", "-s", "broken"])
+    assert "[extra]" in capsys.readouterr().out
+    main(["--home", str(tmp_path), "sources"])
+    assert "[extra]" in capsys.readouterr().out
+
+
+def test_fetch_shows_partial_failure(tmp_path, capsys):
+    assert main(["--home", str(tmp_path), "fetch", "-s", "partial"]) == 0
+    assert "1 of 2 boards failed" in capsys.readouterr().out
+
+
+def test_fetch_unknown_source(tmp_path, capsys):
+    assert main(["--home", str(tmp_path), "fetch", "-s", "nope"]) == 2
+    assert "Unknown source" in capsys.readouterr().out
+
+
+def test_sources_lists_enabled_state_and_last_fetch(tmp_path, capsys):
+    main(["--home", str(tmp_path), "fetch"])
+    capsys.readouterr()
+    assert main(["--home", str(tmp_path), "sources"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    demo = next(line for line in lines if "demo" in line)
+    broken = next(line for line in lines if "broken" in line)
+    assert "yes" in demo and "3" in demo
+    assert "no" in broken
