@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:tt="https://teamtailor.com/locations" version="2.0">
+  <channel>
+    <title>Quinyx</title>
+    <description>Find a role that suits you</description>
+    <link>https://quinyx.teamtailor.com/jobs</link>
+    <item>
+      <title>Product Marketing Director</title>
+      <description>&lt;h3&gt;&#127919; About the role&lt;/h3&gt;&lt;p&gt;Product Marketing at Quinyx is the strategy center of marketing and drives many facets of our business performance: Quinyx value proposition, competitive and market intelligence, product positioning and product launches and GTM, sales collateral, customer stories, and thought leadership. This is a broad role with high impact, with multiple stakeholders at an executive l...</description>
+      <pubDate>Tue, 06 Oct 2026 14:24:47 +0200</pubDate>
+      <link>https://careers.quinyx.com/jobs/8505736-product-marketing-director</link>
+      <remoteStatus>hybrid</remoteStatus>
+      <guid>5f59d943-f382-4428-a894-b0b847b7d392</guid>
+      <tt:locations>
+        <tt:location>
+          <tt:name />
+          <tt:address>Vattugatan 17</tt:address>
+          <tt:zip>111 52</tt:zip>
+          <tt:city>Stockholm</tt:city>
+          <tt:country>Sweden</tt:country>
+        </tt:location>
+      </tt:locations>
+      <tt:department>Marketing</tt:department>
+      <tt:role />
+    </item>
+    <item>
+      <title>Senior Product Manager - Analytics</title>
+      <description>&lt;h2&gt;&lt;span&gt;Senior Product Manager at Quinyx&lt;/span&gt;&lt;/h2&gt;&lt;p&gt;&lt;span&gt;You know that moment when a simple staffing question suddenly turns into three tools, five messages, and a lot of guesswork?&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span&gt;At Quinyx, we&#8217;re building a product that removes that friction - for managers, employees, and entire organisations. &lt;/span&gt;We are looking for a Senior Product Manager who brings a blend of shar...</description>
+      <pubDate>Thu, 24 Sep 2026 09:24:05 +0200</pubDate>
+      <link>https://careers.quinyx.com/jobs/8446514-senior-product-manager-analytics</link>
+      <remoteStatus>hybrid</remoteStatus>
+      <guid>a6e1bd60-b5cc-46c6-a6df-6c6f4a3126a7</guid>
+      <tt:locations>
+        <tt:location>
+          <tt:name />
+          <tt:address>2nd floor, 8 Brewhouse Yard</tt:address>
+          <tt:zip>EC1V</tt:zip>
+          <tt:city>London</tt:city>
+          <tt:country>United Kingdom</tt:country>
+        </tt:location>
+      </tt:locations>
+      <tt:department>Product</tt:department>
+      <tt:role>Product Manager</tt:role>
+    </item>
+    </channel>
+</rss>

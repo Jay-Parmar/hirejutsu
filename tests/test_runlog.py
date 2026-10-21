@@ -1,0 +1,106 @@
+import logging
+import sys
+from datetime import date
+
+import pytest
+
+from hirejutsu import runlog, sources
+from hirejutsu.cli import main
+from hirejutsu.models import Job
+from hirejutsu.sources import Source
+
+
+class Demo(Source):
+    name = "demo"
+
+    def fetch(self):
+        return [Job("demo", "1", "Python Engineer", "Acme", "https://x/1", description="python")]
+
+
+@pytest.fixture(autouse=True)
+def registry(monkeypatch):
+    monkeypatch.setattr(sources, "SOURCES", {"demo": Demo})
+    monkeypatch.setattr(sources.pkgutil, "iter_modules", lambda path: [])
+
+
+@pytest.fixture
+def home(tmp_path):
+    (tmp_path / "resume.txt").write_text("Python developer", encoding="utf-8")
+    (tmp_path / "config.yaml").write_text("resume: resume.txt\nprofile:\n  skills: [python]\n", encoding="utf-8")
+    return tmp_path
+
+
+@pytest.fixture
+def headless(monkeypatch):
+    """No stdout or stderr, like pythonw.exe started by the Task Scheduler."""
+    monkeypatch.setattr(sys, "stdout", None)
+    monkeypatch.setattr(sys, "stderr", None)
+
+
+def todays_log(folder):
+    return folder / f"run-{date.today().isoformat()}.log"
+
+
+def log_text(folder):
+    """Close the run log, as the end of the process would, and read it."""
+    sys.stdout.close()
+    return todays_log(folder).read_text(encoding="utf-8")
+
+
+def test_run_log_gets_the_console_output(home, headless):
+    assert main(["--home", str(home), "run", "--log"]) == 0
+    assert "Python Engineer" in log_text(home / "logs")
+
+
+def test_run_log_is_appended(home, headless):
+    log = todays_log(home / "logs")
+    log.parent.mkdir()
+    log.write_text("earlier run\n", encoding="utf-8")
+    main(["--home", str(home), "run", "--log"])
+    text = log_text(home / "logs")
+    assert text.startswith("earlier run\n")
+    assert "Python Engineer" in text
+
+
+def test_run_log_gets_config_errors(tmp_path, headless):
+    (tmp_path / "config.yaml").write_text("- not a mapping\n", encoding="utf-8")
+    assert main(["--home", str(tmp_path), "run", "--log"]) == 2
+    assert "must contain a mapping" in log_text(tmp_path / "logs")
+
+
+def test_logging_set_up_after_start_writes_to_the_log(tmp_path, headless):
+    runlog.start(tmp_path)
+    logging.StreamHandler().handle(logging.makeLogRecord({"msg": "source failed"}))
+    sys.stderr.write("Traceback\n")
+    text = log_text(tmp_path)
+    assert "source failed" in text
+    assert "Traceback" in text
+
+
+def test_start_keeps_the_newest_30_logs(tmp_path, headless):
+    for day in range(1, 32):
+        (tmp_path / f"run-2000-01-{day:02d}.log").write_text("old\n", encoding="utf-8")
+    (tmp_path / "notes.txt").write_text("mine\n", encoding="utf-8")
+    runlog.start(tmp_path)
+    sys.stdout.close()
+    names = sorted(path.name for path in tmp_path.glob("run-*.log"))
+    assert len(names) == 30
+    assert names[0] == "run-2000-01-03.log"
+    assert names[-1] == todays_log(tmp_path).name
+    assert (tmp_path / "notes.txt").exists()
+
+
+def test_latest_log_and_its_tail(tmp_path):
+    (tmp_path / "run-2026-10-16.log").write_text("older run\n", encoding="utf-8")
+    (tmp_path / "run-2026-10-17.log").write_text("".join(f"line {n}\n" for n in range(20)), encoding="utf-8")
+    latest = runlog.latest(tmp_path)
+    assert latest == tmp_path / "run-2026-10-17.log"
+    assert runlog.tail(latest, 3) == ["line 17", "line 18", "line 19"]
+
+
+def test_latest_without_logs(tmp_path):
+    assert runlog.latest(tmp_path / "logs") is None
+
+
+def test_run_without_console_or_log(home, headless):
+    assert main(["--home", str(home), "run"]) == 0

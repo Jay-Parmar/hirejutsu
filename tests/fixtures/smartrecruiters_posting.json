@@ -1,0 +1,140 @@
+{
+  "id": "744000156093019",
+  "name": "Principal Software Engineer - Veza",
+  "uuid": "212bfb7e-c965-4521-ad87-bea7447acda4",
+  "jobId": "2e5cae8b-474c-4acf-b570-d12dcb23a0a2",
+  "jobAdId": "c4a04cc7-ce20-4cc6-bd75-5b6404760d24",
+  "defaultJobAd": true,
+  "refNumber": "JB0076129",
+  "company": {
+    "name": "ServiceNow",
+    "identifier": "ServiceNow"
+  },
+  "location": {
+    "city": "San Diego",
+    "region": "CALIFORNIA",
+    "country": "us",
+    "address": "4810 Eastgate Mall",
+    "postalCode": "92121",
+    "remote": false,
+    "hybrid": false,
+    "fullLocation": "San Diego, CALIFORNIA, United States"
+  },
+  "customField": [
+    {
+      "fieldId": "60345fa28b4ba8595bef1863",
+      "fieldLabel": "Recruiting Team",
+      "valueId": "professional",
+      "valueLabel": "Professional"
+    },
+    {
+      "fieldId": "60345e1a0b24a127cbdfa148",
+      "fieldLabel": "Employee Type",
+      "valueId": "0082f6cbe6154da19322cbab1f6aa5af",
+      "valueLabel": "Regular"
+    },
+    {
+      "fieldId": "5f63a78f1dae5c5c4e54ba2b",
+      "fieldLabel": "Department",
+      "valueId": "2294038",
+      "valueLabel": "Engineering, Infrastructure and Operations"
+    },
+    {
+      "fieldId": "COUNTRY",
+      "fieldLabel": "Country/Region",
+      "valueId": "us",
+      "valueLabel": "United States"
+    },
+    {
+      "fieldId": "5f63a78f1dae5c5c4e54ba2a",
+      "fieldLabel": "Brands",
+      "valueId": "default",
+      "valueLabel": "ServiceNow"
+    },
+    {
+      "fieldId": "60345d5c5165a31b17288279",
+      "fieldLabel": "Region",
+      "valueId": "722a833b93e4437798309f43c0d25990",
+      "valueLabel": "AMS - North America and Canada"
+    },
+    {
+      "fieldId": "603462175165a31b1728827d",
+      "fieldLabel": "Cost Center",
+      "valueId": "CC6019",
+      "valueLabel": "6019 Veza Engineering"
+    },
+    {
+      "fieldId": "6034601b43915a29a4b3389b",
+      "fieldLabel": "Job Location",
+      "valueId": "L_SAN003",
+      "valueLabel": "4810 Eastgate Mall, San Diego, California, 92121, United States of America(L_SAN003)"
+    },
+    {
+      "fieldId": "618ed92b8f5e5f110e5bfb95",
+      "fieldLabel": "Work Persona",
+      "valueId": "bf7551c6-9b06-4e7c-8217-3baf43edd060",
+      "valueLabel": "Flexible"
+    },
+    {
+      "fieldId": "690cc0e8c682c3dbadaa7d73",
+      "fieldLabel": "Job Posting Type",
+      "valueId": "professional",
+      "valueLabel": "Professional"
+    }
+  ],
+  "releasedDate": "2026-10-16T23:15:30.201Z",
+  "creator": {
+    "name": "",
+    "avatarUrl": ""
+  },
+  "postingUrl": "https://jobs.smartrecruiters.com/ServiceNow/744000156093019-principal-software-engineer-veza",
+  "applyUrl": "https://jobs.smartrecruiters.com/ServiceNow/744000156093019-principal-software-engineer-veza?oga=true",
+  "referralUrl": "https://jobs.smartrecruiters.com/external-referrals/company/ServiceNow/publication/212bfb7e-c965-4521-ad87-bea7447acda4?dcr_ci=ServiceNow",
+  "jobAd": {
+    "sections": {
+      "companyDescription": {
+        "title": "Company Description",
+        "text": "<p>It all started when engineer Fred Luddy wrote code that automated a tedious task for his coworker, Phyllis. She cried tears of joy. That moment inspired Fred to build a company that could do that for everyone\u2014freeing people from busywork so they could focus on meaningful work. Today, ServiceNow is the AI control tower for business reinvention. Our ServiceNow AI platform brings together any AI,..."
+      },
+      "jobDescription": {
+        "title": "Job Description",
+        "text": "<p><strong>About Veza</strong></p><p>Veza is the identity security platform for human, non-human, and AI agent access. Customers use it to see who and what has access to what, govern it, and remediate risk across cloud, SaaS, and on-prem systems.</p><p>Agent security is the inflection point. Static access reviews can't keep up with autonomous agents acting at machine speed. Security is shifting to..."
+      },
+      "qualifications": {
+        "title": "Qualifications",
+        "text": "<p><strong>What you bring</strong></p><p><strong>Core</strong></p><ul><li>15+ years in software engineering, with 5+ years as a staff/principal/chief architect, or equivalent, over a large multi-team platform.</li><li>Deep experience designing multi-tenant, cloud-native SaaS at enterprise scale: distributed systems, large-scale data and graph systems, APIs, and microservices.</li><li>Hands-on Kube..."
+      },
+      "additionalInformation": {
+        "title": "Additional Information",
+        "text": "<p><strong>Work Personas</strong></p><p>We approach our distributed world of work with flexibility and trust. Work personas (flexible, remote, or required in office) are categories that are assigned to ServiceNow employees depending on the nature of their work and their assigned work location. <a href=\"https://careers.servicenow.com/life-at-servicenow#workpersonas\" rel=\"noopener noreferrer\"><u>Lea..."
+      }
+    }
+  },
+  "active": true,
+  "visibility": "PUBLIC",
+  "industry": {
+    "id": "it_and_services",
+    "label": "Information Technology And Services"
+  },
+  "function": {
+    "id": "engineering",
+    "label": "Engineering"
+  },
+  "department": {
+    "id": 2294038,
+    "label": "Engineering, Infrastructure and Operations"
+  },
+  "experienceLevel": {
+    "id": "not_applicable",
+    "label": "Not Applicable"
+  },
+  "typeOfEmployment": {
+    "id": "permanent",
+    "label": "Full-time"
+  },
+  "language": {
+    "code": "en",
+    "label": "English",
+    "labelNative": "English (US)"
+  }
+}

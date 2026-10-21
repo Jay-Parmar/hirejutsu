@@ -1,0 +1,975 @@
+# Skills to look for in resumes, one per line: the name to show, then other
+# ways people write it, separated by |. Matching ignores case and only counts
+# whole words, so "java" is not found inside "javascript".
+#
+# A leading ! means that spelling only counts in exactly this case and as a
+# word of its own. It is for names that are also plain English or a single
+# letter: "Go" is a skill but "go" is not, and neither is the C in C-suite.
+
+# Programming languages
+Python
+Java
+JavaScript | JS | ECMAScript | ES6
+TypeScript
+!Go | Golang
+!C | ANSI C | Embedded C | C programming | C language
+C++ | CPP
+C# | C Sharp | CSharp
+!R | RStudio | R programming | R language
+!Rust
+!Swift
+PHP
+Kotlin
+Scala
+Perl
+Ruby
+Lua
+Haskell
+Elixir
+Erlang
+Clojure
+F#
+OCaml
+!Dart
+MATLAB
+Fortran
+COBOL
+Visual Basic
+VB.NET
+VBA | Excel VBA | Excel macros
+Objective-C | ObjC | Objective C
+Assembly Language | x86 Assembly | ARM Assembly
+Bash | Bash scripting
+Shell Scripting | shell script | shell scripts
+PowerShell
+!Groovy
+Solidity
+!Apex | Salesforce Apex
+Visualforce
+ABAP | SAP ABAP
+PL/SQL | PLSQL
+T-SQL | TSQL | Transact-SQL
+SQL
+Delphi
+Prolog
+Lisp | Common Lisp
+Smalltalk
+!Elm
+Verilog
+VHDL
+SystemVerilog
+WebAssembly | Wasm
+CUDA
+OpenCL
+
+# Web front end
+HTML | HTML5
+CSS | CSS3
+Sass | SCSS
+Tailwind CSS | Tailwind | TailwindCSS
+!Bootstrap
+Material UI | MUI | Material-UI
+Chakra UI
+Ant Design
+jQuery
+!React | React.js | ReactJS
+React Native
+Next.js | NextJS | Next JS
+Redux
+Vue.js | Vue | VueJS
+Nuxt.js | Nuxt | NuxtJS
+!Angular | AngularJS | Angular.js
+Svelte | SvelteKit
+Ember.js | EmberJS
+Backbone.js | BackboneJS
+Gatsby | GatsbyJS
+Webpack
+Vite
+Babel
+npm
+pnpm
+Storybook
+Three.js | ThreeJS
+D3.js | D3
+Chart.js
+WebGL
+Web Components
+Responsive Design | responsive web design
+Web Accessibility | WCAG | a11y
+Progressive Web Apps | PWA | PWAs | progressive web app
+RxJS
+MobX
+Apollo GraphQL | Apollo Client | Apollo Server
+AJAX
+JSON
+XML
+YAML
+Server-Side Rendering | SSR
+
+# Websites and online stores
+WordPress
+Drupal
+Joomla
+Magento | Adobe Commerce
+Shopify
+WooCommerce
+BigCommerce
+Strapi
+Contentful
+Headless CMS
+Webflow
+Wix
+Squarespace
+
+# Backend
+Node.js | NodeJS | Node JS | !Node
+!Express | Express.js | ExpressJS
+NestJS | Nest.js
+Fastify
+Deno
+Django
+Django REST Framework | DRF
+!Flask
+FastAPI
+!Celery
+SQLAlchemy
+Pydantic
+Spring Boot | SpringBoot | Spring-Boot
+!Spring | Spring Framework | Spring MVC | Spring Security | Spring Cloud | Spring Data
+!Hibernate
+JPA
+Jakarta EE | Java EE | J2EE | JEE
+JSP | JavaServer Pages
+Servlets | Java Servlets
+Apache Struts | !Struts
+Quarkus
+Micronaut
+Vert.x
+Play Framework
+Dropwizard
+Laravel
+Symfony
+CodeIgniter
+CakePHP
+Yii
+Zend Framework | Laminas
+Ruby on Rails | RoR | !Rails
+ASP.NET | ASP.NET Core | ASP.NET MVC
+.NET | .NET Core | .NET Framework | dotnet
+Entity Framework | EF Core
+Blazor
+WCF
+LINQ
+Ktor
+gRPC
+!REST | RESTful | REST API | REST APIs | RESTful APIs
+GraphQL
+!SOAP
+WebSockets | WebSocket
+Socket.IO
+OAuth | OAuth2 | OAuth 2.0
+OpenID Connect | OIDC
+JWT | JSON Web Tokens | JSON Web Token
+SAML
+RabbitMQ
+Apache Kafka | Kafka
+ActiveMQ
+Apache Tomcat | Tomcat
+JBoss | WildFly
+WebLogic
+WebSphere
+Nginx
+Apache HTTP Server | httpd
+IIS
+Microservices | microservice | micro-services | micro services
+Serverless
+API Design
+
+# Mobile, desktop and games
+Android
+iOS
+SwiftUI
+UIKit
+Jetpack Compose
+Xcode
+Android Studio
+Flutter
+Xamarin
+!Ionic
+Apache Cordova | Cordova | PhoneGap
+Core Data
+Firebase
+RxJava
+CocoaPods
+Kotlin Multiplatform
+!Electron | Electron.js | ElectronJS
+!Qt
+WPF
+WinForms | Windows Forms
+!Unity | Unity3D
+Unreal Engine | UE4 | UE5
+Godot
+OpenGL
+DirectX
+!Vulkan
+Pygame
+
+# Databases
+MySQL
+PostgreSQL | Postgres | psql
+SQLite
+Microsoft SQL Server | SQL Server | MSSQL | MS SQL
+Oracle | Oracle Database | Oracle DB
+MariaDB
+MongoDB | Mongo
+Apache Cassandra | Cassandra
+Redis
+Memcached
+Elasticsearch | Elastic Search
+OpenSearch
+Apache Solr | Solr
+Neo4j
+DynamoDB | Amazon DynamoDB
+Couchbase
+CouchDB
+Firestore | Cloud Firestore
+Azure Cosmos DB | Cosmos DB | CosmosDB
+HBase
+InfluxDB
+TimescaleDB
+ClickHouse
+!Snowflake
+BigQuery | Google BigQuery
+Amazon Redshift | Redshift
+Databricks
+Teradata
+Vertica
+IBM Db2 | DB2
+SAP HANA
+Pinecone
+Weaviate
+Milvus
+FAISS
+pgvector
+Supabase
+CockroachDB
+Prisma
+Sequelize
+TypeORM
+Mongoose
+Liquibase
+Flyway
+NoSQL
+RDBMS
+Stored Procedures | stored procedure
+Database Design | database modeling
+Query Optimization | query tuning
+Vector Databases | vector database
+
+# Cloud
+AWS | Amazon Web Services
+Microsoft Azure | Azure
+Google Cloud | GCP | Google Cloud Platform
+Amazon EC2 | EC2
+Amazon S3 | S3
+AWS Lambda
+Amazon RDS | RDS
+Amazon ECS | ECS
+Amazon EKS | EKS
+AWS Fargate | Fargate
+AWS CloudFormation | CloudFormation
+Amazon CloudWatch | CloudWatch
+Amazon SQS | SQS
+Amazon SNS | SNS
+Amazon Kinesis | Kinesis
+API Gateway | AWS API Gateway
+Route 53 | Route53 | Amazon Route 53
+CloudFront | Amazon CloudFront
+Elastic Beanstalk | AWS Elastic Beanstalk
+AWS Glue
+Amazon Athena | !Athena
+AWS Step Functions | Step Functions
+Amazon SageMaker | SageMaker
+Amazon Bedrock | AWS Bedrock
+Amazon Aurora
+Amazon EMR | AWS EMR
+AWS CDK
+Azure DevOps | VSTS
+Azure Functions
+Azure Data Factory
+Azure Synapse | Synapse Analytics
+Azure Kubernetes Service | AKS
+Microsoft Entra ID | Entra ID | Azure Active Directory | Azure AD
+Google Kubernetes Engine | GKE
+Cloud Run | Google Cloud Run
+Cloud Functions | Google Cloud Functions
+Pub/Sub | Google Pub/Sub | PubSub
+Google Dataflow | Cloud Dataflow
+Vertex AI
+Heroku
+Vercel
+Netlify
+DigitalOcean
+Linode
+Cloudflare
+OpenStack
+VMware | vSphere | ESXi
+Hyper-V
+Oracle Cloud | Oracle Cloud Infrastructure
+IBM Cloud
+Alibaba Cloud
+Cloud Computing
+
+# DevOps and infrastructure
+Docker
+Docker Compose
+Kubernetes | K8s
+OpenShift
+!Helm
+Terraform
+Pulumi
+Ansible
+!Puppet
+SaltStack
+Vagrant
+HashiCorp Vault
+Jenkins
+GitHub Actions
+GitLab CI | GitLab CI/CD
+CircleCI
+Travis CI
+TeamCity
+Argo CD | ArgoCD
+Spinnaker
+CI/CD | CICD | continuous integration | continuous delivery | continuous deployment
+DevOps
+DevSecOps
+Site Reliability Engineering | SRE
+Infrastructure as Code | IaC
+GitOps
+Git
+GitHub
+GitLab
+Bitbucket
+Subversion | SVN
+Linux
+Unix
+Ubuntu
+CentOS
+Red Hat Enterprise Linux | RHEL | Red Hat Linux
+Debian
+Windows Server
+macOS
+Linux Administration
+System Administration | sysadmin
+Virtualization
+Prometheus
+Grafana
+Datadog
+New Relic
+Splunk
+ELK Stack | ELK | Elastic Stack
+Kibana
+Logstash
+Fluentd
+OpenTelemetry
+Nagios
+Zabbix
+PagerDuty
+!Sentry
+Istio
+HAProxy
+Podman
+Maven | Apache Maven
+Gradle
+CMake
+Bazel
+SonarQube
+JFrog Artifactory | Artifactory
+TCP/IP
+DNS
+VPN
+Load Balancing | load balancer
+Cisco Networking | CCNA | CCNP
+
+# Data engineering and analytics
+Data Engineering
+Data Analysis | data analytics
+Data Science
+Data Visualization | data visualisation
+Data Modeling | data modelling
+Data Warehousing | data warehouse
+Data Pipelines | data pipeline
+Data Mining
+Data Governance
+Data Cleaning | data cleansing | data wrangling
+Data Lakes | data lake
+Big Data
+ETL | ELT
+Apache Hadoop | Hadoop
+Apache Spark | !Spark
+PySpark
+Apache Hive | !Hive
+Apache Airflow | !Airflow
+Apache Flink | Flink
+Apache Beam
+Apache Iceberg
+Delta Lake
+!dbt | data build tool
+Fivetran
+Talend
+Informatica
+SSIS
+SSRS
+SSAS
+Alteryx
+KNIME
+Tableau
+Looker
+Looker Studio | Google Data Studio | Data Studio
+Power BI | PowerBI
+Qlik | QlikView | Qlik Sense
+Metabase
+Apache Superset
+Business Intelligence | !BI
+SAS
+SPSS | IBM SPSS
+Stata
+Statistics | statistical analysis
+Regression Analysis
+Time Series Analysis | time series
+Hypothesis Testing
+A/B Testing | AB testing | split testing
+Predictive Modeling | predictive modelling
+Web Scraping | web crawling
+Beautiful Soup | BeautifulSoup
+Scrapy
+Jupyter | Jupyter Notebook | JupyterLab
+Pandas
+NumPy
+SciPy
+Matplotlib
+Seaborn
+Plotly
+ggplot2
+
+# Machine learning and AI
+Machine Learning | !ML
+Deep Learning
+Artificial Intelligence | AI
+Generative AI | GenAI | Gen AI
+Large Language Models | LLM | LLMs
+Prompt Engineering
+Retrieval-Augmented Generation | retrieval augmented generation | !RAG
+Natural Language Processing | NLP
+Computer Vision
+Reinforcement Learning
+Neural Networks | neural network
+Convolutional Neural Networks | CNN | CNNs
+LSTM
+!BERT
+ChatGPT
+OpenAI API | OpenAI
+LangChain
+LlamaIndex
+Hugging Face | HuggingFace
+TensorFlow
+PyTorch
+Keras
+scikit-learn | sklearn | scikit learn
+XGBoost
+LightGBM
+CatBoost
+OpenCV
+spaCy
+NLTK
+Gensim
+MLflow
+Kubeflow
+MLOps
+Weights & Biases | wandb
+ONNX
+TensorRT
+Feature Engineering
+Recommendation Systems | recommender systems | recommendation engine
+Chatbots | chatbot
+Speech Recognition
+Image Processing
+Object Detection
+!YOLO
+Stable Diffusion
+AutoML
+Anomaly Detection
+Sentiment Analysis
+
+# Testing and quality
+Selenium | Selenium WebDriver
+Cypress
+Playwright
+Puppeteer
+Jest
+!Mocha
+Vitest
+pytest
+unittest
+JUnit
+TestNG
+Mockito
+!Cucumber
+Gherkin
+Postman
+SoapUI
+JMeter | Apache JMeter
+LoadRunner
+Gatling
+Appium
+Robot Framework
+Katalon
+TestRail
+Unit Testing | unit tests | unit test
+Integration Testing | integration tests
+End-to-End Testing | end to end testing | E2E testing | E2E tests
+Test Automation | automation testing | automated testing
+Manual Testing
+Regression Testing
+Performance Testing
+Load Testing
+API Testing
+Test-Driven Development | TDD | test driven development
+Behavior-Driven Development | BDD | behaviour-driven development | behavior driven development
+Quality Assurance | QA
+Software Testing
+
+# Security
+Cybersecurity | cyber security
+Information Security | InfoSec
+Network Security
+Application Security | AppSec
+Cloud Security
+Penetration Testing | pen testing | pentesting
+Ethical Hacking
+Vulnerability Assessment | VAPT
+OWASP
+SIEM
+Incident Response
+Threat Modeling | threat modelling
+Threat Intelligence
+Malware Analysis
+Digital Forensics
+Cryptography | encryption
+PKI
+SSL/TLS | TLS | SSL
+Firewalls | firewall
+IDS/IPS | intrusion detection
+Zero Trust
+Burp Suite
+Metasploit
+Nmap
+Wireshark
+Kali Linux
+Nessus
+CrowdStrike
+Okta
+Active Directory
+LDAP
+Kerberos
+Single Sign-On | SSO
+Multi-Factor Authentication | two-factor authentication | 2FA
+IAM | Identity and Access Management | AWS IAM
+GDPR
+HIPAA
+PCI DSS | PCI-DSS
+SOC 2 | SOC2
+ISO 27001
+NIST
+SAST
+DAST
+CISSP
+Certified Ethical Hacker | CEH
+OSCP
+CompTIA Security+ | Security+
+Risk Assessment
+
+# Software engineering practice
+Object-Oriented Programming | OOP | OOPS | object oriented programming
+Functional Programming
+Data Structures
+Algorithms
+Design Patterns
+SOLID Principles
+System Design
+Software Architecture
+Solution Architecture
+Distributed Systems
+Event-Driven Architecture | event driven architecture
+Domain-Driven Design | DDD | domain driven design
+Multithreading | multi-threading
+Web Development
+Frontend Development | front-end development | frontend | front-end | front end
+Backend Development | back-end development | backend | back-end | back end
+Full Stack Development | full-stack development | full stack | full-stack
+Mobile Development | mobile app development
+Code Review | code reviews
+Debugging
+Version Control
+
+# Developer tools and collaboration
+Visual Studio Code | VS Code | VSCode
+Visual Studio
+IntelliJ IDEA | IntelliJ
+!Eclipse
+PyCharm
+Vim | Neovim
+Emacs
+Swagger | OpenAPI
+Jira | Atlassian Jira
+!Confluence
+Trello
+!Asana
+!Notion
+Monday.com
+ClickUp
+!Slack
+Microsoft Teams | MS Teams
+Miro
+Lucidchart
+Draw.io | diagrams.net
+Microsoft Visio | Visio | MS Visio
+Regular Expressions | regex
+Command Line | CLI
+
+# Embedded, hardware and engineering tools
+Embedded Systems
+Arduino
+Raspberry Pi
+Internet of Things | IoT
+Microcontrollers | microcontroller
+RTOS
+FPGA
+PCB Design
+Firmware Development | firmware
+Device Drivers | device driver
+Linux Kernel
+Robotics
+Robot Operating System | ROS
+PLC Programming | PLC
+SCADA
+AutoCAD
+SolidWorks
+CATIA
+Revit
+SketchUp
+Fusion 360
+ANSYS
+Simulink
+LabVIEW
+
+# Design
+Figma
+!Sketch
+Adobe XD
+InVision
+Zeplin
+Framer
+Adobe Photoshop | Photoshop
+Adobe Illustrator | !Illustrator
+Adobe InDesign | InDesign
+Adobe After Effects | After Effects
+Adobe Premiere Pro | Premiere Pro | Adobe Premiere
+Adobe Lightroom | Lightroom
+Adobe Creative Cloud | Creative Cloud | Adobe Creative Suite
+Canva
+CorelDRAW | Corel Draw
+Affinity Designer
+!Blender
+Autodesk Maya
+3ds Max | 3D Studio Max
+Cinema 4D | C4D
+ZBrush
+Final Cut Pro
+DaVinci Resolve
+Procreate
+UI Design | user interface design | UI
+UX Design | user experience design | user experience | UX
+User Research | UX Research
+Wireframing | wireframes | wireframe
+Prototyping
+Interaction Design
+Visual Design
+Graphic Design
+Motion Graphics | motion design
+Typography
+Design Systems | design system
+Information Architecture
+Usability Testing
+Human-Computer Interaction | HCI
+Video Editing
+Photography
+Animation
+3D Modeling | 3D modelling
+Product Design
+Industrial Design
+Interior Design
+
+# Product and project management
+Product Management
+Product Strategy
+Product Roadmapping | product roadmap | product roadmaps | roadmapping
+Product Discovery
+Product Analytics
+Product Lifecycle Management | PLM
+Go-to-Market | go to market
+Market Research
+Competitive Analysis | competitor analysis
+User Stories | user story
+Requirements Gathering | requirement gathering | requirements analysis
+Business Analysis
+Stakeholder Management
+Project Management
+Program Management
+Agile | Agile methodology | agile methodologies
+Scrum
+Kanban
+!SAFe | Scaled Agile Framework | Scaled Agile
+Waterfall
+Sprint Planning
+PMP | Project Management Professional
+PRINCE2
+Six Sigma | Lean Six Sigma
+OKRs | OKR
+Risk Management
+Change Management
+Vendor Management
+Strategic Planning
+Business Strategy
+Business Development
+Operations Management
+Process Improvement | process optimization
+Team Leadership | team management | people management
+Mentoring | mentorship
+Public Speaking
+Negotiation | negotiations
+Design Thinking
+Customer Journey Mapping | journey mapping
+Mixpanel
+!Amplitude
+Hotjar
+Pendo
+Google Analytics | GA4
+Google Tag Manager
+
+# Sales and customer success
+B2B Sales | B2B
+B2C Sales | B2C
+Inside Sales
+Field Sales
+Sales Management
+Sales Forecasting
+Lead Generation
+Cold Calling
+Prospecting
+Account Management
+Key Account Management
+Customer Relationship Management | CRM
+Salesforce | SFDC
+HubSpot
+Zoho CRM
+Pipedrive
+Freshsales
+Pipeline Management | sales pipeline
+Solution Selling
+Consultative Selling
+Channel Sales
+Pre-Sales | presales
+Upselling | cross-selling
+Telemarketing
+Customer Success
+Customer Service
+Customer Support
+Technical Support
+Zendesk
+Freshdesk
+Intercom
+ServiceNow
+
+# Marketing
+Digital Marketing
+Content Marketing
+Email Marketing
+Social Media Marketing | SMM | social media management
+Performance Marketing
+Affiliate Marketing
+Influencer Marketing
+Growth Marketing | growth hacking
+Product Marketing
+Brand Management | branding | brand strategy
+Marketing Strategy
+Marketing Automation
+Marketing Analytics
+SEO | Search Engine Optimization | search engine optimisation
+!SEM | Search Engine Marketing
+PPC | pay per click | pay-per-click
+Google Ads | Google AdWords | AdWords
+Meta Ads | Facebook Ads | Instagram Ads
+LinkedIn Ads
+Conversion Rate Optimization | conversion rate optimisation
+Copywriting
+Content Writing
+Content Strategy
+Technical Writing
+Public Relations
+Event Management | event planning
+Campaign Management
+Community Management
+Keyword Research
+Link Building
+Mailchimp
+Marketo
+Klaviyo
+Braze
+Hootsuite
+Semrush
+Ahrefs
+Google Search Console
+
+# Finance and accounting
+Accounting
+Bookkeeping
+Financial Analysis
+Financial Modeling | financial modelling
+Financial Reporting
+Financial Planning
+FP&A | financial planning and analysis
+Budgeting
+Forecasting
+Cost Accounting
+Management Accounting
+Auditing
+Internal Audit
+Statutory Audit
+Taxation
+Direct Tax | direct taxation
+Indirect Tax | indirect taxation
+GST | Goods and Services Tax
+TDS
+Income Tax
+Payroll | payroll processing
+Accounts Payable
+Accounts Receivable
+General Ledger
+Reconciliation | bank reconciliation | account reconciliation
+Invoicing
+IFRS
+US GAAP | GAAP
+Ind AS
+MIS Reporting | MIS
+Variance Analysis
+Cash Flow Management | cash flow forecasting
+Working Capital Management
+Credit Analysis
+Risk Analysis
+Equity Research
+Investment Banking
+Valuation | DCF | discounted cash flow
+Mergers and Acquisitions | M&A
+Portfolio Management
+Wealth Management
+Due Diligence
+Corporate Finance
+Financial Statements | financial statement analysis
+Underwriting
+Anti-Money Laundering | AML
+KYC | Know Your Customer
+Bloomberg Terminal | Bloomberg
+Capital IQ
+FactSet
+!Tally | Tally ERP | TallyPrime | Tally Prime
+QuickBooks
+Xero
+Zoho Books
+Sage Accounting
+FreshBooks
+NetSuite | Oracle NetSuite
+SAP FICO | SAP FI/CO
+SAP MM
+SAP SD
+SAP PP
+SAP HCM
+SAP BW
+SAP Basis
+SAP S/4HANA | S/4HANA | S4HANA
+SAP
+Oracle E-Business Suite | Oracle EBS
+ERP | enterprise resource planning
+CFA
+CPA
+ACCA
+
+# Office and business tools
+!Excel | Microsoft Excel | MS Excel | MS-Excel | Advanced Excel
+Microsoft Word | MS Word | MS-Word
+PowerPoint | Microsoft PowerPoint | MS PowerPoint | MS-PowerPoint
+!Outlook | Microsoft Outlook | MS Outlook
+Microsoft Access | MS Access
+Microsoft Office | MS Office | MS-Office | Office 365 | Microsoft 365 | O365
+Google Workspace | G Suite | GSuite
+Google Sheets
+Google Docs
+Airtable
+Smartsheet
+Pivot Tables | pivot table
+VLOOKUP | XLOOKUP | HLOOKUP
+Power Query
+Power Pivot
+Power Apps | PowerApps
+Power Automate | Microsoft Flow
+SharePoint
+Microsoft Dynamics 365 | Dynamics 365 | Microsoft Dynamics | Dynamics CRM
+Zapier
+UiPath
+Automation Anywhere
+Blue Prism
+Robotic Process Automation | RPA
+Data Entry
+
+# People and operations
+Recruitment | recruiting | talent acquisition
+Employee Onboarding
+HRIS
+!Workday
+SAP SuccessFactors | SuccessFactors
+BambooHR
+Employee Engagement
+Performance Management
+Employee Relations
+Compensation and Benefits
+Labour Law | labor law | labour laws | labor laws
+Learning and Development | L&D | training and development
+HR Operations
+Talent Management
+Supply Chain Management | supply chain
+Logistics
+Inventory Management
+Procurement
+Strategic Sourcing
+Warehouse Management | WMS
+Demand Planning
+Lean Manufacturing
+Kaizen
+5S
+Quality Control | QC
+Quality Management | QMS
+ISO 9001
+Root Cause Analysis | RCA
+Production Planning
+GMP | Good Manufacturing Practice
+
+# Healthcare, legal and education
+Electronic Health Records | EHR | EMR | electronic medical records
+Medical Coding
+Clinical Research
+Patient Care
+Pharmacovigilance
+Legal Research
+Contract Management
+Curriculum Development
