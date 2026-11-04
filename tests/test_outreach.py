@@ -3,10 +3,11 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+import yaml
 
 from hirejutsu import outreach
 from hirejutsu.applicant import Applicant
-from hirejutsu.config import Config
+from hirejutsu.config import Config, template
 from hirejutsu.contacts import Contact, Person, guesses
 from hirejutsu.models import Job, Match, Profile
 
@@ -219,3 +220,7 @@ def test_recruiters_found_by_search_link_to_their_profiles():
     assert ('<a href="https://www.linkedin.com/in/jane-doe" target="_blank" rel="noopener noreferrer">Jane Doe</a>, '
             "Talent Acquisition Partner") in page
     assert "Recruiters found" not in outreach.markdown([draft()], DAY)
+
+
+def test_starter_config_has_the_outreach_defaults():
+    assert yaml.safe_load(template())["outreach"] == outreach.OUTREACH_DEFAULTS

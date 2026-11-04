@@ -195,3 +195,18 @@ notify:
     topic: ""
     # Only needed for topics that require a login.
     token_env: ""
+
+# Emails to recruiters about your picks, drafted by "hirejutsu outreach". You send them yourself.
+outreach:
+  # Sources whose picks get an email. Job boards are left out, their listings rarely say who to write to.
+  sources: [greenhouse, lever, ashby, smartrecruiters, recruitee, workable, workday, personio, breezy,
+            bamboohr, teamtailor, hackernews]
+  # One line about you for every email, like "Last year I cut our API response times in half."
+  pitch: ""
+  # Search for recruiters with a web search API: tavily, or empty for no search.
+  # When on, company names go to Tavily. See the README for a free key.
+  search: ""
+  # Environment variable holding the search API key.
+  search_key_env: TAVILY_API_KEY
+  # Let the AI of the ai section rewrite each email for its job. Your resume and the job go to it.
+  ai: false
