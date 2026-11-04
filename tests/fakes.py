@@ -96,6 +96,10 @@ class FakePage:
         self.steps = list(steps)
         self.filled: list[tuple[str, str]] = []
         self.waited = 0.0
+        self.url = ""
+
+    def goto(self, url: str) -> None:
+        self.url = url
 
     def step(self) -> str:
         if not self.steps:
@@ -103,6 +107,8 @@ class FakePage:
         return self.steps.pop(0)
 
     def wait(self, seconds: float) -> None:
+        if not self.steps:
+            raise WindowClosed
         self.waited += seconds
 
     def fields(self):

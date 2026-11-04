@@ -382,7 +382,7 @@ def test_each_step_shows_once_per_visit_until_review():
 
 
 def test_closing_the_window_ends_the_steps():
-    shown = steps(FakePage([Field(1, ("a1",), "A")], steps=["current step 2 of 4 My Information"]))
+    shown = steps(FakePage([Field(1, ("a1",), "A")], steps=["current step 2 of 4 My Information", ""]))
     assert next(shown) == "My Information"
     with pytest.raises(WindowClosed):
         next(shown)
@@ -396,7 +396,7 @@ def test_a_step_shows_once_its_fields_stop_changing():
             self.looks += 1
             return [Field(number, (str(number),), str(number)) for number in range(min(self.looks, 3))]
 
-    page = LoadingPage(steps=["current step 2 of 4 My Information"])
+    page = LoadingPage(steps=["current step 2 of 4 My Information", ""])
     assert next(steps(page)) == "My Information"
     assert page.looks == 4
 
