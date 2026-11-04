@@ -231,3 +231,32 @@ def test_skills_already_in_the_box_are_kept():
     page = FakePage([Field(1, ("skills",), "Skills", "prompt", "Java")])
     fill_step(page, "My Experience", DETAILS, skills=["Python"])
     assert page.value(1) == "Java"
+
+
+def resume_box(value="", section="Resume/CV"):
+    return Field(1, ("file-upload-input-ref",), "Upload a file (5MB max)", "file", value, section=section)
+
+
+def test_a_pdf_or_docx_resume_is_uploaded(tmp_path):
+    for name in ("resume.pdf", "Resume.DOCX"):
+        page = FakePage([resume_box()])
+        fill_step(page, "My Experience", DETAILS, resume=tmp_path / name)
+        assert page.value(1) == str(tmp_path / name)
+
+
+def test_other_resumes_are_not_uploaded(tmp_path):
+    page = FakePage([resume_box()])
+    fill_step(page, "My Experience", DETAILS, resume=tmp_path / "resume.txt")
+    assert page.value(1) == ""
+
+
+def test_an_uploaded_file_is_kept(tmp_path):
+    page = FakePage([resume_box("old.pdf")])
+    fill_step(page, "My Experience", DETAILS, resume=tmp_path / "resume.pdf")
+    assert page.value(1) == "old.pdf"
+
+
+def test_only_the_resume_box_gets_the_resume(tmp_path):
+    page = FakePage([resume_box(section="Cover Letter")])
+    fill_step(page, "My Experience", DETAILS, resume=tmp_path / "resume.pdf")
+    assert page.value(1) == ""

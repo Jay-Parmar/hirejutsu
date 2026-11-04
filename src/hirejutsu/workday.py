@@ -6,6 +6,7 @@ Everything here works on a small page object, so it runs the same against the br
 
 import re
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 
 from .applicant import Applicant, Position, School
 
@@ -22,6 +23,9 @@ STEP_NUMBER = re.compile(r"(current )?step \d+ of \d+", re.IGNORECASE)
 # Headings of the repeating sections on My Experience. Some companies say Professional Experience.
 WORK = r"experience|employment"
 EDUCATION = r"education"
+RESUME = r"resume|cv"
+# Workday reads these resumes. Other files are left for you to upload.
+UPLOADS = (".pdf", ".docx")
 
 
 @dataclass
@@ -97,17 +101,24 @@ def best_option(answer: str, options: list[str]) -> int | None:
     return next((index for index, option in enumerate(found) if option.startswith(wanted + " ")), None)
 
 
-def fill_step(page, step: str, details: Applicant, skills: list[str] = ()) -> Report:
+def fill_step(page, step: str, details: Applicant, skills: list[str] = (), resume: Path | None = None) -> Report:
     """Fill the empty fields hirejutsu knows on one step of the application."""
     report = Report(step)
     if step == "My Information":
         fill_values(page, information(details), report)
     elif step == "My Experience":
-        fill_entries(page, WORK, [job(position) for position in details.work], report)
-        fill_entries(page, EDUCATION, [education(school) for school in details.education], report)
-        fill_skills(page, skills, report)
+        fill_experience(page, details, skills, resume, report)
     report.left = [item for item in page.fields() if not item.value]
     return report
+
+
+def fill_experience(page, details: Applicant, skills: list[str], resume: Path | None, report: Report) -> None:
+    """Jobs, schools, skills and the resume on the My Experience step."""
+    fill_entries(page, WORK, [job(position) for position in details.work], report)
+    fill_entries(page, EDUCATION, [education(school) for school in details.education], report)
+    fill_skills(page, skills, report)
+    upload = str(resume) if resume and resume.suffix.lower() in UPLOADS else ""
+    fill_values(page, [Want(upload, ("file-upload-input-ref",), r"upload|resume|cv", RESUME)], report)
 
 
 def fill_values(page, wants: list[Want], report: Report) -> None:
