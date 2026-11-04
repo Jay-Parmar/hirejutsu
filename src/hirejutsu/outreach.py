@@ -1,5 +1,6 @@
 """Drafting emails to recruiters about the day's picks. Nothing here sends anything."""
 
+import os
 import re
 from dataclasses import dataclass
 from datetime import date
@@ -13,13 +14,20 @@ from .applicant import Applicant
 from .companies import ATSES
 from .config import Config
 from .contacts import Contact, search_links
+from .errors import HirejutsuError
 from .models import Job, Match, Profile
 from .report import source_label, web_link
 from .store import Store
 
-# Company career pages, and Hacker News, where companies post their own jobs. Job boards are
-# left out because a board's listing rarely says who at the company to write to.
-OUTREACH_DEFAULTS = {"sources": [*ATSES, "hackernews"], "pitch": ""}
+OUTREACH_DEFAULTS = {
+    # Company career pages, and Hacker News, where companies post their own jobs. Job boards are
+    # left out because a board's listing rarely says who at the company to write to.
+    "sources": [*ATSES, "hackernews"],
+    "pitch": "",
+    "search": "",
+    "search_key_env": "TAVILY_API_KEY",
+}
+SEARCH_APIS = ("tavily",)
 # The skills reason of a pick, like "Skills: Python, Django (5 of 20)".
 SKILLS_REASON = re.compile(r"Skills: (.+) \(\d+ of \d+\)")
 ROLE_WORDS = {"role", "roles", "position", "positions"}
@@ -48,7 +56,15 @@ class Draft:
 
 
 def load_settings(config: Config) -> dict:
-    return config.section("outreach", OUTREACH_DEFAULTS)
+    settings = config.section("outreach", OUTREACH_DEFAULTS)
+    if settings["search"] and settings["search"] not in SEARCH_APIS:
+        raise HirejutsuError(f"Unknown outreach.search '{settings['search']}'. Use tavily, or leave it empty.")
+    return settings
+
+
+def search_key(settings: dict) -> str:
+    """The search API key from the environment variable in search_key_env. Empty when search is off."""
+    return os.environ.get(settings["search_key_env"] or "", "") if settings["search"] else ""
 
 
 def picks_to_write(matches: list[Match], settings: dict) -> list[Match]:

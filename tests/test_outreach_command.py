@@ -1,7 +1,7 @@
 from datetime import date, datetime, timezone
 
 import pytest
-from fakes import FakeClient
+from fakes import FakeClient, fixture
 
 from hirejutsu.app import App
 from hirejutsu.cli import main
@@ -13,6 +13,7 @@ DAY = date(2026, 11, 4)
 ACME = Job("greenhouse", "1", "Backend Engineer", "Acme", "https://acme.com/jobs/1", description="Mail jobs@acme.com")
 GLOBEX = Job("remoteok", "2", "Python Developer", "Globex", "https://remoteok.com/remote-jobs/2")
 INITECH = Job("lever", "3", "Platform Engineer", "Initech", "https://jobs.lever.co/initech/3")
+TAVILY = "https://api.tavily.com/search"
 
 
 @pytest.fixture
@@ -146,3 +147,43 @@ def test_jobs_you_emailed_about_are_left_out_next_time(home, client, capsys):
     text = saved(home, DAY)
     assert "Backend Engineer at Acme" not in text
     assert "## 1. Platform Engineer at Initech" in text
+
+
+def search_with_tavily(home):
+    (home / "config.yaml").write_text("resume: resume.txt\noutreach:\n  search: tavily\n", encoding="utf-8")
+
+
+def searched(client):
+    return [call for call in client.calls if call[1] == TAVILY]
+
+
+def test_recruiter_search_uses_the_key_from_the_environment(home, client, monkeypatch):
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test")
+    search_with_tavily(home)
+    client.routes[TAVILY] = fixture("tavily_people.json")
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert "jane.doe@acme.com, jane@acme.com, janedoe@acme.com, jdoe@acme.com (guess)" in saved(home, DAY)
+
+
+def test_recruiter_search_without_its_key_is_skipped(home, client, monkeypatch, capsys):
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    search_with_tavily(home)
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert "TAVILY_API_KEY is not set" in capsys.readouterr().out
+    assert searched(client) == []
+
+
+def test_recruiter_search_is_off_by_default(home, client, monkeypatch):
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test")
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert searched(client) == []
+
+
+def test_an_unknown_search_api_is_an_error(home, client, capsys):
+    (home / "config.yaml").write_text("resume: resume.txt\noutreach:\n  search: bing\n", encoding="utf-8")
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 2
+    assert "Unknown outreach.search 'bing'" in capsys.readouterr().out

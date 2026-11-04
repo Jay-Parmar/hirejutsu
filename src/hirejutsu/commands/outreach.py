@@ -51,7 +51,11 @@ def draft_emails(app, args) -> int:
     applicant = load_applicant(app.config)
     if not applicant.name:
         app.console.print("Your name is missing from the sign off. Run 'hirejutsu applicant --edit' to add it.")
-    finder = Finder(app.client)
+    key = outreach.search_key(settings)
+    if settings["search"] and not key:
+        app.console.print(f"outreach.search is {settings['search']}, but {settings['search_key_env']} is not set, "
+                          "so there is no search for recruiters.")
+    finder = Finder(app.client, key)
     with app.console.status(f"Looking for contacts at {len(chosen)} companies..."):
         drafts = [outreach.draft(match, finder.contacts(match.job), profile, applicant, settings) for match in chosen]
     print_drafts(app.console, drafts, day)
