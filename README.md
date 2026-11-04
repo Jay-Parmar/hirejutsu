@@ -55,7 +55,8 @@ pip install -e .
 ```
 
 On macOS or Linux use `python3 -m venv .venv` and `source .venv/bin/activate`. For LinkedIn,
-Indeed and Naukri also install the optional extra: `pip install -e ".[jobspy]"`.
+Indeed and Naukri also install the optional extra: `pip install -e ".[jobspy]"`. For Workday forms
+it is `pip install -e ".[workday]"`.
 
 Check that it works:
 
@@ -122,6 +123,63 @@ hirejutsu applicant          # show what is filled in and what is missing
 name, email, phone, address, links, jobs, education and answers to common questions like your
 notice period. The first `--edit` fills in the name, email, phone and links found in your resume.
 The file stays on your computer.
+
+## Workday forms
+
+`hirejutsu workday <job link>` fills a Workday job application with your applicant details, so you
+don't type the long forms by hand. It works on myworkdayjobs.com and other Workday career sites.
+You sign in and submit yourself.
+
+It needs the optional extra:
+
+```
+pip install -e ".[workday]"
+```
+
+It opens Microsoft Edge, which comes with Windows, so there is no browser to download. Set
+`workday.browser` to `chrome`, or to `chromium` after `playwright install chromium`.
+
+```
+hirejutsu workday https://acme.wd5.myworkdayjobs.com/en-US/External/job/Pune/Backend-Engineer_R123
+```
+
+A run goes like this:
+
+1. A browser window opens on the job. Click Apply, then sign in or create your account there.
+2. Each time a step shows, hirejutsu fills the empty fields it knows and prints what it filled and
+   what it left for you.
+3. Check the step, fill in the rest and click Save and Continue.
+4. At the Review step it stops filling and prints a summary. Check the application, click Submit
+   and close the window.
+
+What it fills:
+
+- My Information: how you heard about the job, whether you worked there before (No, unless
+  `answers.worked_here_before` says otherwise), country, name, address, email, phone type, country
+  code and number.
+- My Experience: your jobs and schools from `applicant.yaml`, up to `max_skills` (10) skills from
+  your resume, your resume when it is a PDF or DOCX, and your links.
+- Application Questions: notice period, expected and current salary, whether you may work there,
+  need sponsorship or would relocate, and how you heard about the job, from your `answers`. A
+  question that fits two of them is left for you.
+- Voluntary Disclosures and Self Identify: only what you filled in under `gender`, `ethnicity`,
+  `veteran_status` and `disability`.
+
+It never changes a field that already has a value, never ticks a box that asks you to agree or
+consent, never clicks Save and Continue or Submit, and never signs in, creates an account or
+solves a captcha.
+
+The window has a browser profile of its own in the `browser` folder of the data folder, so Workday
+sign ins stay between runs. It never uses your own Edge or Chrome profile.
+
+If hirejutsu misses a field, run it again with `--dump`. The fields of each step (their ids, labels
+and types, never what is in them) are saved to the `logs` folder, and that file shows what to fix.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `browser` | `msedge` | `msedge`, `chrome` or `chromium` |
+| `profile_folder` | `browser` | the browser's own profile, a folder inside the data folder |
+| `max_skills` | 10 | most skills from your resume to add |
 
 ## Fetching jobs
 
@@ -444,6 +502,7 @@ ai:
 |---|---|
 | `init`, `config --edit`, `doctor` | create the data folder, edit the config, check the setup |
 | `resume`, `applicant` | show what was read from your resume, and your details for forms and emails |
+| `workday <link>` | fill a Workday application in a browser window, for you to check and submit |
 | `sources`, `fetch`, `companies` | list sources, download jobs, manage company career pages |
 | `run`, `today`, `top` | pick today's jobs, show them again, rank without recording |
 | `explain <id>` | show how one job scored |
