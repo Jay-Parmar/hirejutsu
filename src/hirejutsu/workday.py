@@ -97,7 +97,7 @@ def best_option(answer: str, options: list[str]) -> int | None:
     return next((index for index, option in enumerate(found) if option.startswith(wanted + " ")), None)
 
 
-def fill_step(page, step: str, details: Applicant) -> Report:
+def fill_step(page, step: str, details: Applicant, skills: list[str] = ()) -> Report:
     """Fill the empty fields hirejutsu knows on one step of the application."""
     report = Report(step)
     if step == "My Information":
@@ -105,6 +105,7 @@ def fill_step(page, step: str, details: Applicant) -> Report:
     elif step == "My Experience":
         fill_entries(page, WORK, [job(position) for position in details.work], report)
         fill_entries(page, EDUCATION, [education(school) for school in details.education], report)
+        fill_skills(page, skills, report)
     report.left = [item for item in page.fields() if not item.value]
     return report
 
@@ -117,6 +118,22 @@ def fill_values(page, wants: list[Want], report: Report) -> None:
         found = find(page.fields(), want)
         if found and not found.value and page.fill(found, want.value):
             report.filled.append((found.label, want.value))
+
+
+def fill_skills(page, skills: list[str], report: Report) -> None:
+    """Pick each skill in the skills box, when the box is still empty."""
+    want = Want("skills", ("skills", "skillsPrompt"), r"(type to add )?skills")
+    found = find(page.fields(), want)
+    if not found or found.value:
+        return
+    added = []
+    for skill in skills:
+        # Looked up again for each skill, as the box changes with every pick.
+        found = find(page.fields(), want)
+        if found and page.fill(found, skill):
+            added.append(skill)
+    if added:
+        report.filled.append((found.label, ", ".join(added)))
 
 
 def information(details: Applicant) -> list[Want]:

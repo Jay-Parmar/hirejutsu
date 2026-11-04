@@ -125,8 +125,12 @@ class FakePage:
             if index is None:
                 return False
             value = field.options[index]
-        self.items[field.ref] = replace(field, value=value)
         self.filled.append((field.label, value))
+        # A prompt box like Skills can hold more than one pick.
+        current = self.items[field.ref].value
+        if field.kind == "prompt" and current:
+            value = f"{current}, {value}"
+        self.items[field.ref] = replace(field, value=value)
         return True
 
 

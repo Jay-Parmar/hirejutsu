@@ -218,3 +218,16 @@ def test_each_school_gets_an_education_entry():
             "Overall Result (GPA)": "8.1", "From": "2014", "To": "2018",
         },
     }
+
+
+def test_skills_from_the_resume_go_in_the_skills_box():
+    page = FakePage([Field(1, ("skills",), "Type to Add Skills", "prompt", options=("Python", "Django", "AWS"))])
+    report = fill_step(page, "My Experience", DETAILS, skills=["Python", "Kubernetes", "AWS"])
+    assert page.value(1) == "Python, AWS"
+    assert ("Type to Add Skills", "Python, AWS") in report.filled
+
+
+def test_skills_already_in_the_box_are_kept():
+    page = FakePage([Field(1, ("skills",), "Skills", "prompt", "Java")])
+    fill_step(page, "My Experience", DETAILS, skills=["Python"])
+    assert page.value(1) == "Java"
