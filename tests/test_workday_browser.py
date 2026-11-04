@@ -156,3 +156,19 @@ def test_my_experience_is_filled_in_the_browser(window, tmp_path):
         ("Websites", 1, "URL"): "https://github.com/asha",
         ("Social Network URLs", 0, "LinkedIn"): "https://www.linkedin.com/in/asha",
     }
+
+
+def test_questions_are_answered_in_the_browser(window):
+    answers = {"needs_sponsorship": "No", "notice_period": "30 days", "willing_to_relocate": "Yes"}
+    page = open_page(window, "questions.html")
+    report = fill_step(page, "Application Questions", replace(DETAILS, answers=answers))
+    assert [field.value for field in page.fields()] == ["No", "30 days", "Yes", "", ""]
+    assert [field.label for field in report.left] == ["Why do you want to work for Acme?"]
+
+
+def test_disclosures_are_answered_and_the_terms_left_in_the_browser(window):
+    page = open_page(window, "disclosures.html")
+    report = fill_step(page, "Voluntary Disclosures", replace(DETAILS, answers={"gender": "Female", "ethnicity": "Asian"}))
+    assert [field.value for field in page.fields()] == ["Female", "Asian (Not Hispanic or Latino)", "", ""]
+    assert [field.kind for field in report.left] == ["select", "checkbox"]
+    assert report.left[1].required
