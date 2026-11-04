@@ -98,8 +98,8 @@ Then check that everything is in place:
 hirejutsu doctor
 ```
 
-`doctor` looks at Python, the config, your resume, the sources, the last fetch, the schedule,
-notifications, AI and recruiter emails, and says what to fix.
+`doctor` looks at Python, the config, your resume, your applicant details, the sources, the last
+fetch, the schedule, notifications, AI and recruiter emails, and says what to fix.
 
 ## Resume
 
