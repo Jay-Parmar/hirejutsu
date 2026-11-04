@@ -287,3 +287,37 @@ def test_websites_already_listed_are_not_added_again():
     page = FakePage([listed], {"Websites": website_entry()})
     fill_step(page, "My Experience", DETAILS)
     assert page.entry_values("Websites") == {1: {"URL": "github.com/asha"}, 2: {"URL": "https://www.linkedin.com/in/asha"}}
+
+
+ANSWERS = {
+    "notice_period": "30 days", "needs_sponsorship": "No", "authorized_to_work": "Yes",
+    "expected_salary": "18 LPA", "current_salary": "12 LPA", "willing_to_relocate": "Yes",
+}
+
+
+def test_questions_get_the_answer_their_text_asks_for():
+    page = FakePage([
+        Field(1, ("a1",), "What is your notice period?"),
+        Field(2, ("b2",), "Will you now or in the future require visa sponsorship?", "select", options=("Yes", "No")),
+        Field(3, ("c3",), "Are you legally authorized to work in India?", "radio", options=("Yes", "No")),
+        Field(4, ("d4",), "What are your salary expectations?", "textarea"),
+        Field(5, ("e5",), "What is your current CTC?"),
+        Field(6, ("f6",), "Are you willing to relocate to Bengaluru?", "select", options=("Yes", "No")),
+        Field(7, ("g7",), "Why do you want to work here?", "textarea"),
+    ])
+    report = fill_step(page, "Application Questions", replace(DETAILS, answers=ANSWERS))
+    assert [item.value for item in page.fields()] == ["30 days", "No", "Yes", "18 LPA", "12 LPA", "Yes", ""]
+    assert [item.label for item in report.left] == ["Why do you want to work here?"]
+
+
+def test_a_question_that_fits_two_answers_is_left():
+    question = "Are you authorized to work in the US without needing sponsorship?"
+    page = FakePage([Field(1, ("a1",), question, "select", options=("Yes", "No"))])
+    fill_step(page, "Application Questions", replace(DETAILS, answers=ANSWERS))
+    assert page.value(1) == ""
+
+
+def test_questions_without_an_answer_are_left():
+    page = FakePage([Field(1, ("a1",), "What is your notice period?")])
+    fill_step(page, "Application Questions", replace(DETAILS, answers={}))
+    assert page.value(1) == ""

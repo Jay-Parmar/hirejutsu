@@ -27,6 +27,18 @@ WEBSITES = r"website|portfolio"
 RESUME = r"resume|cv"
 # Workday reads these resumes. Other files are left for you to upload.
 UPLOADS = (".pdf", ".docx")
+# What an application question has to say to get one of your answers.
+QUESTIONS = {
+    "notice_period": r"notice period|how soon can you (start|join)|earliest (start|joining) date|available to (start|join)",
+    "expected_salary": r"expected\b.{0,30}\b(salary|ctc|compensation|pay)|salary expectation|desired (salary|pay)",
+    "current_salary": r"current\b.{0,30}\b(salary|ctc|compensation|pay)",
+    "authorized_to_work": r"(authori[sz]ed|eligible|permitted|right) to work|work (permit|authori[sz]ation)",
+    "needs_sponsorship": r"sponsor",
+    "willing_to_relocate": r"relocat",
+    "how_did_you_hear": r"how did you (hear|learn|find)|where did you (hear|see|find)",
+}
+# Fields a question can be answered in. Dates, files and check boxes are left for you.
+ANSWERABLE = ("text", "textarea", "select", "prompt", "radio")
 
 
 @dataclass
@@ -109,6 +121,8 @@ def fill_step(page, step: str, details: Applicant, skills: list[str] = (), resum
         fill_values(page, information(details), report)
     elif step == "My Experience":
         fill_experience(page, details, skills, resume, report)
+    elif step == "Application Questions":
+        fill_questions(page, details.answers, report)
     report.left = [item for item in page.fields() if not item.value]
     return report
 
@@ -156,6 +170,20 @@ def fill_links(page, links: dict, report: Report) -> None:
     fill_values(page, [linkedin], report)
     urls = [url for name, url in links.items() if not (has_box and name == "linkedin")]
     fill_entries(page, WEBSITES, [[Want(url, ("url", "website"), r"url|website|link")] for url in urls], report)
+
+
+def fill_questions(page, answers: dict, report: Report) -> None:
+    """Answer each question whose text asks for one of your answers."""
+    for question in page.fields():
+        key = answer_key(question.label)
+        if key and question.kind in ANSWERABLE:
+            fill_values(page, [Want(answers.get(key, ""), question.ids, re.escape(question.label))], report)
+
+
+def answer_key(question: str) -> str | None:
+    """The answer a question asks for. A question that fits two, like working without sponsorship, is left for you."""
+    keys = [key for key, pattern in QUESTIONS.items() if re.search(pattern, question, re.IGNORECASE)]
+    return keys[0] if len(keys) == 1 else None
 
 
 def information(details: Applicant) -> list[Want]:
