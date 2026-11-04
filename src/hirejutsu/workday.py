@@ -265,7 +265,9 @@ def fill_questions(page, answers: dict, report: Report) -> None:
     for question in page.fields():
         key = answer_key(question.label)
         if key and question.kind in ANSWERABLE:
-            fill_values(page, [Want(answers.get(key, ""), question.ids, re.escape(question.label))], report)
+            # Only the box's own id, as the ids inside it, like multiSelectContainer, repeat in other boxes.
+            want = Want(answers.get(key, ""), question.ids[:1], re.escape(question.label) + "$")
+            fill_values(page, [want], report)
 
 
 def fill_disclosures(page, answers: dict, report: Report) -> None:

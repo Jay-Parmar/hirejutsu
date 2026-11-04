@@ -453,3 +453,12 @@ def test_only_required_check_boxes_are_left_for_you():
     ])
     report = fill_step(page, "My Information", DETAILS)
     assert [item.label for item in report.left] == ["I consent to the terms"]
+
+
+def test_each_question_gets_its_own_answer():
+    page = FakePage([
+        Field(1, ("a1", "multiSelectContainer"), "Why do you want this job?", "prompt"),
+        Field(2, ("b2", "multiSelectContainer"), "What is your notice period?", "prompt"),
+    ])
+    fill_step(page, "Application Questions", replace(DETAILS, answers=ANSWERS))
+    assert [item.value for item in page.fields()] == ["", "30 days"]
