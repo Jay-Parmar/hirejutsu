@@ -97,12 +97,21 @@ def role(job: Job) -> str:
 def fit_line(match: Match, years: float | None) -> str:
     """Your years and up to three skills the job and your resume share, as far as they are known."""
     skills = shared_skills(match)
-    if years:
-        experience = f"{years:g} year" if years == 1 else f"{years:g} years"
+    experience = years_text(years)
+    if experience:
         if skills:
             return f"I have {experience} of experience, much of it with {and_list(skills)}, which the role asks for."
         return f"I have {experience} of experience and would like to bring it to {match.job.company}."
     return f"I work with {and_list(skills)}, which the role asks for." if skills else ""
+
+
+def years_text(years: float | None) -> str:
+    """Whole years, like "6 years", or "9+ years" for the 9.7 a resume can give. Empty below one year."""
+    if not years or years < 1:
+        return ""
+    whole = int(years)
+    plus = "+" if years > whole else ""
+    return f"{whole}{plus} year" if whole == 1 and not plus else f"{whole}{plus} years"
 
 
 def shared_skills(match: Match) -> list[str]:

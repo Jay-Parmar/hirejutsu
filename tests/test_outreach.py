@@ -71,7 +71,8 @@ def test_the_pitch_gets_a_line_of_its_own():
 
 @pytest.mark.parametrize("reasons, years, line", [
     ([SKILLS], 1, "I have 1 year of experience, much of it with Python, Django and PostgreSQL, which"),
-    (["Skills: Go (1 of 9)"], 4.5, "I have 4.5 years of experience, much of it with Go, which the role asks for."),
+    (["Skills: Go (1 of 9)"], 9.7, "I have 9+ years of experience, much of it with Go, which the role asks for."),
+    (["Skills: Go (1 of 9)"], 0.5, "I work with Go, which the role asks for."),
     ([SKILLS], None, "I work with Python, Django and PostgreSQL, which the role asks for."),
     (["AI: Strong fit", "Posted today"], 6, "I have 6 years of experience and would like to bring it to Acme."),
 ])
