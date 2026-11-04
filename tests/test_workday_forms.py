@@ -444,3 +444,12 @@ def test_a_step_that_keeps_changing_shows_after_ten_seconds():
     page = BusyPage(steps=["current step 2 of 4 My Information", ""])
     assert next(steps(page)) == "My Information"
     assert page.waited == 10
+
+
+def test_only_required_check_boxes_are_left_for_you():
+    page = FakePage([
+        Field(1, ("preferredCheck",), "I have a preferred name", "checkbox"),
+        Field(2, ("acceptTermsAndAgreements",), "I consent to the terms", "checkbox", required=True),
+    ])
+    report = fill_step(page, "My Information", DETAILS)
+    assert [item.label for item in report.left] == ["I consent to the terms"]

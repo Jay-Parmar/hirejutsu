@@ -210,7 +210,8 @@ def fill_step(page, step: str, details: Applicant, skills: list[str] = (), resum
         fill_questions(page, details.answers, report)
     elif step in ("Voluntary Disclosures", "Self Identify"):
         fill_disclosures(page, details.answers, report)
-    report.left = [item for item in page.fields() if not item.value]
+    # A check box left empty is an answer too, unless the form needs it ticked.
+    report.left = [item for item in page.fields() if not item.value and (item.required or item.kind != "checkbox")]
     return report
 
 
