@@ -48,6 +48,12 @@ DISCLOSURES = {
 }
 # Fields that ask you to agree to something. Those are always left for you.
 CONSENT = r"consent|agree|terms|acknowledg|privacy|certify|attest|signature"
+# Seconds between looks at the page.
+PAUSE = 1.0
+
+
+class WindowClosed(Exception):
+    """The browser window was closed."""
 
 
 @dataclass
@@ -88,6 +94,35 @@ class Report:
     step: str
     filled: list = field(default_factory=list)
     left: list = field(default_factory=list)
+
+
+def steps(page):
+    """Each step of the application by name as it shows, once per visit, until the Review step.
+
+    Raises WindowClosed when the window is closed.
+    """
+    seen = ""
+    while True:
+        text = page.step()
+        if text and text != seen:
+            seen = text
+            name = step_name(text)
+            if name == "Review":
+                return
+            settle(page)
+            yield name
+        page.wait(PAUSE)
+
+
+def settle(page) -> None:
+    """Wait until the fields of a new step stop changing, as Workday draws them bit by bit."""
+    last = None
+    for _ in range(10):
+        shown = [(item.ids, item.label) for item in page.fields()]
+        if shown and shown == last:
+            return
+        last = shown
+        page.wait(PAUSE / 2)
 
 
 def step_name(text: str) -> str:

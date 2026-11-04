@@ -1,8 +1,10 @@
 from dataclasses import replace
 
+import pytest
+
 from fakes import FakePage
 from hirejutsu.applicant import Applicant, Position, School
-from hirejutsu.workday import Field, Want, best_option, fill_step, find, step_name
+from hirejutsu.workday import Field, Want, WindowClosed, best_option, fill_step, find, step_name, steps
 
 DETAILS = Applicant(
     first_name="Asha",
@@ -354,3 +356,32 @@ def test_nothing_that_asks_you_to_agree_is_answered():
     for step in ("Application Questions", "Voluntary Disclosures", "Self Identify"):
         fill_step(page, step, replace(DETAILS, answers=answers))
     assert [item.value for item in page.fields()] == ["", "", ""]
+
+
+def test_each_step_shows_once_per_visit_until_review():
+    page = FakePage([Field(1, ("a1",), "A")], steps=[
+        "", "current step 1 of 4 Autofill with Resume", "current step 2 of 4 My Information",
+        "current step 2 of 4 My Information", "", "current step 3 of 4 My Experience",
+        "current step 4 of 4 Review", "current step 3 of 4 My Experience",
+    ])
+    assert list(steps(page)) == ["Autofill with Resume", "My Information", "My Experience"]
+
+
+def test_closing_the_window_ends_the_steps():
+    shown = steps(FakePage([Field(1, ("a1",), "A")], steps=["current step 2 of 4 My Information"]))
+    assert next(shown) == "My Information"
+    with pytest.raises(WindowClosed):
+        next(shown)
+
+
+def test_a_step_shows_once_its_fields_stop_changing():
+    class LoadingPage(FakePage):
+        looks = 0
+
+        def fields(self):
+            self.looks += 1
+            return [Field(number, (str(number),), str(number)) for number in range(min(self.looks, 3))]
+
+    page = LoadingPage(steps=["current step 2 of 4 My Information"])
+    assert next(steps(page)) == "My Information"
+    assert page.looks == 4

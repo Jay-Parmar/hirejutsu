@@ -10,7 +10,7 @@ import requests
 import yaml
 
 from hirejutsu.config import Config
-from hirejutsu.workday import best_option
+from hirejutsu.workday import WindowClosed, best_option
 
 FIXTURES = Path(__file__).parent / "fixtures"
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -88,11 +88,22 @@ class FakeRun:
 class FakePage:
     """Stands in for a Workday tab: holds the fields of a step and records what was filled."""
 
-    def __init__(self, fields=(), entries=None):
+    def __init__(self, fields=(), entries=None, steps=()):
         self.items = {item.ref: item for item in fields}
         # The fields of a new entry for each repeating section with an Add button, as {section: fields}.
         self.entries = entries or {}
+        # What the progress bar says at each look. The window closes after the last one.
+        self.steps = list(steps)
         self.filled: list[tuple[str, str]] = []
+        self.waited = 0.0
+
+    def step(self) -> str:
+        if not self.steps:
+            raise WindowClosed
+        return self.steps.pop(0)
+
+    def wait(self, seconds: float) -> None:
+        self.waited += seconds
 
     def fields(self):
         return list(self.items.values())
