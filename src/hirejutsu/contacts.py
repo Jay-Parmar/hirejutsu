@@ -1,12 +1,18 @@
 """Finding who to write to about a job."""
 
+import html
+import logging
 import re
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
+import requests
+
 from .applicant import EMAIL
 from .companies import URL_IN_TEXT
 from .models import Job
+
+log = logging.getLogger(__name__)
 
 # How sure a contact is: written in the job post, a hiring address on the company's site, or a guess.
 STATED, SITE, GUESS = "stated", "site", "guess"
@@ -26,6 +32,13 @@ SHARED_SITES = {
 # Labels such as the co in acme.co.uk, below which companies register their names.
 SECOND_LEVEL = {"ac", "co", "com", "edu", "gov", "net", "org"}
 LEGAL_WORDS = {"inc", "llc", "ltd", "limited", "corp", "gmbh", "pvt", "private"}
+# Pages of the company's site that are read for hiring addresses: the home page, careers, jobs and contact.
+SITE_PAGES = ("", "careers", "jobs", "contact")
+# The first word of addresses like careers@, jobs@ or talent.team@.
+HIRING_WORDS = {
+    "careers", "career", "jobs", "job", "talent", "recruiting", "recruitment", "recruiter", "recruiters",
+    "hr", "people", "hiring", "join", "joinus", "apply",
+}
 
 
 @dataclass
@@ -76,3 +89,36 @@ def named_like(domain: str, company: str) -> bool:
     name = "".join(word for word in re.findall(r"[a-z0-9]+", company.lower()) if word not in LEGAL_WORDS)
     # A name of one or two letters would match far too many sites.
     return len(min(label, name, key=len)) >= 3 and (label in name or name in label)
+
+
+def site_contacts(client, domain: str) -> list[Contact]:
+    """Hiring addresses like careers@ on a few pages of the company's site. Pages that fail are skipped."""
+    found = {}
+    for page in SITE_PAGES:
+        url = f"https://{domain}/{page}"
+        try:
+            text = client.get_text(url)
+        except requests.HTTPError as exc:
+            log.debug("Skipped %s: %s", url, exc)
+            continue
+        except requests.RequestException as exc:
+            # A site that does not answer for one page will not answer for the others either.
+            log.debug("Could not read %s: %s", url, exc)
+            break
+        for address in hiring_addresses(text, domain):
+            found.setdefault(address, Contact(address, url, SITE))
+    return list(found.values())
+
+
+def hiring_addresses(page: str, domain: str) -> list[str]:
+    addresses = dict.fromkeys(address.lower() for address in EMAIL.findall(html.unescape(page)))
+    return [address for address in addresses if on_domain(address, domain) and is_hiring(address)]
+
+
+def on_domain(address: str, domain: str) -> bool:
+    host = address.split("@")[1]
+    return host == domain or host.endswith(f".{domain}")
+
+
+def is_hiring(address: str) -> bool:
+    return re.split(r"[._+-]", address.split("@")[0])[0] in HIRING_WORDS

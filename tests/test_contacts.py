@@ -1,6 +1,10 @@
-import pytest
+import logging
 
-from hirejutsu.contacts import company_domain, post_contacts
+import pytest
+import requests
+from fakes import FakeClient, fixture
+
+from hirejutsu.contacts import company_domain, post_contacts, site_contacts
 from hirejutsu.models import Job
 
 
@@ -79,3 +83,37 @@ def test_legal_words_in_the_company_name_are_ignored():
 
 def test_very_short_names_are_too_vague_to_match():
     assert company_domain(job(company="X", url="https://x.com/jobs/1")) == ""
+
+
+def acme_site():
+    return FakeClient({
+        "https://acme.com/": "<footer>hello@acme.com</footer>",
+        "https://acme.com/careers": fixture("company_careers.html"),
+        "https://acme.com/contact": "<p>HR questions: hr@acme.com</p>",
+    })
+
+
+def test_hiring_addresses_on_the_company_site_are_kept():
+    found = site_contacts(acme_site(), "acme.com")
+    assert [(contact.address, contact.found, contact.confidence) for contact in found] == [
+        ("careers@acme.com", "https://acme.com/careers", "site"),
+        ("jobs@acme.com", "https://acme.com/careers", "site"),
+        ("people-ops@eu.acme.com", "https://acme.com/careers", "site"),
+        ("hr@acme.com", "https://acme.com/contact", "site"),
+    ]
+
+
+def test_a_few_pages_are_read_and_missing_ones_skipped():
+    client = acme_site()
+    site_contacts(client, "acme.com")
+    assert [call[1] for call in client.calls] == [
+        "https://acme.com/", "https://acme.com/careers", "https://acme.com/jobs", "https://acme.com/contact",
+    ]
+
+
+def test_a_site_that_does_not_answer_is_left_quietly(caplog):
+    client = FakeClient({"https://acme.com/": requests.ConnectionError("timed out")})
+    with caplog.at_level(logging.DEBUG, logger="hirejutsu.contacts"):
+        assert site_contacts(client, "acme.com") == []
+    assert len(client.calls) == 1
+    assert "https://acme.com/" in caplog.text
