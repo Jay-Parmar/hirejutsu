@@ -12,8 +12,13 @@ import requests
 from .applicant import EMAIL
 from .companies import URL_IN_TEXT
 from .models import Job
+from .notify import describe
 
 log = logging.getLogger(__name__)
+
+TAVILY_URL = "https://api.tavily.com/search"
+# Recruiters looked up at each company. Each one gives four guessed addresses.
+MAX_PEOPLE = 2
 
 # How sure a contact is: written in the job post, a hiring address on the company's site, or a guess.
 STATED, SITE, GUESS = "stated", "site", "guess"
@@ -214,12 +219,20 @@ def surest_first(contacts: list[Contact]) -> list[Contact]:
     return list(unique.values())
 
 
-class Finder:
-    """Finds who to write to about each job, reading each company's site once a run."""
+def tavily_search(client, key: str, query: str, **options) -> list[dict]:
+    """The results of one Tavily search, each with a title, url and content."""
+    reply = client.post_json(TAVILY_URL, {"query": query, **options}, headers={"Authorization": f"Bearer {key}"})
+    return reply.get("results") or []
 
-    def __init__(self, client):
+
+class Finder:
+    """Finds who to write to about each job, reading each company's site and searching for it once a run."""
+
+    def __init__(self, client, search_key: str = ""):
         self.client = client
+        self.search_key = search_key
         self.sites: dict[str, list[Contact]] = {}
+        self.people: dict[str, list[Person]] = {}
 
     def contacts(self, job: Job) -> list[Contact]:
         found = post_contacts(job)
@@ -228,4 +241,26 @@ class Finder:
             if domain not in self.sites:
                 self.sites[domain] = site_contacts(self.client, domain)
             found += self.sites[domain]
+            for person in self.recruiters(job.company):
+                found += guesses(person, domain)
         return surest_first(found)
+
+    def recruiters(self, company: str) -> list[Person]:
+        """Recruiters at the company found by a web search, when there is a search key."""
+        key = company.lower()
+        if key not in self.people:
+            results = self.search(f'{company} recruiter OR "talent acquisition"', include_domains=["linkedin.com"],
+                                  max_results=10)
+            self.people[key] = people_in(results, company)[:MAX_PEOPLE]
+        return self.people[key]
+
+    def search(self, query: str, **options) -> list[dict]:
+        if not self.search_key:
+            return []
+        try:
+            return tavily_search(self.client, self.search_key, query, **options)
+        except requests.RequestException as exc:
+            log.warning("The recruiter search failed, going on without it: %s", describe(exc))
+            # A wrong key or a used up plan fails the same way for every company.
+            self.search_key = ""
+            return []

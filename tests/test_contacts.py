@@ -2,7 +2,7 @@ import logging
 
 import pytest
 import requests
-from fakes import FakeClient, fixture
+from fakes import FakeClient, fixture, http_error
 
 from hirejutsu.contacts import (
     SITE_PAGES, Finder, Person, company_domain, guesses, people_in, post_contacts, search_links, site_contacts,
@@ -201,3 +201,61 @@ def test_accented_names_are_spelled_without_accents():
 
 def test_no_guesses_without_the_company_domain():
     assert guesses(JANE, "") == []
+
+TAVILY = "https://api.tavily.com/search"
+
+
+class HeaderClient(FakeClient):
+    """FakeClient that also remembers the headers of the last POST."""
+
+    def post_json(self, url, payload, headers=None):
+        self.headers = headers
+        return super().post_json(url, payload, headers)
+
+
+def searches(client):
+    return [call[3] for call in client.calls if call[1] == TAVILY]
+
+
+def test_recruiters_found_by_search_give_guesses_at_the_company_domain():
+    client = HeaderClient({TAVILY: fixture("tavily_people.json")})
+    found = Finder(client, "tvly-test").contacts(job(url="https://acme.com/jobs/1"))
+    assert client.headers == {"Authorization": "Bearer tvly-test"}
+    assert searches(client) == [
+        {"query": 'Acme recruiter OR "talent acquisition"', "include_domains": ["linkedin.com"], "max_results": 10},
+    ]
+    assert [contact.address for contact in found] == [
+        "jane.doe@acme.com", "jane@acme.com", "janedoe@acme.com", "jdoe@acme.com",
+        "jose.martinez@acme.com", "jose@acme.com", "josemartinez@acme.com", "jmartinez@acme.com",
+    ]
+
+
+def test_at_most_two_recruiters_are_kept():
+    results = [{"title": f"{name} Doe - Recruiter - Acme | LinkedIn", "url": f"https://www.linkedin.com/in/{name}"}
+               for name in ("Ann", "Bob", "Cat")]
+    finder = Finder(FakeClient({TAVILY: {"results": results}}), "tvly-test")
+    assert [person.name for person in finder.recruiters("Acme")] == ["Ann Doe", "Bob Doe"]
+
+
+def test_each_company_is_searched_once_a_run():
+    client = FakeClient({TAVILY: fixture("tavily_people.json")})
+    finder = Finder(client, "tvly-test")
+    finder.contacts(job(url="https://acme.com/jobs/1"))
+    finder.contacts(job(url="https://acme.com/jobs/2"))
+    assert len(searches(client)) == 1
+
+
+def test_nothing_is_searched_without_a_key():
+    client = FakeClient({TAVILY: fixture("tavily_people.json")})
+    assert Finder(client).contacts(job(url="https://acme.com/jobs/1")) == []
+    assert searches(client) == []
+
+
+def test_a_failed_search_is_reported_once_and_not_tried_again(caplog):
+    client = FakeClient({TAVILY: http_error(401, TAVILY)})
+    finder = Finder(client, "tvly-wrong")
+    with caplog.at_level(logging.WARNING, logger="hirejutsu.contacts"):
+        finder.contacts(job(url="https://acme.com/jobs/1"))
+        finder.contacts(job(company="Initech", url="https://initech.com/jobs/1"))
+    assert len(searches(client)) == 1
+    assert "HTTP 401" in caplog.text
