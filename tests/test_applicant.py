@@ -1,7 +1,7 @@
 import pytest
 import yaml
 
-from hirejutsu.applicant import Applicant, Position, School, load_applicant, template
+from hirejutsu.applicant import Applicant, Position, School, found_in_resume, load_applicant, template
 from hirejutsu.config import Config
 from hirejutsu.errors import ConfigError
 
@@ -18,6 +18,12 @@ work:
 education:
   - {school: Pune University, degree: B.E., field_of_study: Computer Engineering, start: 2014, end: 2018}
 answers: {notice_period: 30 days, authorized_to_work: yes, needs_sponsorship: no, expected_salary: }
+"""
+RESUME = """Priya Sharma
+Senior Software Engineer
+Pune, India | priya.sharma@example.com | +91 98765 43210
+linkedin.com/in/priya-sharma | https://github.com/priyasharma
+Jan 2021 - Present
 """
 
 
@@ -79,3 +85,36 @@ def test_job_needs_title_and_company(tmp_path):
 def test_unknown_keys_are_reported(tmp_path):
     with pytest.raises(ConfigError, match="'titel'"):
         load_applicant(config(tmp_path, "work:\n  - {titel: Engineer, title: Engineer, company: Acme}\n"))
+
+
+def test_details_are_found_in_a_resume():
+    assert found_in_resume(RESUME) == {
+        "first_name": "Priya",
+        "last_name": "Sharma",
+        "email": "priya.sharma@example.com",
+        "phone_code": "+91",
+        "phone": "9876543210",
+        "linkedin": "https://www.linkedin.com/in/priya-sharma",
+        "github": "https://github.com/priyasharma",
+    }
+
+
+def test_names_in_capitals_are_written_normally():
+    found = found_in_resume("JAY KUMAR PARMAR\nDeveloper")
+    assert (found["first_name"], found["last_name"]) == ("Jay Kumar", "Parmar")
+
+
+def test_a_heading_is_not_taken_for_a_name():
+    assert "first_name" not in found_in_resume("Curriculum Vitae\npriya@example.com")
+    assert "first_name" not in found_in_resume("Resume 2026\npriya@example.com")
+
+
+def test_phone_without_a_country_code():
+    found = found_in_resume("Call 98765-43210")
+    assert found["phone"] == "9876543210"
+    assert "phone_code" not in found
+
+
+def test_dates_are_not_phone_numbers():
+    assert "phone" not in found_in_resume("Acme 2018 - 2020\nGlobex 2020 - 2024")
+    assert "phone" not in found_in_resume("Acme\n2018 - 2020\n2021 - 2024")

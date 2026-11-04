@@ -1,5 +1,6 @@
 """Your details for job applications, kept in applicant.yaml in the data folder."""
 
+import re
 from dataclasses import dataclass, field, fields
 from importlib import resources
 from pathlib import Path
@@ -10,6 +11,13 @@ from .config import Config
 from .errors import ConfigError
 
 APPLICANT_NAME = "applicant.yaml"
+EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+PHONE = re.compile(r"\+?\d[\d \t().-]{8,16}\d")
+COUNTRY_CODE = re.compile(r"\+(\d{1,3})[\s.(-]")
+LINKEDIN = re.compile(r"linkedin\.com/in/([\w%-]+)", re.IGNORECASE)
+GITHUB = re.compile(r"github\.com/([\w-]+)", re.IGNORECASE)
+NAME_WORD = re.compile(r"[A-Za-z][A-Za-z.'-]*")
+NOT_NAMES = {"resume", "curriculum", "vitae", "cv", "profile", "summary", "contact"}
 
 
 @dataclass
@@ -82,6 +90,56 @@ def load_applicant(config: Config) -> Applicant:
         education=[School(**entry) for entry in _entries(data, "education", School, ("school",), path)],
         answers=_mapping(data, "answers", path),
     )
+
+
+def found_in_resume(text: str) -> dict:
+    """Name, email, phone and profile links in resume text, keyed like applicant.yaml."""
+    found = {}
+    name = _name(text)
+    if name:
+        found["first_name"], found["last_name"] = name
+    email = EMAIL.search(text)
+    if email:
+        found["email"] = email.group()
+    phone = _phone(text)
+    if phone:
+        code, found["phone"] = phone
+        if code:
+            found["phone_code"] = code
+    linkedin = LINKEDIN.search(text)
+    if linkedin:
+        found["linkedin"] = f"https://www.linkedin.com/in/{linkedin.group(1)}"
+    github = GITHUB.search(text)
+    if github:
+        found["github"] = f"https://github.com/{github.group(1)}"
+    return found
+
+
+def _name(text: str) -> tuple[str, str] | None:
+    """First and last name from the first line, when that line looks like a name."""
+    line = next((line.strip() for line in text.splitlines() if line.strip()), "")
+    words = line.split()
+    if not 2 <= len(words) <= 4 or not all(NAME_WORD.fullmatch(word) for word in words):
+        return None
+    if any(word.lower() in NOT_NAMES for word in words):
+        return None
+    words = [word.capitalize() if word.isupper() else word for word in words]
+    return " ".join(words[:-1]), words[-1]
+
+
+def _phone(text: str) -> tuple[str, str] | None:
+    """(country code, number) of the first run of 10 to 13 digits. Shorter runs are dates."""
+    for match in PHONE.finditer(text):
+        raw = match.group()
+        digits = re.sub(r"\D", "", raw)
+        if not 10 <= len(digits) <= 13:
+            continue
+        if not raw.startswith("+"):
+            return "", digits
+        code = COUNTRY_CODE.match(raw)
+        code = code.group(1) if code else digits[:-10]
+        return f"+{code}", digits[len(code):]
+    return None
 
 
 def text(value) -> str:
