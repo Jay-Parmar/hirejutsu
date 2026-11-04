@@ -46,6 +46,8 @@ DISCLOSURES = {
     "veteran_status": (("veteranStatus", "veteran"), r"veteran"),
     "disability": (("disability", "disabilityStatus"), r"disabilit"),
 }
+# Fields that ask you to agree to something. Those are always left for you.
+CONSENT = r"consent|agree|terms|acknowledg|privacy|certify|attest|signature"
 
 
 @dataclass
@@ -105,6 +107,11 @@ def find(fields: list[Field], want: Want) -> Field | None:
     return next((item for item in here if re.match(want.label, item.label, re.IGNORECASE)), None)
 
 
+def fillable(item: Field) -> bool:
+    """True for an empty field that does not ask you to agree to something."""
+    return not item.value and not re.search(CONSENT, item.label, re.IGNORECASE)
+
+
 def words(text: str) -> str:
     """Text in lower case without punctuation, for comparing an answer with the options."""
     return " ".join(re.sub(r"[^\w\s/]", "", text.lower()).replace("/", " ").split())
@@ -152,7 +159,7 @@ def fill_values(page, wants: list[Want], report: Report) -> None:
         if not want.value:
             continue
         found = find(page.fields(), want)
-        if found and not found.value and page.fill(found, want.value):
+        if found and fillable(found) and page.fill(found, want.value):
             report.filled.append((found.label, want.value))
 
 
@@ -160,7 +167,7 @@ def fill_skills(page, skills: list[str], report: Report) -> None:
     """Pick each skill in the skills box, when the box is still empty."""
     want = Want("skills", ("skills", "skillsPrompt"), r"(type to add )?skills")
     found = find(page.fields(), want)
-    if not found or found.value:
+    if not found or not fillable(found):
         return
     added = []
     for skill in skills:
@@ -197,7 +204,7 @@ def fill_disclosures(page, answers: dict, report: Report) -> None:
             continue
         fields = page.fields()
         found = find(fields, Want(answer, ids)) or mentioning(fields, pattern)
-        if found and not found.value and found.kind in (*ANSWERABLE, "checkboxes") and page.fill(found, answer):
+        if found and fillable(found) and found.kind in (*ANSWERABLE, "checkboxes") and page.fill(found, answer):
             report.filled.append((found.label, answer))
 
 

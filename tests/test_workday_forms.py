@@ -342,3 +342,15 @@ def test_the_disability_form_is_answered_by_its_choices():
     fill_step(page, "Self Identify", replace(DETAILS, answers={"disability": "No"}))
     assert page.value(2) == "No, I do not have a disability"
     assert page.value(1) == ""
+
+
+def test_nothing_that_asks_you_to_agree_is_answered():
+    page = FakePage([
+        Field(1, ("a1",), "I agree to relocate if the role needs it", "select", options=("Yes", "No")),
+        Field(2, ("b2",), "I consent to sharing my gender", "select", options=("Female", "Male")),
+        Field(3, ("c3",), "I acknowledge the terms of the privacy notice", "checkboxes", options=("Yes, I have a disability",)),
+    ])
+    answers = {"willing_to_relocate": "Yes", "gender": "Female", "disability": "Yes"}
+    for step in ("Application Questions", "Voluntary Disclosures", "Self Identify"):
+        fill_step(page, step, replace(DETAILS, answers=answers))
+    assert [item.value for item in page.fields()] == ["", "", ""]
