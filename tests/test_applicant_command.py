@@ -1,4 +1,7 @@
+from hirejutsu.applicant import load_applicant, template
 from hirejutsu.cli import main
+from hirejutsu.commands import applicant as applicant_command
+from hirejutsu.config import Config
 
 DETAILS = """
 first_name: Asha
@@ -13,6 +16,10 @@ work:
 education:
   - {school: Pune University, degree: B.E.}
 answers: {notice_period: 30 days, needs_sponsorship: no}
+"""
+RESUME = """Priya Sharma
+Pune | priya@example.com | +91 98765 43210
+linkedin.com/in/priya-sharma
 """
 
 
@@ -43,3 +50,34 @@ def test_applicant_lists_what_is_missing(tmp_path, capsys):
 def test_applicant_without_a_file_says_how_to_start(tmp_path, capsys):
     assert main(["--home", str(tmp_path), "applicant"]) == 1
     assert "hirejutsu applicant --edit" in capsys.readouterr().out
+
+
+def test_edit_starts_the_file_from_the_resume(tmp_path, capsys, monkeypatch):
+    opened = []
+    monkeypatch.setattr(applicant_command, "edit_file", opened.append)
+    (tmp_path / "resume.txt").write_text(RESUME, encoding="utf-8")
+    (tmp_path / "config.yaml").write_text("resume: resume.txt\n", encoding="utf-8")
+    assert main(["--home", str(tmp_path), "applicant", "--edit"]) == 0
+    path = tmp_path / "applicant.yaml"
+    assert opened == [path]
+    assert path.read_text(encoding="utf-8").startswith("# Your details")
+    details = load_applicant(Config({}, tmp_path))
+    assert details.name == "Priya Sharma"
+    assert (details.phone_code, details.phone) == ("+91", "9876543210")
+    assert details.links == {"linkedin": "https://www.linkedin.com/in/priya-sharma"}
+    assert "filled in from your resume: first_name, last_name, email, phone, phone_code, linkedin" in capsys.readouterr().out
+
+
+def test_edit_without_a_resume_starts_from_the_template(tmp_path, monkeypatch):
+    monkeypatch.setattr(applicant_command, "edit_file", lambda path: None)
+    assert main(["--home", str(tmp_path), "applicant", "--edit"]) == 0
+    assert (tmp_path / "applicant.yaml").read_text(encoding="utf-8") == template()
+
+
+def test_edit_keeps_an_existing_file(tmp_path, monkeypatch):
+    opened = []
+    monkeypatch.setattr(applicant_command, "edit_file", opened.append)
+    home = make_home(tmp_path, "first_name: Asha\n")
+    assert main(["--home", home, "applicant", "--edit"]) == 0
+    assert opened == [tmp_path / "applicant.yaml"]
+    assert (tmp_path / "applicant.yaml").read_text(encoding="utf-8") == "first_name: Asha\n"

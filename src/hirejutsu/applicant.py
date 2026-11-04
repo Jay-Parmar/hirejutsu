@@ -1,5 +1,6 @@
 """Your details for job applications, kept in applicant.yaml in the data folder."""
 
+import json
 import re
 from dataclasses import dataclass, field, fields
 from importlib import resources
@@ -19,6 +20,7 @@ GITHUB = re.compile(r"github\.com/([\w-]+)", re.IGNORECASE)
 NAME_WORD = re.compile(r"[A-Za-z][A-Za-z.'-]*")
 NOT_NAMES = {"resume", "curriculum", "vitae", "cv", "profile", "summary", "contact"}
 NEEDED = ("first_name", "last_name", "email", "phone")
+KEY_LINE = re.compile(r"(\s*)([a-z_]+):")
 
 
 @dataclass
@@ -65,6 +67,17 @@ class Applicant:
 
 def template() -> str:
     return resources.files("hirejutsu").joinpath("data", APPLICANT_NAME).read_text(encoding="utf-8")
+
+
+def starter_text(found: dict) -> str:
+    """The starter file with the details found in a resume filled in."""
+    lines = []
+    for line in template().splitlines():
+        match = KEY_LINE.match(line)
+        if match and found.get(match.group(2)):
+            line = f"{match.group(1)}{match.group(2)}: {json.dumps(found[match.group(2)], ensure_ascii=False)}"
+        lines.append(line)
+    return "\n".join(lines) + "\n"
 
 
 def applicant_path(config: Config) -> Path:
