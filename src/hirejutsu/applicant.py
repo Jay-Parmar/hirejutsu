@@ -18,6 +18,7 @@ LINKEDIN = re.compile(r"linkedin\.com/in/([\w%-]+)", re.IGNORECASE)
 GITHUB = re.compile(r"github\.com/([\w-]+)", re.IGNORECASE)
 NAME_WORD = re.compile(r"[A-Za-z][A-Za-z.'-]*")
 NOT_NAMES = {"resume", "curriculum", "vitae", "cv", "profile", "summary", "contact"}
+NEEDED = ("first_name", "last_name", "email", "phone")
 
 
 @dataclass
@@ -56,6 +57,10 @@ class Applicant:
     @property
     def name(self) -> str:
         return " ".join(part for part in (self.first_name, self.last_name) if part)
+
+    def missing(self) -> list[str]:
+        """The basic details every form asks for that are still empty."""
+        return [key for key in NEEDED if not getattr(self, key)]
 
 
 def template() -> str:
