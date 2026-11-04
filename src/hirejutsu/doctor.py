@@ -5,6 +5,7 @@ import os
 import sys
 
 from . import ai, notify, schedule
+from .applicant import applicant_path, load_applicant
 from .config import CONFIG_NAME, load_config
 from .errors import HirejutsuError
 from .resume import load_profile
@@ -22,7 +23,8 @@ def run_checks(app) -> list[tuple[str, str, str]]:
     results = [check_python(), check_config(app)]
     if results[-1][0] == FAIL:
         return results
-    for check in (check_resume, check_sources, check_last_fetch, check_schedule, check_notify, check_ai):
+    checks = (check_resume, check_applicant, check_sources, check_last_fetch, check_schedule, check_notify, check_ai)
+    for check in checks:
         try:
             results.append(check(app))
         except HirejutsuError as exc:
@@ -54,6 +56,17 @@ def check_resume(app) -> tuple[str, str, str]:
     if len(profile.skills) < FEW_SKILLS:
         return WARN, "resume", f"{detail}. Add skills under profile.skills, see 'hirejutsu resume'"
     return OK, "resume", detail
+
+
+def check_applicant(app) -> tuple[str, str, str]:
+    if not applicant_path(app.config).exists():
+        return WARN, "applicant", "no details for forms and emails, run 'hirejutsu applicant --edit'"
+    details = load_applicant(app.config)
+    if details.missing():
+        return WARN, "applicant", f"missing {', '.join(details.missing())}, see 'hirejutsu applicant'"
+    jobs = "1 job" if len(details.work) == 1 else f"{len(details.work)} jobs"
+    schools = "1 school" if len(details.education) == 1 else f"{len(details.education)} schools"
+    return OK, "applicant", f"{details.name}, {jobs}, {schools}"
 
 
 def check_sources(app) -> tuple[str, str, str]:

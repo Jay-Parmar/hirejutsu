@@ -103,3 +103,29 @@ def test_doctor_command_exit_code(tmp_path, capsys):
     assert "hirejutsu init" in capsys.readouterr().out
     write_home(tmp_path)
     assert main(["--home", str(tmp_path), "doctor"]) == 0
+
+
+def test_no_applicant_details_is_a_warning(tmp_path):
+    write_home(tmp_path)
+    status, detail = statuses(tmp_path)["applicant"]
+    assert status == WARN
+    assert "hirejutsu applicant --edit" in detail
+
+
+def test_applicant_details_list_what_is_missing(tmp_path):
+    write_home(tmp_path)
+    (tmp_path / "applicant.yaml").write_text("first_name: Asha\nemail: asha@example.com\n", encoding="utf-8")
+    assert statuses(tmp_path)["applicant"] == (WARN, "missing last_name, phone, see 'hirejutsu applicant'")
+
+
+def test_complete_applicant_details_pass(tmp_path):
+    write_home(tmp_path)
+    details = "first_name: Asha\nlast_name: Rao\nemail: a@example.com\nphone: 9876543210\nwork:\n  - {title: Dev, company: Acme}\n"
+    (tmp_path / "applicant.yaml").write_text(details, encoding="utf-8")
+    assert statuses(tmp_path)["applicant"] == (OK, "Asha Rao, 1 job, 0 schools")
+
+
+def test_broken_applicant_details_fail(tmp_path):
+    write_home(tmp_path)
+    (tmp_path / "applicant.yaml").write_text("work: Acme\n", encoding="utf-8")
+    assert statuses(tmp_path)["applicant"][0] == FAIL
