@@ -431,3 +431,16 @@ def test_the_browser_profile_stays_in_the_data_folder(tmp_path):
     for folder in (str(edge), "."):
         with pytest.raises(ConfigError, match="inside the data folder"):
             load_settings(Config({"workday": {"profile_folder": folder}}, tmp_path / "home"))
+
+
+def test_a_step_that_keeps_changing_shows_after_ten_seconds():
+    class BusyPage(FakePage):
+        looks = 0
+
+        def fields(self):
+            self.looks += 1
+            return [Field(self.looks, (str(self.looks),), "Loading")]
+
+    page = BusyPage(steps=["current step 2 of 4 My Information", ""])
+    assert next(steps(page)) == "My Information"
+    assert page.waited == 10

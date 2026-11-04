@@ -134,9 +134,9 @@ def steps(page):
 
 
 def settle(page) -> None:
-    """Wait until the fields of a new step stop changing, as Workday draws them bit by bit."""
+    """Wait until the fields of a new step stop changing, for at most ten seconds. Workday draws them bit by bit."""
     last = None
-    for _ in range(10):
+    for _ in range(20):
         shown = [(item.ids, item.label) for item in page.fields()]
         if shown and shown == last:
             return
