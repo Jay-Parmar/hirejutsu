@@ -39,6 +39,13 @@ QUESTIONS = {
 }
 # Fields a question can be answered in. Dates, files and check boxes are left for you.
 ANSWERABLE = ("text", "textarea", "select", "prompt", "radio")
+# Voluntary disclosures: the ids of each question, and what its label or its choices mention.
+DISCLOSURES = {
+    "gender": (("gender",), r"gender"),
+    "ethnicity": (("ethnicity", "ethnicityDropdown", "race"), r"ethnic|race"),
+    "veteran_status": (("veteranStatus", "veteran"), r"veteran"),
+    "disability": (("disability", "disabilityStatus"), r"disabilit"),
+}
 
 
 @dataclass
@@ -123,6 +130,8 @@ def fill_step(page, step: str, details: Applicant, skills: list[str] = (), resum
         fill_experience(page, details, skills, resume, report)
     elif step == "Application Questions":
         fill_questions(page, details.answers, report)
+    elif step in ("Voluntary Disclosures", "Self Identify"):
+        fill_disclosures(page, details.answers, report)
     report.left = [item for item in page.fields() if not item.value]
     return report
 
@@ -178,6 +187,23 @@ def fill_questions(page, answers: dict, report: Report) -> None:
         key = answer_key(question.label)
         if key and question.kind in ANSWERABLE:
             fill_values(page, [Want(answers.get(key, ""), question.ids, re.escape(question.label))], report)
+
+
+def fill_disclosures(page, answers: dict, report: Report) -> None:
+    """Answer the voluntary disclosures you gave answers for. The others are left for you."""
+    for key, (ids, pattern) in DISCLOSURES.items():
+        answer = answers.get(key, "")
+        if not answer:
+            continue
+        fields = page.fields()
+        found = find(fields, Want(answer, ids)) or mentioning(fields, pattern)
+        if found and not found.value and found.kind in (*ANSWERABLE, "checkboxes") and page.fill(found, answer):
+            report.filled.append((found.label, answer))
+
+
+def mentioning(fields: list[Field], pattern: str) -> Field | None:
+    """The first field whose label or choices mention pattern. The disability form only names its choices."""
+    return next((item for item in fields if re.search(pattern, " ".join([item.label, *item.options]), re.IGNORECASE)), None)
 
 
 def answer_key(question: str) -> str | None:

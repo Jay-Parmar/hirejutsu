@@ -321,3 +321,24 @@ def test_questions_without_an_answer_are_left():
     page = FakePage([Field(1, ("a1",), "What is your notice period?")])
     fill_step(page, "Application Questions", replace(DETAILS, answers={}))
     assert page.value(1) == ""
+
+
+def test_disclosures_are_answered_only_when_you_gave_an_answer():
+    page = FakePage([
+        Field(1, ("gender",), "Gender", "select", options=("Male", "Female", "I do not wish to answer")),
+        Field(2, ("a1",), "Please select your ethnicity", "select", options=("Asian", "White")),
+        Field(3, ("veteranStatus",), "Veteran Status", "select", options=("I am not a veteran", "I am a veteran")),
+    ])
+    fill_step(page, "Voluntary Disclosures", replace(DETAILS, answers={"gender": "Female", "ethnicity": "Asian"}))
+    assert [item.value for item in page.fields()] == ["Female", "Asian", ""]
+
+
+def test_the_disability_form_is_answered_by_its_choices():
+    choices = ("Yes, I have a disability", "No, I do not have a disability", "I do not want to answer")
+    page = FakePage([
+        Field(1, ("name",), "Name"),
+        Field(2, ("a1",), "Please check one of the boxes below:", "checkboxes", options=choices),
+    ])
+    fill_step(page, "Self Identify", replace(DETAILS, answers={"disability": "No"}))
+    assert page.value(2) == "No, I do not have a disability"
+    assert page.value(1) == ""
