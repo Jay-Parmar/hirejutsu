@@ -2,12 +2,14 @@
 
 import json
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import requests
 import yaml
 
 from hirejutsu.config import Config
+from hirejutsu.workday import best_option
 
 FIXTURES = Path(__file__).parent / "fixtures"
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -80,6 +82,31 @@ class FakeRun:
         if isinstance(reply, Exception):
             raise reply
         return subprocess.CompletedProcess(args, *reply)
+
+
+class FakePage:
+    """Stands in for a Workday tab: holds the fields of a step and records what was filled."""
+
+    def __init__(self, fields=()):
+        self.items = {item.ref: item for item in fields}
+        self.filled: list[tuple[str, str]] = []
+
+    def fields(self):
+        return list(self.items.values())
+
+    def value(self, ref: int) -> str:
+        return self.items[ref].value
+
+    def fill(self, field, value: str) -> bool:
+        # A field with options only takes one of them, the way the browser picks from a list.
+        if field.options:
+            index = best_option(value, list(field.options))
+            if index is None:
+                return False
+            value = field.options[index]
+        self.items[field.ref] = replace(field, value=value)
+        self.filled.append((field.label, value))
+        return True
 
 
 def claude_reply(text: str) -> dict:

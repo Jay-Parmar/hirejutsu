@@ -1,4 +1,24 @@
-from hirejutsu.workday import Field, Want, best_option, find, step_name
+from dataclasses import replace
+
+from fakes import FakePage
+from hirejutsu.applicant import Applicant, Position, School
+from hirejutsu.workday import Field, Want, best_option, fill_step, find, step_name
+
+DETAILS = Applicant(
+    first_name="Asha",
+    last_name="Rao",
+    email="asha@example.com",
+    phone="9876543210",
+    phone_code="+91",
+    address={"line1": "12 MG Road", "city": "Pune", "state": "Maharashtra", "postal_code": "411001", "country": "India"},
+    links={"linkedin": "https://www.linkedin.com/in/asha", "github": "https://github.com/asha"},
+    work=[
+        Position("Backend Engineer", "Acme", "Pune", "2021-04", "", "Built the payments API."),
+        Position("Developer", "Globex", "Mumbai", "2018-07", "2021-03"),
+    ],
+    education=[School("Pune University", "B.E.", "Computer Engineering", "2014", "2018", "8.1")],
+    answers={"how_did_you_hear": "LinkedIn", "notice_period": "30 days"},
+)
 
 FIELDS = [
     Field(1, ("legalName--firstName",), "Given Name(s)"),
@@ -64,3 +84,68 @@ def test_best_option_needs_whole_words():
 
 def test_best_option_needs_an_answer():
     assert best_option("", ["Yes", "No"]) is None
+
+
+def my_information():
+    """The My Information step as Workday shows it, with India already picked as the country."""
+    return [
+        Field(1, ("source",), "How Did You Hear About Us?", "select", required=True),
+        Field(2, ("candidateIsPreviousWorker",), "Have you previously worked for Acme?", "radio", options=("Yes", "No")),
+        Field(3, ("country",), "Country", "select", "India", required=True),
+        Field(4, ("legalName--firstName",), "Given Name(s)", required=True),
+        Field(5, ("legalName--lastName",), "Family Name"),
+        Field(6, ("addressLine1",), "Address Line 1", required=True),
+        Field(7, ("city",), "City", required=True),
+        Field(8, ("countryRegion",), "State", "select", options=("Gujarat", "Maharashtra")),
+        Field(9, ("postalCode",), "Postal Code"),
+        Field(10, ("phoneType",), "Phone Device Type", "select", options=("Landline", "Mobile")),
+        Field(11, ("countryPhoneCode",), "Country Phone Code", "prompt", options=("Indonesia (+62)", "India (+91)")),
+        Field(12, ("phoneNumber",), "Phone Number", required=True),
+        Field(13, ("extension",), "Phone Extension"),
+    ]
+
+
+def test_my_information_is_filled_from_the_details():
+    page = FakePage(my_information())
+    report = fill_step(page, "My Information", DETAILS)
+    values = {item.ref: item.value for item in page.fields()}
+    assert values == {
+        1: "LinkedIn", 2: "No", 3: "India", 4: "Asha", 5: "Rao", 6: "12 MG Road", 7: "Pune", 8: "Maharashtra",
+        9: "411001", 10: "Mobile", 11: "India (+91)", 12: "9876543210", 13: "",
+    }
+    assert ("Given Name(s)", "Asha") in report.filled
+    assert [item.label for item in report.left] == ["Phone Extension"]
+
+
+def test_fields_that_have_a_value_are_kept():
+    fields = my_information()
+    fields[3] = replace(fields[3], value="Priya")
+    page = FakePage(fields)
+    fill_step(page, "My Information", DETAILS)
+    assert page.value(4) == "Priya"
+    assert "Given Name(s)" not in [label for label, _ in page.filled]
+
+
+def test_older_pages_are_filled_by_their_ids():
+    page = FakePage([
+        Field(1, ("legalNameSection_firstName",), "First Name"),
+        Field(2, ("addressSection_city",), "City or Town"),
+        Field(3, ("phone-device-type",), "Phone Device Type", "select"),
+        Field(4, ("phone-number",), "Phone"),
+        Field(5, ("previousWorker",), "Have you worked here before?", "radio", options=("Yes", "No")),
+    ])
+    fill_step(page, "My Information", DETAILS)
+    assert [item.value for item in page.fields()] == ["Asha", "Pune", "Mobile", "9876543210", "No"]
+
+
+def test_fields_without_known_ids_are_found_by_label():
+    page = FakePage([Field(1, ("a1b2",), "First Name"), Field(2, ("c3d4",), "Last Name"), Field(3, (), "Email Address")])
+    fill_step(page, "My Information", DETAILS)
+    assert [item.value for item in page.fields()] == ["Asha", "Rao", "asha@example.com"]
+
+
+def test_worked_here_before_follows_the_answer():
+    page = FakePage(my_information())
+    fill_step(page, "My Information", replace(DETAILS, answers={"worked_here_before": "Yes"}))
+    assert page.value(2) == "Yes"
+    assert page.value(1) == ""

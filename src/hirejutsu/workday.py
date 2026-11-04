@@ -5,7 +5,9 @@ Everything here works on a small page object, so it runs the same against the br
 """
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from .applicant import Applicant
 
 # The steps hirejutsu knows, found in the progress bar label or, on older pages, the step's data-automation-id.
 STEPS = {
@@ -50,6 +52,15 @@ class Want:
     entry: int = 0
 
 
+@dataclass
+class Report:
+    """What hirejutsu filled on one step, and the empty fields it left for you."""
+
+    step: str
+    filled: list = field(default_factory=list)
+    left: list = field(default_factory=list)
+
+
 def step_name(text: str) -> str:
     """The name of the step a progress bar label shows. Steps hirejutsu does not know keep their label."""
     for name, pattern in STEPS.items():
@@ -81,3 +92,49 @@ def best_option(answer: str, options: list[str]) -> int | None:
     if wanted in found:
         return found.index(wanted)
     return next((index for index, option in enumerate(found) if option.startswith(wanted + " ")), None)
+
+
+def fill_step(page, step: str, details: Applicant) -> Report:
+    """Fill the empty fields hirejutsu knows on one step of the application."""
+    report = Report(step)
+    if step == "My Information":
+        fill_values(page, information(details), report)
+    report.left = [item for item in page.fields() if not item.value]
+    return report
+
+
+def fill_values(page, wants: list[Want], report: Report) -> None:
+    """Put each value in its field, when the field is on the page and still empty."""
+    for want in wants:
+        if not want.value:
+            continue
+        found = find(page.fields(), want)
+        if found and not found.value and page.fill(found, want.value):
+            report.filled.append((found.label, want.value))
+
+
+def information(details: Applicant) -> list[Want]:
+    """Where the details go on the My Information step."""
+    address, answers = details.address, details.answers
+    country = address.get("country", "")
+    phone_code = f"{country} ({details.phone_code})" if country and details.phone_code else ""
+    return [
+        Want(answers.get("how_did_you_hear", ""), ("source", "sourcePrompt"), r"how did you hear"),
+        # Most people apply to companies they never worked for, so this one is answered unless told otherwise.
+        Want(
+            answers.get("worked_here_before", "No"),
+            ("candidateIsPreviousWorker", "previousWorker"),
+            r"have you (previously|ever) (worked|been employed)",
+        ),
+        Want(country, ("country",), r"country( ?/ ?region)?$"),
+        Want(details.first_name, ("legalName--firstName", "legalNameSection_firstName"), r"(first|given) name"),
+        Want(details.last_name, ("legalName--lastName", "legalNameSection_lastName"), r"(last|family) name"),
+        Want(address.get("line1", ""), ("addressLine1", "addressSection_addressLine1"), r"address line 1"),
+        Want(address.get("city", ""), ("city", "addressSection_city"), r"city"),
+        Want(address.get("state", ""), ("countryRegion", "addressSection_countryRegion"), r"state|province|region"),
+        Want(address.get("postal_code", ""), ("postalCode", "addressSection_postalCode"), r"postal code|zip|pin ?code"),
+        Want(details.email, ("email",), r"email"),
+        Want("Mobile" if details.phone else "", ("phoneType", "phone-device-type"), r"phone device type"),
+        Want(phone_code, ("countryPhoneCode", "country-phone-code"), r"country phone code"),
+        Want(details.phone, ("phoneNumber", "phone-number"), r"phone number"),
+    ]
