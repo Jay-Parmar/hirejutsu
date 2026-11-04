@@ -132,8 +132,16 @@ def sent_command(draft: Draft) -> str:
     return f"hirejutsu outreach sent {draft.match.job.id} {draft.to or '<address>'}"
 
 
-def contact_line(contact: Contact) -> str:
-    return f"{contact.address} ({contact.confidence}): {contact.found}"
+def contact_groups(contacts: list[Contact]) -> list[list[Contact]]:
+    """Contacts found in the same place and just as sure, together, like the guesses for one person."""
+    groups: dict[tuple[str, str], list[Contact]] = {}
+    for contact in contacts:
+        groups.setdefault((contact.confidence, contact.found), []).append(contact)
+    return list(groups.values())
+
+
+def contact_line(group: list[Contact]) -> str:
+    return f"{', '.join(contact.address for contact in group)} ({group[0].confidence}): {group[0].found}"
 
 
 def markdown(drafts: list[Draft], day: date) -> str:
@@ -142,7 +150,7 @@ def markdown(drafts: list[Draft], day: date) -> str:
         job = draft.match.job
         lines += [f"## {number}. {job.title} at {job.company}",
                   f"{job.url} | via {source_label(job.source)} | id {job.id}", "", "Who to write to:"]
-        lines += [f"- {contact_line(contact)}" for contact in draft.contacts] or ["- Nobody found."]
+        lines += [f"- {contact_line(group)}" for group in contact_groups(draft.contacts)] or ["- Nobody found."]
         searches = " | ".join(f"[{label}]({url})" for label, url in search_links(job.company))
         lines += ["", f"Find someone yourself: {searches}"]
         lines += ["", "```", f"Subject: {draft.subject}", "", email_text(draft), "```", ""]
@@ -179,7 +187,7 @@ def _job_html(number: int, draft: Draft) -> str:
     job = draft.match.job
     link = escape(web_link(job.url))
     text = email_text(draft)
-    contacts = "".join(_contact_html(contact, draft) for contact in draft.contacts) or "<li>Nobody found.</li>"
+    contacts = "".join(_contacts_html(group, draft) for group in contact_groups(draft.contacts))
     command = escape(sent_command(draft))
     searches = " ".join(f'<a href="{escape(url)}" target="_blank" rel="noopener noreferrer">{label}</a>'
                         for label, url in search_links(job.company))
@@ -190,7 +198,7 @@ def _job_html(number: int, draft: Draft) -> str:
 <p class="company">{escape(job.company)}</p>
 <p class="facts"><span>via {escape(source_label(job.source))}</span><span>id {job.id}</span></p>
 <h3>Who to write to</h3>
-<ul class="contacts">{contacts}</ul>
+<ul class="contacts">{contacts or "<li>Nobody found.</li>"}</ul>
 <p class="find">Find someone yourself: {searches}</p>
 <h3>Draft</h3>
 <pre class="draft">Subject: {escape(draft.subject)}
@@ -202,7 +210,12 @@ def _job_html(number: int, draft: Draft) -> str:
 </li>"""
 
 
-def _contact_html(contact: Contact, draft: Draft) -> str:
-    write = escape(mailto(contact.address, draft.subject, email_text(draft, contact)))
-    return (f'<li><a href="{write}">{escape(contact.address)}</a> <span class="sure">{escape(contact.confidence)}</span>'
-            f' <span class="found">{escape(contact.found)}</span></li>')
+def _contacts_html(group: list[Contact], draft: Draft) -> str:
+    """One line of contacts, each address a link that opens the draft written to it."""
+    links = ", ".join(
+        f'<a href="{escape(mailto(contact.address, draft.subject, email_text(draft, contact)))}">'
+        f"{escape(contact.address)}</a>"
+        for contact in group
+    )
+    return (f'<li>{links} <span class="sure">{escape(group[0].confidence)}</span>'
+            f' <span class="found">{escape(group[0].found)}</span></li>')

@@ -7,7 +7,7 @@ import pytest
 from hirejutsu import outreach
 from hirejutsu.applicant import Applicant
 from hirejutsu.config import Config
-from hirejutsu.contacts import Contact
+from hirejutsu.contacts import Contact, Person, guesses
 from hirejutsu.models import Job, Match, Profile
 
 DAY = date(2026, 11, 4)
@@ -196,3 +196,15 @@ def test_a_known_person_is_greeted_by_first_name():
     assert outreach.email_text(email, jane).startswith("Hi Jane,\n")
     page = outreach.html_page([email], DAY)
     assert 'href="mailto:jane.doe@acme.com?subject=Backend%20Engineer%20role%20at%20Acme&amp;body=Hi%20Jane%2C' in page
+
+
+def test_contacts_found_together_share_a_line():
+    contacts = [Contact("careers@acme.com", "https://acme.com/careers", "site"),
+                Contact("jobs@acme.com", "https://acme.com/careers", "site"),
+                *guesses(Person("Jane Doe", "Recruiter", "https://www.linkedin.com/in/jane"), "acme.com")]
+    text = outreach.markdown([draft(contacts=contacts)], DAY)
+    assert "\n- careers@acme.com, jobs@acme.com (site): https://acme.com/careers\n" in text
+    assert "\n- jane.doe@acme.com, jane@acme.com, janedoe@acme.com, jdoe@acme.com (guess): Jane Doe, Recruiter\n" in text
+    page = outreach.html_page([draft(contacts=contacts)], DAY)
+    assert page.count('<li><a href="mailto:') == 2
+    assert page.count('href="mailto:') == len(contacts) + 1
