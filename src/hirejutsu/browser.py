@@ -3,12 +3,13 @@
 Playwright comes with the optional workday extra, so it is imported only when a window opens.
 """
 
+import re
 from contextlib import contextmanager
 from functools import cache
 from importlib import resources
 
 from .errors import HirejutsuError
-from .workday import Field, WindowClosed
+from .workday import Field, WindowClosed, best_option
 
 CHANNELS = {"msedge": "msedge", "chrome": "chrome", "chromium": None}
 NAMES = {"msedge": "Microsoft Edge", "chrome": "Google Chrome", "chromium": "Chromium"}
@@ -105,6 +106,73 @@ class WorkdayPage:
     def fields(self) -> list[Field]:
         rows = self.run("fields") or []
         return [Field(**{**row, "ids": tuple(row["ids"]), "options": tuple(row["options"])}) for row in rows]
+
+    def fill(self, field: Field, value: str) -> bool:
+        """Put value in a field the way a person would. False when the page did not take it."""
+        box = self.tab.locator(f'[data-hirejutsu-field="{field.ref}"]')
+        if field.kind in ("radio", "checkbox", "checkboxes"):
+            return bool(self.call(lambda tab: self.click_choice(field, value)))
+        fillers = {"text": self.type_text, "textarea": self.type_text, "select": self.choose, "prompt": self.search}
+        filler = fillers.get(field.kind)
+        return bool(filler and self.call(lambda tab: filler(box, value)))
+
+    def type_text(self, box, value: str) -> bool:
+        control = box.locator('textarea, input:not([type="hidden"])').first
+        control.fill(value)
+        # Workday keeps what was typed once the field loses focus.
+        control.blur()
+        return True
+
+    def choose(self, box, value: str) -> bool:
+        """Open a dropdown and click the option that is the value."""
+        box.locator('button[aria-haspopup="listbox"]').first.click()
+        index = self.option(value, "select")
+        if index is None:
+            # Long lists only draw the options near the top, and typing jumps to the others.
+            self.tab.keyboard.type(value)
+            index = self.option(value, "select")
+        if index is None:
+            self.tab.keyboard.press("Escape")
+            return False
+        self.tab.locator(f'[data-hirejutsu-option="{index}"]').click()
+        return True
+
+    def search(self, box, value: str) -> bool:
+        """Type into a search box, press Enter and click the result that is the value."""
+        picked = box.locator('[data-automation-id="selectedItem"]')
+        before = picked.count()
+        query = box.locator('input:not([type="hidden"])').first
+        # The search looks for words, so "India (+91)" is looked up as India.
+        query.fill(re.sub(r"\s*\(.*?\)", "", value).strip() or value)
+        query.press("Enter")
+        index = self.option(value, "prompt")
+        # On some pages Enter alone picks the only result.
+        if index is not None and picked.count() == before:
+            self.tab.locator(f'[data-hirejutsu-option="{index}"]').click()
+        query.press("Escape")
+        return picked.count() > before
+
+    def option(self, value: str, kind: str) -> int | None:
+        """The index of the shown option that is the value, once the list shows."""
+        return best_option(value, self.until(lambda: self.run("options", kind), 1.5) or [])
+
+    def click_choice(self, field: Field, value: str) -> bool:
+        """Click the radio button or check box that is the value. A lone check box is ticked."""
+        labels = self.run("choices", field.ref) or []
+        index = 0 if field.kind == "checkbox" else best_option(value, labels)
+        if not labels or index is None:
+            return False
+        self.tab.locator(f'[data-hirejutsu-choice="{index}"]').click()
+        return True
+
+    def until(self, check, seconds: float):
+        """The first true result of check, looking every quarter of a second for at most seconds."""
+        for _ in range(int(seconds * 4)):
+            result = check()
+            if result:
+                return result
+            self.tab.wait_for_timeout(250)
+        return check()
 
     def run(self, action: str, argument=None):
         """One action of workday.js. None while the page is changing, as when the next step loads."""

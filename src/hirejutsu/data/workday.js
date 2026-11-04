@@ -11,6 +11,7 @@
   const STEP_PAGE = /^(applyFlow\w+Page|contactInformationPage|myExperiencePage|voluntaryDisclosuresPage|selfIdentificationPage)$/;
   const PROMPT = '[data-automation-id="multiSelectContainer"], [data-automation-id="multiselectInputContainer"], [data-automation-id="searchBox"]';
   const DATE_PART = '[data-automation-id^="dateSection"][data-automation-id$="-input"]';
+  const OPTIONS = { select: '[role="option"]', prompt: '[data-automation-id="promptOption"]' };
 
   const shown = (element) => element.getClientRects().length > 0;
   const clean = (text) => (text || '').replace(/\*/g, '').replace(/\s+/g, ' ').trim();
@@ -124,6 +125,28 @@
     });
   }
 
-  const actions = { step, fields };
+  // The options of the open dropdown or search list, marked so one can be clicked.
+  function options(kind) {
+    unmark('data-hirejutsu-option');
+    const shownOptions = [...document.querySelectorAll(OPTIONS[kind])].filter(
+      (option) => shown(option) && !option.closest('[data-automation-id="selectedItemList"]'),
+    );
+    return shownOptions.map((option, index) => {
+      option.setAttribute('data-hirejutsu-option', index);
+      return clean(option.getAttribute('data-automation-label') || option.textContent);
+    });
+  }
+
+  // The radio buttons or check boxes of a field, marked where a person would click them.
+  function choicesOf(ref) {
+    unmark('data-hirejutsu-choice');
+    const box = document.querySelector(`[data-hirejutsu-field="${ref}"]`);
+    return (box ? choices(box) : []).map((choice, index) => {
+      (choice.label || choice.input).setAttribute('data-hirejutsu-choice', index);
+      return choice.text;
+    });
+  }
+
+  const actions = { step, fields, options, choices: choicesOf };
   return actions[action](argument);
 }
