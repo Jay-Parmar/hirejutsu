@@ -1,4 +1,28 @@
-from hirejutsu.workday import best_option, step_name
+from hirejutsu.workday import Field, Want, best_option, find, step_name
+
+FIELDS = [
+    Field(1, ("legalName--firstName",), "Given Name(s)"),
+    Field(2, (), "Local Given Name(s)"),
+    Field(3, (), "First Name"),
+    Field(4, ("jobTitle",), "Job Title", section="Work Experience", entry=1),
+    Field(5, ("jobTitle",), "Job Title", section="Work Experience", entry=2),
+]
+FIRST_NAME = ("legalName--firstName", "legalNameSection_firstName")
+
+
+def test_find_looks_for_the_automation_id_first():
+    assert find(FIELDS, Want("Asha", FIRST_NAME, r"first name")).ref == 1
+
+
+def test_find_falls_back_to_the_start_of_the_label():
+    assert find(FIELDS, Want("Asha", ("firstName",), r"first name")).ref == 3
+    assert find(FIELDS[1:], Want("Asha", ("firstName",), r"given name")) is None
+
+
+def test_find_keeps_to_the_section_and_entry():
+    assert find(FIELDS, Want("Dev", ("jobTitle",), section=r"experience", entry=2)).ref == 5
+    assert find(FIELDS, Want("Dev", ("jobTitle",), section=r"education", entry=2)) is None
+    assert find(FIELDS, Want("Dev", ("jobTitle",))) is None
 
 
 def test_step_name_comes_from_the_progress_bar():
