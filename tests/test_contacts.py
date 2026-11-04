@@ -4,7 +4,7 @@ import pytest
 import requests
 from fakes import FakeClient, fixture
 
-from hirejutsu.contacts import company_domain, post_contacts, site_contacts
+from hirejutsu.contacts import SITE_PAGES, Finder, company_domain, post_contacts, site_contacts
 from hirejutsu.models import Job
 
 
@@ -117,3 +117,28 @@ def test_a_site_that_does_not_answer_is_left_quietly(caplog):
         assert site_contacts(client, "acme.com") == []
     assert len(client.calls) == 1
     assert "https://acme.com/" in caplog.text
+
+
+def test_contacts_come_surest_first_and_once():
+    found = Finder(acme_site()).contacts(job("Mail careers@acme.com or Jane@acme.com.", url="https://acme.com/jobs/1"))
+    assert [(contact.address, contact.confidence) for contact in found] == [
+        ("careers@acme.com", "stated"),
+        ("jane@acme.com", "stated"),
+        ("jobs@acme.com", "site"),
+        ("people-ops@eu.acme.com", "site"),
+        ("hr@acme.com", "site"),
+    ]
+
+
+def test_each_company_site_is_read_once_a_run():
+    client = acme_site()
+    finder = Finder(client)
+    finder.contacts(job(url="https://acme.com/jobs/1"))
+    finder.contacts(job(url="https://www.acme.com/jobs/2"))
+    assert len(client.calls) == len(SITE_PAGES)
+
+
+def test_no_site_is_read_without_the_company_domain():
+    client = FakeClient()
+    assert [contact.address for contact in Finder(client).contacts(job("Mail jobs@gmail.com"))] == ["jobs@gmail.com"]
+    assert client.calls == []

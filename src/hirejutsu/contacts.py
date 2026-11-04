@@ -122,3 +122,29 @@ def on_domain(address: str, domain: str) -> bool:
 
 def is_hiring(address: str) -> bool:
     return re.split(r"[._+-]", address.split("@")[0])[0] in HIRING_WORDS
+
+
+def surest_first(contacts: list[Contact]) -> list[Contact]:
+    """Each address once: stated ones first, then the company site's, then guesses."""
+    order = (STATED, SITE, GUESS)
+    unique = {}
+    for contact in sorted(contacts, key=lambda contact: order.index(contact.confidence)):
+        unique.setdefault(contact.address, contact)
+    return list(unique.values())
+
+
+class Finder:
+    """Finds who to write to about each job, reading each company's site once a run."""
+
+    def __init__(self, client):
+        self.client = client
+        self.sites: dict[str, list[Contact]] = {}
+
+    def contacts(self, job: Job) -> list[Contact]:
+        found = post_contacts(job)
+        domain = company_domain(job)
+        if domain:
+            if domain not in self.sites:
+                self.sites[domain] = site_contacts(self.client, domain)
+            found += self.sites[domain]
+        return surest_first(found)
