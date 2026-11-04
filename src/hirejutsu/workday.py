@@ -232,7 +232,7 @@ def fill_values(page, wants: list[Want], report: Report) -> None:
             continue
         found = find(page.fields(), want)
         if found and fillable(found) and page.fill(found, want.value):
-            report.filled.append((found.label, want.value))
+            report.filled.append((found.label, Path(want.value).name if found.kind == "file" else want.value))
 
 
 def fill_skills(page, skills: list[str], report: Report) -> None:

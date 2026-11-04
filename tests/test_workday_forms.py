@@ -256,8 +256,9 @@ def resume_box(value="", section="Resume/CV"):
 def test_a_pdf_or_docx_resume_is_uploaded(tmp_path):
     for name in ("resume.pdf", "Resume.DOCX"):
         page = FakePage([resume_box()])
-        fill_step(page, "My Experience", DETAILS, resume=tmp_path / name)
+        report = fill_step(page, "My Experience", DETAILS, resume=tmp_path / name)
         assert page.value(1) == str(tmp_path / name)
+        assert ("Upload a file (5MB max)", name) in report.filled
 
 
 def test_other_resumes_are_not_uploaded(tmp_path):
