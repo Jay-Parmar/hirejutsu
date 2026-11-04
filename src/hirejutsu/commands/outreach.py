@@ -40,7 +40,10 @@ def draft_emails(app, args) -> int:
     if len(chosen) < len(matches):
         app.console.print(f"Left out {len(matches) - len(chosen)} of {len(matches)} picks because they come from "
                           "job boards. Add their sources to outreach.sources to write about them too.")
-    chosen = chosen[:args.n] if args.n else chosen
+    fresh = [match for match in chosen if not outreach.emailed(app.store, match.job.id)]
+    if len(fresh) < len(chosen):
+        app.console.print(f"Left out {len(chosen) - len(fresh)} you already emailed about.")
+    chosen = fresh[:args.n] if args.n else fresh
     if not chosen:
         app.console.print("No picks to write about.")
         return 0

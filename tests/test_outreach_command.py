@@ -136,3 +136,13 @@ def test_sent_needs_email_addresses(home, capsys):
 def test_sent_for_an_unknown_job(home, capsys):
     assert run(home, "sent", "99", "jobs@acme.com") == 1
     assert "No job with id 99" in capsys.readouterr().out
+
+
+def test_jobs_you_emailed_about_are_left_out_next_time(home, client, capsys):
+    save_picks(home, DAY, ACME, INITECH)
+    assert run(home, "sent", "1", "jobs@acme.com") == 0
+    assert run(home, "--day", "2026-11-04") == 0
+    assert "Left out 1 you already emailed about" in capsys.readouterr().out
+    text = saved(home, DAY)
+    assert "Backend Engineer at Acme" not in text
+    assert "## 1. Platform Engineer at Initech" in text

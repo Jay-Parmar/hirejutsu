@@ -15,6 +15,7 @@ from .config import Config
 from .contacts import Contact
 from .models import Job, Match, Profile
 from .report import source_label, web_link
+from .store import Store
 
 # Company career pages, and Hacker News, where companies post their own jobs. Job boards are
 # left out because a board's listing rarely says who at the company to write to.
@@ -112,6 +113,11 @@ def mailto(address: str, subject: str, text: str) -> str:
 
 def sent_note(addresses: list[str]) -> str:
     return EMAILED + ", ".join(addresses)
+
+
+def emailed(store: Store, job_id: int) -> bool:
+    """True once a note says you emailed someone about the job."""
+    return any(note.startswith(EMAILED) for _, _, note in store.history(job_id))
 
 
 def sent_command(draft: Draft) -> str:
