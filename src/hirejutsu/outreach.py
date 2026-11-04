@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from urllib.parse import quote, urlencode
 
 from .applicant import Applicant
@@ -9,6 +10,7 @@ from .companies import ATSES
 from .config import Config
 from .contacts import Contact
 from .models import Job, Match, Profile
+from .report import source_label
 
 # Company career pages, and Hacker News, where companies post their own jobs. Job boards are
 # left out because a board's listing rarely says who at the company to write to.
@@ -27,6 +29,11 @@ class Draft:
     subject: str
     body: str
     signature: str
+
+    @property
+    def to(self) -> str:
+        """The surest address, or "" when none was found."""
+        return self.contacts[0].address if self.contacts else ""
 
 
 def load_settings(config: Config) -> dict:
@@ -95,3 +102,24 @@ def mailto(address: str, subject: str, text: str) -> str:
     # Mail apps read line breaks in a mailto body as CRLF.
     query = urlencode({"subject": subject, "body": text.replace("\n", "\r\n")}, quote_via=quote)
     return f"mailto:{quote(address, safe='@')}?{query}"
+
+
+def sent_command(draft: Draft) -> str:
+    return f"hirejutsu outreach sent {draft.match.job.id} {draft.to or '<address>'}"
+
+
+def contact_line(contact: Contact) -> str:
+    return f"{contact.address} ({contact.confidence}): {contact.found}"
+
+
+def markdown(drafts: list[Draft], day: date) -> str:
+    lines = [f"# Recruiter emails for {day.isoformat()}", ""]
+    for number, draft in enumerate(drafts, start=1):
+        job = draft.match.job
+        lines += [f"## {number}. {job.title} at {job.company}",
+                  f"{job.url} | via {source_label(job.source)} | id {job.id}", "", "Who to write to:"]
+        lines += [f"- {contact_line(contact)}" for contact in draft.contacts] or ["- Nobody found."]
+        lines += ["", "```", f"Subject: {draft.subject}", "", email_text(draft), "```", ""]
+        lines += [f"[Write email]({mailto(draft.to, draft.subject, email_text(draft))})", "",
+                  f"After sending it: `{sent_command(draft)}`", ""]
+    return "\n".join(lines)

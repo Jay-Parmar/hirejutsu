@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -5,8 +6,10 @@ import pytest
 from hirejutsu import outreach
 from hirejutsu.applicant import Applicant
 from hirejutsu.config import Config
+from hirejutsu.contacts import Contact
 from hirejutsu.models import Job, Match, Profile
 
+DAY = date(2026, 11, 4)
 SKILLS = "Skills: Python, Django, PostgreSQL (5 of 20)"
 ASHA = Applicant(
     first_name="Asha", last_name="Rao", phone="9876543210", phone_code="+91",
@@ -24,8 +27,8 @@ def pick(source="greenhouse", reasons=(SKILLS,), **fields):
     return Match(Job(source, "1", **values, id=12), 0.8, list(reasons))
 
 
-def draft(match=None, years=6, applicant=ASHA, **values):
-    return outreach.draft(match or pick(), [], Profile(years=years), applicant, settings(**values))
+def draft(match=None, years=6, applicant=ASHA, contacts=(), **values):
+    return outreach.draft(match or pick(), list(contacts), Profile(years=years), applicant, settings(**values))
 
 
 def test_board_picks_are_left_out_by_default():
@@ -98,3 +101,22 @@ def test_mailto_link_fills_in_the_address_subject_and_text():
 
 def test_mailto_link_without_an_address_leaves_the_to_line_empty():
     assert outreach.mailto("", "Hello", "Hi") == "mailto:?subject=Hello&body=Hi"
+
+
+def test_markdown_lists_each_job_with_its_contacts_and_draft():
+    email = draft(contacts=[Contact("jobs@acme.com", "job post", "stated"),
+                            Contact("careers@acme.com", "https://acme.com/careers", "site")])
+    text = outreach.markdown([email], DAY)
+    assert text.startswith("# Recruiter emails for 2026-11-04\n")
+    assert "## 1. Backend Engineer at Acme\nhttps://jobs.acme.com/1 | via Greenhouse career pages | id 12\n" in text
+    assert "- jobs@acme.com (stated): job post\n- careers@acme.com (site): https://acme.com/careers\n" in text
+    assert "```\nSubject: Backend Engineer role at Acme\n\nHi Acme team,\n\nI saw the Backend Engineer role" in text
+    assert f"[Write email]({outreach.mailto('jobs@acme.com', email.subject, outreach.email_text(email))})" in text
+    assert "After sending it: `hirejutsu outreach sent 12 jobs@acme.com`" in text
+
+
+def test_markdown_without_contacts_leaves_the_address_to_you():
+    text = outreach.markdown([draft()], DAY)
+    assert "- Nobody found." in text
+    assert "[Write email](mailto:?subject=" in text
+    assert "`hirejutsu outreach sent 12 <address>`" in text
