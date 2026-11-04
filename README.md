@@ -111,6 +111,18 @@ Skills are matched against a built-in list of common skills, technical and non-t
 Anything you set under `profile` in the config wins: `skills` are added to the ones found,
 while `titles` and `years` replace the ones detected.
 
+## Applicant details
+
+```
+hirejutsu applicant --edit   # start applicant.yaml from your resume and open it
+hirejutsu applicant          # show what is filled in and what is missing
+```
+
+`applicant.yaml` in the data folder holds what application forms and recruiter emails need: your
+name, email, phone, address, links, jobs, education and answers to common questions like your
+notice period. The first `--edit` fills in the name, email, phone and links found in your resume.
+The file stays on your computer.
+
 ## Fetching jobs
 
 ```
@@ -431,7 +443,7 @@ ai:
 | Command | What it does |
 |---|---|
 | `init`, `config --edit`, `doctor` | create the data folder, edit the config, check the setup |
-| `resume` | show what was read from your resume |
+| `resume`, `applicant` | show what was read from your resume, and your details for forms and emails |
 | `sources`, `fetch`, `companies` | list sources, download jobs, manage company career pages |
 | `run`, `today`, `top` | pick today's jobs, show them again, rank without recording |
 | `explain <id>` | show how one job scored |
