@@ -3,6 +3,9 @@
 import re
 from dataclasses import dataclass
 from datetime import date
+from html import escape
+from importlib import resources
+from string import Template
 from urllib.parse import quote, urlencode
 
 from .applicant import Applicant
@@ -10,7 +13,7 @@ from .companies import ATSES
 from .config import Config
 from .contacts import Contact
 from .models import Job, Match, Profile
-from .report import source_label
+from .report import source_label, web_link
 
 # Company career pages, and Hacker News, where companies post their own jobs. Job boards are
 # left out because a board's listing rarely says who at the company to write to.
@@ -123,3 +126,45 @@ def markdown(drafts: list[Draft], day: date) -> str:
         lines += [f"[Write email]({mailto(draft.to, draft.subject, email_text(draft))})", "",
                   f"After sending it: `{sent_command(draft)}`", ""]
     return "\n".join(lines)
+
+
+def html_page(drafts: list[Draft], day: date) -> str:
+    """The drafts as one HTML file that loads nothing from the internet."""
+    page = Template(resources.files("hirejutsu").joinpath("data", "outreach.html").read_text(encoding="utf-8"))
+    count = len(drafts)
+    return page.substitute(
+        title=f"Recruiter emails for {day.isoformat()}",
+        heading=f"Recruiter emails for {day:%A}, {day.day} {day:%B %Y}",
+        count=f"{count} job to write about" if count == 1 else f"{count} jobs to write about",
+        jobs="\n".join(_job_html(number, draft) for number, draft in enumerate(drafts, start=1)),
+    )
+
+
+def _job_html(number: int, draft: Draft) -> str:
+    job = draft.match.job
+    link = escape(web_link(job.url))
+    text = email_text(draft)
+    contacts = "".join(_contact_html(contact, draft) for contact in draft.contacts) or "<li>Nobody found.</li>"
+    command = escape(sent_command(draft))
+    return f"""<li class="job">
+<div class="rank">{number}</div>
+<div>
+<h2><a href="{link}" target="_blank" rel="noopener noreferrer">{escape(job.title)}</a></h2>
+<p class="company">{escape(job.company)}</p>
+<p class="facts"><span>via {escape(source_label(job.source))}</span><span>id {job.id}</span></p>
+<h3>Who to write to</h3>
+<ul class="contacts">{contacts}</ul>
+<h3>Draft</h3>
+<pre class="draft">Subject: {escape(draft.subject)}
+
+{escape(text)}</pre>
+<p class="actions"><a class="open" href="{escape(mailto(draft.to, draft.subject, text))}">Write email</a>
+<span class="command"><code>{command}</code><button type="button" data-command="{command}">Copy</button></span></p>
+</div>
+</li>"""
+
+
+def _contact_html(contact: Contact, draft: Draft) -> str:
+    write = escape(mailto(contact.address, draft.subject, email_text(draft)))
+    return (f'<li><a href="{write}">{escape(contact.address)}</a> <span class="sure">{escape(contact.confidence)}</span>'
+            f' <span class="found">{escape(contact.found)}</span></li>')

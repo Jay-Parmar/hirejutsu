@@ -1,3 +1,4 @@
+import html
 from datetime import date
 from pathlib import Path
 
@@ -120,3 +121,51 @@ def test_markdown_without_contacts_leaves_the_address_to_you():
     assert "- Nobody found." in text
     assert "[Write email](mailto:?subject=" in text
     assert "`hirejutsu outreach sent 12 <address>`" in text
+
+
+def test_html_page_shows_each_job_with_its_contacts_and_draft():
+    email = draft(contacts=[Contact("jobs@acme.com", "job post", "stated"),
+                            Contact("careers@acme.com", "https://acme.com/careers", "site")])
+    page = outreach.html_page([email], DAY)
+    assert "<title>Recruiter emails for 2026-11-04</title>" in page
+    assert "Wednesday, 4 November 2026" in page
+    assert "1 job to write about" in page
+    assert '<a href="https://jobs.acme.com/1" target="_blank" rel="noopener noreferrer">Backend Engineer</a>' in page
+    assert ">Acme</p>" in page
+    assert "<span>via Greenhouse career pages</span><span>id 12</span>" in page
+    assert '<span class="sure">stated</span> <span class="found">job post</span>' in page
+    assert '<span class="sure">site</span> <span class="found">https://acme.com/careers</span>' in page
+    assert '<pre class="draft">Subject: Backend Engineer role at Acme' in page
+    write = html.escape(outreach.mailto("jobs@acme.com", email.subject, outreach.email_text(email)))
+    assert f'<a class="open" href="{write}">Write email</a>' in page
+    other = html.escape(outreach.mailto("careers@acme.com", email.subject, outreach.email_text(email)))
+    assert f'<a href="{other}">careers@acme.com</a>' in page
+    assert 'data-command="hirejutsu outreach sent 12 jobs@acme.com"' in page
+
+
+def test_html_page_counts_the_jobs():
+    assert "2 jobs to write about" in outreach.html_page([draft(), draft()], DAY)
+
+
+def test_html_page_without_contacts_says_so():
+    assert "<li>Nobody found.</li>" in outreach.html_page([draft()], DAY)
+
+
+def test_html_page_escapes_job_text():
+    nasty = pick(title='<script>alert("hi")</script>', company="Fish & Chips", url='https://x/a?b=1&c="2"')
+    page = outreach.html_page([draft(nasty, contacts=[Contact("a@b.com", "<b>post</b>", "stated")])], DAY)
+    assert "<script>alert" not in page
+    assert "&lt;script&gt;alert(&quot;hi&quot;)&lt;/script&gt;" in page
+    assert "Fish &amp; Chips" in page
+    assert "&lt;b&gt;post&lt;/b&gt;" in page
+    assert 'href="https://x/a?b=1&amp;c=&quot;2&quot;"' in page
+
+
+def test_html_page_loads_nothing_from_the_internet():
+    page = outreach.html_page([draft()], DAY)
+    for loads in ("src=", "url(", "<link", "@import"):
+        assert loads not in page
+
+
+def test_html_page_links_jobs_only_to_web_addresses():
+    assert 'href="javascript:' not in outreach.html_page([draft(pick(url="javascript:alert(1)"))], DAY)
