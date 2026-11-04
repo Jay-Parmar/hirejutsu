@@ -1,8 +1,9 @@
 from datetime import date, datetime, timezone
 
 import pytest
-from fakes import FakeClient, fixture
+from fakes import CLAUDE_URL, FakeClient, claude_reply, fixture
 
+from hirejutsu import ai
 from hirejutsu.app import App
 from hirejutsu.cli import main
 from hirejutsu.commands import report as report_command
@@ -189,3 +190,39 @@ def test_an_unknown_search_api_is_an_error(home, client, capsys):
     save_picks(home, DAY, ACME)
     assert run(home, "--day", "2026-11-04") == 2
     assert "Unknown outreach.search 'bing'" in capsys.readouterr().out
+
+
+def fake_ai(monkeypatch, answer=None):
+    client = FakeClient({CLAUDE_URL: answer} if answer else {})
+    monkeypatch.setattr(ai, "make_client", lambda settings: client)
+    return client
+
+
+def test_the_ai_rewrites_the_drafts_when_outreach_ai_is_on(home, client, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    (home / "config.yaml").write_text("resume: resume.txt\noutreach:\n  ai: true\n", encoding="utf-8")
+    ai_client = fake_ai(monkeypatch, claude_reply("I saw your Backend Engineer role. My Python work fits it."))
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert "Hi Acme team,\n\nI saw your Backend Engineer role. My Python work fits it.\n\nBest regards," in saved(home, DAY)
+    prompt = ai_client.calls[0][3]["messages"][0]["content"]
+    assert "Python developer" in prompt
+    assert "Could you pass my profile to the hiring manager" in prompt
+
+
+def test_the_drafts_keep_the_template_when_the_ai_fails(home, client, monkeypatch, capsys):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    (home / "config.yaml").write_text("resume: resume.txt\noutreach:\n  ai: true\n", encoding="utf-8")
+    fake_ai(monkeypatch)
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert "ANTHROPIC_API_KEY" in capsys.readouterr().out
+    assert "Could you pass my profile to the hiring manager" in saved(home, DAY)
+
+
+def test_the_ai_is_not_asked_by_default(home, client, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    ai_client = fake_ai(monkeypatch, claude_reply("Rewritten."))
+    save_picks(home, DAY, ACME)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert ai_client.calls == []

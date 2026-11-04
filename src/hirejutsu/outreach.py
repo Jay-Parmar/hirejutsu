@@ -26,6 +26,7 @@ OUTREACH_DEFAULTS = {
     "pitch": "",
     "search": "",
     "search_key_env": "TAVILY_API_KEY",
+    "ai": False,
 }
 SEARCH_APIS = ("tavily",)
 # The skills reason of a pick, like "Skills: Python, Django (5 of 20)".
