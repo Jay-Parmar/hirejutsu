@@ -4,8 +4,10 @@ Everything here works on a small page object, so it runs the same against the br
 (see browser.py) and against the fake page in the tests.
 """
 
+import json
 import re
 from dataclasses import dataclass, field, replace
+from datetime import datetime
 from pathlib import Path
 
 from .applicant import Applicant, Position, School
@@ -123,6 +125,23 @@ def settle(page) -> None:
             return
         last = shown
         page.wait(PAUSE / 2)
+
+
+def save_fields(page, step: str, url: str, folder: Path) -> Path:
+    """Save what each field of a step is, never what it holds, to send when hirejutsu misses a field."""
+    fields = [
+        {
+            "ids": list(item.ids), "label": item.label, "type": item.kind, "required": item.required,
+            "section": item.section, "entry": item.entry,
+        }
+        for item in page.fields()
+    ]
+    # The query part of a link can carry more than the job, so it is left out.
+    data = {"step": step, "url": url.split("?")[0].split("#")[0], "fields": fields}
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"workday-{datetime.now():%Y-%m-%d-%H%M%S}-{'-'.join(words(step).split()) or 'step'}.json"
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return path
 
 
 def step_name(text: str) -> str:

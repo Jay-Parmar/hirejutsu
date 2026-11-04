@@ -1,10 +1,11 @@
+import json
 from dataclasses import replace
 
 import pytest
 
 from fakes import FakePage
 from hirejutsu.applicant import Applicant, Position, School
-from hirejutsu.workday import Field, Want, WindowClosed, best_option, fill_step, find, step_name, steps
+from hirejutsu.workday import Field, Want, WindowClosed, best_option, fill_step, find, save_fields, step_name, steps
 
 DETAILS = Applicant(
     first_name="Asha",
@@ -385,3 +386,18 @@ def test_a_step_shows_once_its_fields_stop_changing():
     page = LoadingPage(steps=["current step 2 of 4 My Information"])
     assert next(steps(page)) == "My Information"
     assert page.looks == 4
+
+
+def test_saved_fields_never_hold_their_values(tmp_path):
+    page = FakePage([Field(1, ("legalName--firstName",), "Given Name(s)", value="Asha", required=True, section="Legal Name")])
+    link = "https://acme.wd5.myworkdayjobs.com/en-US/External/job/Pune/Engineer_R1/apply?source=LinkedIn"
+    path = save_fields(page, "My Information", link, tmp_path / "logs")
+    assert path.parent == tmp_path / "logs"
+    assert path.name.startswith("workday-") and path.name.endswith("-my-information.json")
+    assert json.loads(path.read_text(encoding="utf-8")) == {
+        "step": "My Information",
+        "url": "https://acme.wd5.myworkdayjobs.com/en-US/External/job/Pune/Engineer_R1/apply",
+        "fields": [{"ids": ["legalName--firstName"], "label": "Given Name(s)", "type": "text", "required": True,
+                    "section": "Legal Name", "entry": 0}],
+    }
+    assert "Asha" not in path.read_text(encoding="utf-8")
