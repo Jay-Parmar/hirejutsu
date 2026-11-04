@@ -104,3 +104,35 @@ def test_missing_applicant_details_are_pointed_out(home, client, capsys):
     save_picks(home, DAY, ACME)
     assert run(home, "--day", "2026-11-04") == 0
     assert "hirejutsu applicant --edit" in capsys.readouterr().out
+
+
+def notes(home, job_id):
+    with Store(home / "hirejutsu.db") as store:
+        return [note for _, _, note in store.history(job_id)]
+
+
+def test_sent_records_the_email_with_the_job(home, capsys):
+    save_picks(home, DAY, ACME)
+    assert run(home, "sent", "1", "jobs@acme.com") == 0
+    assert "Noted that you emailed jobs@acme.com about job 1: Backend Engineer at Acme" in capsys.readouterr().out
+    assert notes(home, 1) == ["Emailed jobs@acme.com"]
+    with Store(home / "hirejutsu.db") as store:
+        assert store.get_job(1).status == "new"
+
+
+def test_sent_takes_todays_pick_numbers_and_several_addresses(home):
+    save_picks(home, datetime.now().astimezone().date(), ACME, INITECH)
+    assert run(home, "sent", "-t", "2", "jane@initech.com", "jobs@initech.com") == 0
+    assert notes(home, 2) == ["Emailed jane@initech.com, jobs@initech.com"]
+
+
+def test_sent_needs_email_addresses(home, capsys):
+    save_picks(home, DAY, ACME)
+    assert run(home, "sent", "1", "Jane") == 2
+    assert "Jane is not an email address" in capsys.readouterr().out
+    assert notes(home, 1) == []
+
+
+def test_sent_for_an_unknown_job(home, capsys):
+    assert run(home, "sent", "99", "jobs@acme.com") == 1
+    assert "No job with id 99" in capsys.readouterr().out

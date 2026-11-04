@@ -22,6 +22,8 @@ OUTREACH_DEFAULTS = {"sources": [*ATSES, "hackernews"], "pitch": ""}
 # The skills reason of a pick, like "Skills: Python, Django (5 of 20)".
 SKILLS_REASON = re.compile(r"Skills: (.+) \(\d+ of \d+\)")
 ROLE_WORDS = {"role", "roles", "position", "positions"}
+# How the note that you emailed someone about a job starts.
+EMAILED = "Emailed "
 
 
 @dataclass
@@ -106,6 +108,10 @@ def mailto(address: str, subject: str, text: str) -> str:
     # Mail apps read line breaks in a mailto body as CRLF.
     query = urlencode({"subject": subject, "body": text.replace("\n", "\r\n")}, quote_via=quote)
     return f"mailto:{quote(address, safe='@')}?{query}"
+
+
+def sent_note(addresses: list[str]) -> str:
+    return EMAILED + ", ".join(addresses)
 
 
 def sent_command(draft: Draft) -> str:

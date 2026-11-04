@@ -7,10 +7,12 @@ from rich.table import Table
 from rich.text import Text
 
 from .. import outreach
-from ..applicant import load_applicant
+from ..applicant import EMAIL, load_applicant
 from ..contacts import Finder
+from ..errors import HirejutsuError
 from ..resume import load_profile
 from .report import show_saved
+from .track import add_ids, named_jobs
 
 
 def register(sub) -> None:
@@ -19,6 +21,12 @@ def register(sub) -> None:
     parser.add_argument("-n", type=int, metavar="LIMIT", help="write about at most this many picks")
     parser.add_argument("--open", action="store_true", help="open the HTML page in your browser")
     parser.set_defaults(func=draft_emails)
+    actions = parser.add_subparsers(dest="action", metavar="action")
+
+    action = actions.add_parser("sent", help="note that you emailed someone about a job")
+    add_ids(action, nargs=1)
+    action.add_argument("addresses", nargs="+", metavar="ADDRESS", help="the addresses you wrote to")
+    action.set_defaults(func=record_sent)
 
 
 def draft_emails(app, args) -> int:
@@ -56,3 +64,15 @@ def print_drafts(console, drafts: list[outreach.Draft], day: date) -> None:
         table.add_row(str(job.id), Text(job.title, style=Style(link=job.url)), Text(job.company),
                       Text(draft.to or "nobody found"), sure, str(len(draft.contacts)))
     console.print(table)
+
+
+def record_sent(app, args) -> int:
+    wrong = [address for address in args.addresses if not EMAIL.fullmatch(address)]
+    if wrong:
+        raise HirejutsuError(f"{wrong[0]} is not an email address")
+    jobs = named_jobs(app, args)
+    for job in jobs:
+        app.store.add_note(job.id, outreach.sent_note(args.addresses))
+        app.console.print(Text(f"Noted that you emailed {', '.join(args.addresses)} about job {job.id}: "
+                               f"{job.title} at {job.company}"))
+    return 0 if jobs else 1
