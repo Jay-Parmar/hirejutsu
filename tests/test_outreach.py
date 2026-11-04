@@ -28,8 +28,9 @@ def pick(source="greenhouse", reasons=(SKILLS,), **fields):
     return Match(Job(source, "1", **values, id=12), 0.8, list(reasons))
 
 
-def draft(match=None, years=6, applicant=ASHA, contacts=(), **values):
-    return outreach.draft(match or pick(), list(contacts), Profile(years=years), applicant, settings(**values))
+def draft(match=None, years=6, applicant=ASHA, contacts=(), people=(), **values):
+    match = match or pick()
+    return outreach.draft(match, list(contacts), list(people), Profile(years=years), applicant, settings(**values))
 
 
 def test_board_picks_are_left_out_by_default():
@@ -208,3 +209,13 @@ def test_contacts_found_together_share_a_line():
     page = outreach.html_page([draft(contacts=contacts)], DAY)
     assert page.count('<li><a href="mailto:') == 2
     assert page.count('href="mailto:') == len(contacts) + 1
+
+
+def test_recruiters_found_by_search_link_to_their_profiles():
+    email = draft(people=[Person("Jane Doe", "Talent Acquisition Partner", "https://www.linkedin.com/in/jane-doe")])
+    text = outreach.markdown([email], DAY)
+    assert "Recruiters found: [Jane Doe, Talent Acquisition Partner](https://www.linkedin.com/in/jane-doe)" in text
+    page = outreach.html_page([email], DAY)
+    assert ('<a href="https://www.linkedin.com/in/jane-doe" target="_blank" rel="noopener noreferrer">Jane Doe</a>, '
+            "Talent Acquisition Partner") in page
+    assert "Recruiters found" not in outreach.markdown([draft()], DAY)

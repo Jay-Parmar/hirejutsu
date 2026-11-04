@@ -56,8 +56,12 @@ def draft_emails(app, args) -> int:
         app.console.print(f"outreach.search is {settings['search']}, but {settings['search_key_env']} is not set, "
                           "so there is no search for recruiters.")
     finder = Finder(app.client, key)
+    drafts = []
     with app.console.status(f"Looking for contacts at {len(chosen)} companies..."):
-        drafts = [outreach.draft(match, finder.contacts(match.job), profile, applicant, settings) for match in chosen]
+        for match in chosen:
+            contacts = finder.contacts(match.job)
+            people = finder.recruiters(match.job.company)
+            drafts.append(outreach.draft(match, contacts, people, profile, applicant, settings))
     print_drafts(app.console, drafts, day)
     show_saved(app, outreach.save_drafts(drafts, app.config, day), args.open)
     return 0

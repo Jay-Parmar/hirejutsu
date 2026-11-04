@@ -163,7 +163,9 @@ def test_recruiter_search_uses_the_key_from_the_environment(home, client, monkey
     client.routes[TAVILY] = fixture("tavily_people.json")
     save_picks(home, DAY, ACME)
     assert run(home, "--day", "2026-11-04") == 0
-    assert "jane.doe@acme.com, jane@acme.com, janedoe@acme.com, jdoe@acme.com (guess)" in saved(home, DAY)
+    text = saved(home, DAY)
+    assert "jane.doe@acme.com, jane@acme.com, janedoe@acme.com, jdoe@acme.com (guess)" in text
+    assert "Recruiters found: [Jane Doe, Talent Acquisition Partner](https://in.linkedin.com/in/jane-doe-4a1b2c)" in text
 
 
 def test_recruiter_search_without_its_key_is_skipped(home, client, monkeypatch, capsys):

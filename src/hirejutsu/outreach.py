@@ -13,7 +13,7 @@ from urllib.parse import quote, urlencode
 from .applicant import Applicant
 from .companies import ATSES
 from .config import Config
-from .contacts import Contact, search_links
+from .contacts import Contact, Person, search_links
 from .errors import HirejutsuError
 from .models import Job, Match, Profile
 from .report import source_label, web_link
@@ -37,10 +37,11 @@ EMAILED = "Emailed "
 
 @dataclass
 class Draft:
-    """An email about one pick and the contacts it could go to, surest first."""
+    """An email about one pick, the contacts it could go to, surest first, and recruiters found by search."""
 
     match: Match
     contacts: list[Contact]
+    people: list[Person]
     subject: str
     body: str
     signature: str
@@ -72,7 +73,8 @@ def picks_to_write(matches: list[Match], settings: dict) -> list[Match]:
     return [match for match in matches if match.job.source in settings["sources"]]
 
 
-def draft(match: Match, contacts: list[Contact], profile: Profile, applicant: Applicant, settings: dict) -> Draft:
+def draft(match: Match, contacts: list[Contact], people: list[Person], profile: Profile, applicant: Applicant,
+          settings: dict) -> Draft:
     job = match.job
     lines = [
         f"I saw the {role(job)} at {job.company} ({job.url}) and wanted to write to you directly.",
@@ -82,7 +84,7 @@ def draft(match: Match, contacts: list[Contact], profile: Profile, applicant: Ap
         "Thank you for your time.",
     ]
     body = "\n".join(line for line in lines if line)
-    return Draft(match, contacts, f"{role(job)} at {job.company}", body, signature(applicant))
+    return Draft(match, contacts, people, f"{role(job)} at {job.company}", body, signature(applicant))
 
 
 def role(job: Job) -> str:
@@ -167,6 +169,9 @@ def markdown(drafts: list[Draft], day: date) -> str:
         lines += [f"## {number}. {job.title} at {job.company}",
                   f"{job.url} | via {source_label(job.source)} | id {job.id}", "", "Who to write to:"]
         lines += [f"- {contact_line(group)}" for group in contact_groups(draft.contacts)] or ["- Nobody found."]
+        if draft.people:
+            found = " | ".join(f"[{person.name}, {person.role}]({person.link})" for person in draft.people)
+            lines += ["", f"Recruiters found: {found}"]
         searches = " | ".join(f"[{label}]({url})" for label, url in search_links(job.company))
         lines += ["", f"Find someone yourself: {searches}"]
         lines += ["", "```", f"Subject: {draft.subject}", "", email_text(draft), "```", ""]
@@ -215,7 +220,7 @@ def _job_html(number: int, draft: Draft) -> str:
 <p class="facts"><span>via {escape(source_label(job.source))}</span><span>id {job.id}</span></p>
 <h3>Who to write to</h3>
 <ul class="contacts">{contacts or "<li>Nobody found.</li>"}</ul>
-<p class="find">Find someone yourself: {searches}</p>
+{_people_html(draft.people)}<p class="find">Find someone yourself: {searches}</p>
 <h3>Draft</h3>
 <pre class="draft">Subject: {escape(draft.subject)}
 
@@ -224,6 +229,18 @@ def _job_html(number: int, draft: Draft) -> str:
 <span class="command"><code>{command}</code><button type="button" data-command="{command}">Copy</button></span></p>
 </div>
 </li>"""
+
+
+def _people_html(people: list[Person]) -> str:
+    """The recruiters found by search, each linked to their profile. Empty when there are none."""
+    if not people:
+        return ""
+    found = "; ".join(
+        f'<a href="{escape(web_link(person.link))}" target="_blank" rel="noopener noreferrer">{escape(person.name)}</a>,'
+        f" {escape(person.role)}"
+        for person in people
+    )
+    return f'<p class="find">Recruiters found: {found}</p>\n'
 
 
 def _contacts_html(group: list[Contact], draft: Draft) -> str:
