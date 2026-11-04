@@ -136,7 +136,6 @@ def test_my_experience_is_filled_in_the_browser(window, tmp_path):
         ("Work Experience", 1, "Location"): "Pune",
         ("Work Experience", 1, "I currently work here"): "I currently work here",
         ("Work Experience", 1, "From"): "04/2021",
-        ("Work Experience", 1, "To"): "",
         ("Work Experience", 1, "Role Description"): "Built the payments API.",
         ("Work Experience", 2, "Job Title"): "Developer",
         ("Work Experience", 2, "Company"): "Globex",

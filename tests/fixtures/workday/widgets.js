@@ -80,6 +80,11 @@
   });
 
   document.addEventListener('change', (event) => {
+    // A current job has no end date, so Workday hides it.
+    if (event.target.closest('[data-automation-id="formField-currentlyWorkHere"]')) {
+      const end = event.target.closest('[role="group"]').querySelector('[data-automation-id="formField-endDate"]');
+      end.style.display = event.target.checked ? 'none' : '';
+    }
     if (event.target.type !== 'file') return;
     const item = document.createElement('div');
     item.setAttribute('data-automation-id', 'file-upload-item');
