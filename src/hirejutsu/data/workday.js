@@ -9,6 +9,7 @@
   const OLD_PANEL = /^(workExperience|education|websitePanelSet)-\d+$/;
   // The step on older pages without a progress bar.
   const STEP_PAGE = /^(applyFlow\w+Page|contactInformationPage|myExperiencePage|voluntaryDisclosuresPage|selfIdentificationPage)$/;
+  const ADD = '[data-automation-id="add-button"], [data-automation-id="Add"], [data-automation-id="Add Another"]';
   const PROMPT = '[data-automation-id="multiSelectContainer"], [data-automation-id="multiselectInputContainer"], [data-automation-id="searchBox"]';
   const DATE_PART = '[data-automation-id^="dateSection"][data-automation-id$="-input"]';
   const OPTIONS = { select: '[role="option"]', prompt: '[data-automation-id="promptOption"]' };
@@ -40,6 +41,11 @@
 
   function panels(section) {
     return [...section.querySelectorAll('*')].filter((element) => isPanel(element) && shown(element));
+  }
+
+  function sections(pattern) {
+    const wanted = new RegExp(pattern, 'i');
+    return [...document.querySelectorAll(SECTION)].filter((section) => shown(section) && wanted.test(heading(section)));
   }
 
   // The label of a field box: its legend or first label, else the label of its control.
@@ -147,6 +153,23 @@
     });
   }
 
-  const actions = { step, fields, options, choices: choicesOf };
+  // Marks the Add button of a section and returns how many entries it has, or -1 without one.
+  function addButton(pattern) {
+    unmark('data-hirejutsu-add');
+    for (const section of sections(pattern)) {
+      const buttons = [...section.querySelectorAll(ADD)].filter((button) => shown(button) && !panelOf(button));
+      if (buttons.length) {
+        buttons[buttons.length - 1].setAttribute('data-hirejutsu-add', '');
+        return panels(section).length;
+      }
+    }
+    return -1;
+  }
+
+  function entries(pattern) {
+    return Math.max(0, ...sections(pattern).map((section) => panels(section).length));
+  }
+
+  const actions = { step, fields, options, choices: choicesOf, add: addButton, entries };
   return actions[action](argument);
 }

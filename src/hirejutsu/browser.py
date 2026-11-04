@@ -112,9 +112,27 @@ class WorkdayPage:
         box = self.tab.locator(f'[data-hirejutsu-field="{field.ref}"]')
         if field.kind in ("radio", "checkbox", "checkboxes"):
             return bool(self.call(lambda tab: self.click_choice(field, value)))
-        fillers = {"text": self.type_text, "textarea": self.type_text, "select": self.choose, "prompt": self.search}
+        fillers = {
+            "text": self.type_text,
+            "textarea": self.type_text,
+            "select": self.choose,
+            "prompt": self.search,
+            "date": self.type_date,
+            "file": self.upload,
+        }
         filler = fillers.get(field.kind)
         return bool(filler and self.call(lambda tab: filler(box, value)))
+
+    def add(self, section: str) -> bool:
+        """Click the Add button of a section and wait for its new entry."""
+        before = self.run("add", section)
+        if before is None or before < 0:
+            return False
+        return bool(self.call(lambda tab: self.click_add(tab, section, before)))
+
+    def click_add(self, tab, section: str, before: int) -> bool:
+        tab.locator("[data-hirejutsu-add]").click()
+        return bool(self.until(lambda: (self.run("entries", section) or 0) > before, 5))
 
     def type_text(self, box, value: str) -> bool:
         control = box.locator('textarea, input:not([type="hidden"])').first
@@ -151,6 +169,23 @@ class WorkdayPage:
             self.tab.locator(f'[data-hirejutsu-option="{index}"]').click()
         query.press("Escape")
         return picked.count() > before
+
+    def type_date(self, box, value: str) -> bool:
+        """Type the month and year of an MM/YYYY or YYYY date into the parts the field has."""
+        month, _, year = value.rpartition("/")
+        typed = False
+        for part, digits in (("Month", month), ("Year", year)):
+            control = box.locator(f'[data-automation-id="dateSection{part}-input"]')
+            if digits and control.count():
+                control.first.focus()
+                self.tab.keyboard.type(digits)
+                control.first.blur()
+                typed = True
+        return typed
+
+    def upload(self, box, value: str) -> bool:
+        box.locator('input[type="file"]').first.set_input_files(value)
+        return True
 
     def option(self, value: str, kind: str) -> int | None:
         """The index of the shown option that is the value, once the list shows."""

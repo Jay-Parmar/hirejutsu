@@ -1,12 +1,13 @@
 """Playwright against local copies of Workday steps. Skipped without Playwright or Microsoft Edge."""
 
 from contextlib import ExitStack
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
 from hirejutsu import browser
-from hirejutsu.applicant import Applicant
+from hirejutsu.applicant import Applicant, Position, School
 from hirejutsu.errors import HirejutsuError
 from hirejutsu.workday import fill_step
 
@@ -19,6 +20,15 @@ DETAILS = Applicant(
     phone_code="+91",
     address={"line1": "12 MG Road", "city": "Pune", "state": "Maharashtra", "postal_code": "411001", "country": "India"},
     answers={"how_did_you_hear": "LinkedIn"},
+)
+EXPERIENCE = replace(
+    DETAILS,
+    links={"linkedin": "https://www.linkedin.com/in/asha", "github": "https://github.com/asha"},
+    work=[
+        Position("Backend Engineer", "Acme", "Pune", "2021-04", "", "Built the payments API."),
+        Position("Developer", "Globex", "Mumbai", "2018-07", "2021-03"),
+    ],
+    education=[School("Pune University", "B.E.", "Computer Engineering", "2014", "2018", "8.1")],
 )
 
 
@@ -112,4 +122,37 @@ def test_an_older_page_is_filled_by_its_ids(window):
         "sourceArea": "LinkedIn", "previousWorkerArea": "No", "firstNameArea": "Asha", "lastNameArea": "Rao",
         "lineArea": "12 MG Road", "cityArea": "Pune", "regionArea": "Maharashtra", "postalArea": "411001",
         "emailArea": "asha@example.com", "deviceArea": "Mobile", "numberArea": "9876543210",
+    }
+
+
+def test_my_experience_is_filled_in_the_browser(window, tmp_path):
+    resume = tmp_path / "resume.pdf"
+    resume.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    page = open_page(window, "my-experience.html")
+    fill_step(page, "My Experience", EXPERIENCE, skills=["Python", "Kubernetes", "AWS"], resume=resume)
+    assert {(field.section, field.entry, field.label): field.value for field in page.fields()} == {
+        ("Work Experience", 1, "Job Title"): "Backend Engineer",
+        ("Work Experience", 1, "Company"): "Acme",
+        ("Work Experience", 1, "Location"): "Pune",
+        ("Work Experience", 1, "I currently work here"): "I currently work here",
+        ("Work Experience", 1, "From"): "04/2021",
+        ("Work Experience", 1, "To"): "",
+        ("Work Experience", 1, "Role Description"): "Built the payments API.",
+        ("Work Experience", 2, "Job Title"): "Developer",
+        ("Work Experience", 2, "Company"): "Globex",
+        ("Work Experience", 2, "Location"): "Mumbai",
+        ("Work Experience", 2, "I currently work here"): "",
+        ("Work Experience", 2, "From"): "07/2018",
+        ("Work Experience", 2, "To"): "03/2021",
+        ("Work Experience", 2, "Role Description"): "",
+        ("Education", 1, "School or University"): "Pune University",
+        ("Education", 1, "Degree"): "BE",
+        ("Education", 1, "Field of Study"): "Computer Engineering",
+        ("Education", 1, "Overall Result (GPA)"): "8.1",
+        ("Education", 1, "From"): "2014",
+        ("Education", 1, "To (Actual or Expected)"): "2018",
+        ("Skills", 0, "Type to Add Skills"): "Python, AWS",
+        ("Resume/CV", 0, "Upload a file (5MB max)"): "uploaded",
+        ("Websites", 1, "URL"): "https://github.com/asha",
+        ("Social Network URLs", 0, "LinkedIn"): "https://www.linkedin.com/in/asha",
     }
