@@ -11,7 +11,11 @@ from datetime import datetime
 from pathlib import Path
 
 from .applicant import Applicant, Position, School
+from .config import Config
+from .errors import ConfigError
 
+WORKDAY_DEFAULTS = {"browser": "msedge", "profile_folder": "browser", "max_skills": 10}
+BROWSERS = ("msedge", "chrome", "chromium")
 # The steps hirejutsu knows, found in the progress bar label or, on older pages, the step's data-automation-id.
 STEPS = {
     "My Information": r"my ?information|contact ?information|myinfo",
@@ -96,6 +100,19 @@ class Report:
     step: str
     filled: list = field(default_factory=list)
     left: list = field(default_factory=list)
+
+
+def load_settings(config: Config) -> dict:
+    """The workday section of the config, with the browser's profile folder as a full path."""
+    settings = config.section("workday", WORKDAY_DEFAULTS)
+    if settings["browser"] not in BROWSERS:
+        raise ConfigError("workday.browser must be msedge, chrome or chromium")
+    folder = config.path(settings["profile_folder"]).resolve()
+    # A folder of its own keeps the browser away from the Edge or Chrome profile you use every day.
+    if config.home.resolve() not in folder.parents:
+        raise ConfigError("workday.profile_folder must be a folder inside the data folder")
+    settings["profile_folder"] = folder
+    return settings
 
 
 def steps(page):

@@ -5,7 +5,20 @@ import pytest
 
 from fakes import FakePage
 from hirejutsu.applicant import Applicant, Position, School
-from hirejutsu.workday import Field, Want, WindowClosed, best_option, fill_step, find, save_fields, step_name, steps
+from hirejutsu.config import Config
+from hirejutsu.errors import ConfigError
+from hirejutsu.workday import (
+    Field,
+    Want,
+    WindowClosed,
+    best_option,
+    fill_step,
+    find,
+    load_settings,
+    save_fields,
+    step_name,
+    steps,
+)
 
 DETAILS = Applicant(
     first_name="Asha",
@@ -401,3 +414,20 @@ def test_saved_fields_never_hold_their_values(tmp_path):
                     "section": "Legal Name", "entry": 0}],
     }
     assert "Asha" not in path.read_text(encoding="utf-8")
+
+
+def test_settings_default_to_edge_with_a_profile_in_the_data_folder(tmp_path):
+    settings = load_settings(Config({}, tmp_path))
+    assert settings == {"browser": "msedge", "profile_folder": tmp_path.resolve() / "browser", "max_skills": 10}
+
+
+def test_unknown_browsers_are_refused(tmp_path):
+    with pytest.raises(ConfigError, match="msedge, chrome or chromium"):
+        load_settings(Config({"workday": {"browser": "firefox"}}, tmp_path))
+
+
+def test_the_browser_profile_stays_in_the_data_folder(tmp_path):
+    edge = tmp_path / "AppData" / "Local" / "Microsoft" / "Edge" / "User Data"
+    for folder in (str(edge), "."):
+        with pytest.raises(ConfigError, match="inside the data folder"):
+            load_settings(Config({"workday": {"profile_folder": folder}}, tmp_path / "home"))
