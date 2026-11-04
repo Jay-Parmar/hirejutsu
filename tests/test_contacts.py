@@ -9,6 +9,17 @@ from hirejutsu.contacts import (
 )
 from hirejutsu.models import Job
 
+TAVILY = "https://api.tavily.com/search"
+JANE = Person("Jane Doe", "Talent Acquisition Partner", "https://www.linkedin.com/in/jane-doe")
+
+
+class HeaderClient(FakeClient):
+    """FakeClient that also remembers the headers of the last POST."""
+
+    def post_json(self, url, payload, headers=None):
+        self.headers = headers
+        return super().post_json(url, payload, headers)
+
 
 def job(description="", **fields):
     values = {"title": "Backend Engineer", "company": "Acme", "url": "https://jobs.lever.co/acme/1"}
@@ -176,8 +187,6 @@ def test_the_same_title_with_a_recruiting_role_is_kept():
     title = "Jane Doe - Recruiter - Acme Robotics | LinkedIn"
     assert len(people_in([{"title": title, "url": "https://www.linkedin.com/in/someone"}], "Acme Robotics Inc")) == 1
 
-JANE = Person("Jane Doe", "Talent Acquisition Partner", "https://www.linkedin.com/in/jane-doe")
-
 
 def test_a_recruiter_gets_the_usual_address_patterns_as_guesses():
     found = guesses(JANE, "acme.com")
@@ -201,16 +210,6 @@ def test_accented_names_are_spelled_without_accents():
 
 def test_no_guesses_without_the_company_domain():
     assert guesses(JANE, "") == []
-
-TAVILY = "https://api.tavily.com/search"
-
-
-class HeaderClient(FakeClient):
-    """FakeClient that also remembers the headers of the last POST."""
-
-    def post_json(self, url, payload, headers=None):
-        self.headers = headers
-        return super().post_json(url, payload, headers)
 
 
 def searches(client):
