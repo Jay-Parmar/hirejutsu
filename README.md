@@ -13,7 +13,7 @@ browser window you control, and you sign in and submit.
 - Optional: LinkedIn, Indeed, Naukri, Glassdoor and ZipRecruiter
 - Reads PDF, DOCX, TXT and MD resumes for skills, titles and years of experience
 - Explains every pick, writes a daily HTML report and tracks what you applied to
-- Fills Workday application forms with your details, so you only check them and submit
+- Fills Workday application forms with your details, for you to check and submit
 - Runs by itself every morning and can send the picks by email, Telegram, Discord, Slack or ntfy
 - Optional AI second opinion with Claude, OpenAI or a local Ollama model
 

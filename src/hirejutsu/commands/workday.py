@@ -35,7 +35,7 @@ def workday(app, args) -> int:
     app.console.print(f"Opening {escape(link)} in {browser.NAMES[settings['browser']]}.")
     with browser.open_window(settings) as page:
         page.goto(link)
-        app.console.print("Click Apply and sign in yourself. Each step is filled as it shows, then you check it.")
+        app.console.print("Click Apply and sign in yourself. hirejutsu fills each step when it shows.")
         reports: list[Report] = []
         try:
             for step in steps(page):
