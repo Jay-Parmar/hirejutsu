@@ -47,3 +47,10 @@ answers:
   authorized_to_work:
   needs_sponsorship:
   willing_to_relocate:
+  # Have you worked for the company before? Workday forms answer No when this is empty.
+  worked_here_before:
+  # Voluntary disclosures. Leave them empty to answer them yourself.
+  gender:
+  ethnicity:
+  veteran_status:
+  disability:
