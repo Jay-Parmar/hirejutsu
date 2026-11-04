@@ -149,3 +149,49 @@ def test_worked_here_before_follows_the_answer():
     fill_step(page, "My Information", replace(DETAILS, answers={"worked_here_before": "Yes"}))
     assert page.value(2) == "Yes"
     assert page.value(1) == ""
+
+
+def work_entry():
+    """The fields of one Work Experience entry."""
+    return [
+        Field(0, ("jobTitle",), "Job Title", required=True),
+        Field(0, ("companyName",), "Company", required=True),
+        Field(0, ("location",), "Location"),
+        Field(0, ("currentlyWorkHere",), "I currently work here", "checkbox"),
+        Field(0, ("startDate", "dateSectionMonth-input", "dateSectionYear-input"), "From", "date", required=True),
+        Field(0, ("endDate", "dateSectionMonth-input", "dateSectionYear-input"), "To", "date"),
+        Field(0, ("roleDescription",), "Role Description", "textarea"),
+    ]
+
+
+def test_each_job_gets_a_work_experience_entry():
+    page = FakePage(entries={"Work Experience": work_entry()})
+    fill_step(page, "My Experience", DETAILS)
+    assert page.entry_values("Work Experience") == {
+        1: {
+            "Job Title": "Backend Engineer", "Company": "Acme", "Location": "Pune", "I currently work here": "Yes",
+            "From": "04/2021", "To": "", "Role Description": "Built the payments API.",
+        },
+        2: {
+            "Job Title": "Developer", "Company": "Globex", "Location": "Mumbai", "I currently work here": "",
+            "From": "07/2018", "To": "03/2021", "Role Description": "",
+        },
+    }
+
+
+def test_an_entry_workday_filled_from_the_resume_is_completed():
+    filled = [replace(item, ref=number, section="Work Experience", entry=1) for number, item in enumerate(work_entry(), 1)]
+    filled[0] = replace(filled[0], value="Developer")
+    filled[1] = replace(filled[1], value="Globex Corp")
+    page = FakePage(filled, entries={"Work Experience": work_entry()})
+    fill_step(page, "My Experience", DETAILS)
+    jobs = page.entry_values("Work Experience")
+    assert (jobs[1]["Company"], jobs[1]["From"], jobs[1]["To"]) == ("Globex Corp", "07/2018", "03/2021")
+    assert (jobs[2]["Company"], jobs[2]["From"]) == ("Acme", "04/2021")
+    assert len(jobs) == 2
+
+
+def test_jobs_need_a_section_to_go_in():
+    page = FakePage([Field(1, ("other",), "Other")])
+    report = fill_step(page, "My Experience", DETAILS)
+    assert report.filled == []

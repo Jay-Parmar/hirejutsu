@@ -1,6 +1,7 @@
 """Test doubles shared by the test suite."""
 
 import json
+import re
 import subprocess
 from dataclasses import replace
 from pathlib import Path
@@ -87,12 +88,32 @@ class FakeRun:
 class FakePage:
     """Stands in for a Workday tab: holds the fields of a step and records what was filled."""
 
-    def __init__(self, fields=()):
+    def __init__(self, fields=(), entries=None):
         self.items = {item.ref: item for item in fields}
+        # The fields of a new entry for each repeating section with an Add button, as {section: fields}.
+        self.entries = entries or {}
         self.filled: list[tuple[str, str]] = []
 
     def fields(self):
         return list(self.items.values())
+
+    def add(self, section: str) -> bool:
+        name = next((name for name in self.entries if re.search(section, name, re.IGNORECASE)), None)
+        if name is None:
+            return False
+        number = 1 + max((item.entry for item in self.items.values() if item.section == name), default=0)
+        for item in self.entries[name]:
+            ref = 1 + max(self.items, default=0)
+            self.items[ref] = replace(item, ref=ref, section=name, entry=number)
+        return True
+
+    def entry_values(self, section: str) -> dict:
+        """{entry: {label: value}} for the entries of a repeating section."""
+        found: dict = {}
+        for item in self.items.values():
+            if item.section == section and item.entry:
+                found.setdefault(item.entry, {})[item.label] = item.value
+        return found
 
     def value(self, ref: int) -> str:
         return self.items[ref].value

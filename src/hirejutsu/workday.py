@@ -5,9 +5,9 @@ Everything here works on a small page object, so it runs the same against the br
 """
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
-from .applicant import Applicant
+from .applicant import Applicant, Position
 
 # The steps hirejutsu knows, found in the progress bar label or, on older pages, the step's data-automation-id.
 STEPS = {
@@ -19,6 +19,8 @@ STEPS = {
     "Review": r"review",
 }
 STEP_NUMBER = re.compile(r"(current )?step \d+ of \d+", re.IGNORECASE)
+# Headings of the repeating sections on My Experience. Some companies say Professional Experience.
+WORK = r"experience|employment"
 
 
 @dataclass
@@ -99,6 +101,8 @@ def fill_step(page, step: str, details: Applicant) -> Report:
     report = Report(step)
     if step == "My Information":
         fill_values(page, information(details), report)
+    elif step == "My Experience":
+        fill_entries(page, WORK, [job(position) for position in details.work], report)
     report.left = [item for item in page.fields() if not item.value]
     return report
 
@@ -138,3 +142,81 @@ def information(details: Applicant) -> list[Want]:
         Want(phone_code, ("countryPhoneCode", "country-phone-code"), r"country phone code"),
         Want(details.phone, ("phoneNumber", "phone-number"), r"phone number"),
     ]
+
+
+def fill_entries(page, section: str, rows: list[list[Want]], report: Report) -> None:
+    """Fill an entry of a repeating section for each row of values, adding entries as needed.
+
+    The first value of a row tells entries apart. An entry that already holds it, like one Workday
+    filled in from the resume, is completed instead of getting a second entry.
+    """
+    used: set[int] = set()
+    for row in rows:
+        entries = entries_of(page.fields(), section)
+        number = holding(entries, row[0], used) or empty_entry(entries, used) or added_entry(page, section, entries)
+        if not number:
+            return
+        used.add(number)
+        fill_values(page, [replace(want, section=section, entry=number) for want in row], report)
+
+
+def entries_of(fields: list[Field], section: str) -> dict[int, list[Field]]:
+    """The fields of each entry of a repeating section, by entry number."""
+    found: dict[int, list[Field]] = {}
+    for item in fields:
+        if item.entry and re.search(section, item.section, re.IGNORECASE):
+            found.setdefault(item.entry, []).append(item)
+    return found
+
+
+def holding(entries: dict[int, list[Field]], want: Want, used: set[int]) -> int | None:
+    """The entry that already holds what want says, like the same company."""
+    for number, items in entries.items():
+        found = find(items, replace(want, entry=number))
+        if number not in used and found and same(found.value, want.value):
+            return number
+    return None
+
+
+def empty_entry(entries: dict[int, list[Field]], used: set[int]) -> int | None:
+    """The first entry with nothing filled in."""
+    for number, items in sorted(entries.items()):
+        if number not in used and not any(item.value for item in items):
+            return number
+    return None
+
+
+def added_entry(page, section: str, entries: dict[int, list[Field]]) -> int | None:
+    """The number of a new entry after clicking the section's Add button."""
+    if not page.add(section):
+        return None
+    number = max(entries_of(page.fields(), section), default=None)
+    return None if number in entries else number
+
+
+def same(first: str, second: str) -> bool:
+    """True when one text has every word of the other, as Acme and Acme Inc do."""
+    one, other = set(words(first).split()), set(words(second).split())
+    return bool(one and other) and (one <= other or other <= one)
+
+
+def job(position: Position) -> list[Want]:
+    """Where one job goes in a Work Experience entry. The company comes first, as it tells jobs apart."""
+    return [
+        Want(position.company, ("companyName", "company"), r"company"),
+        Want(position.title, ("jobTitle",), r"job title"),
+        Want(position.location, ("location",), r"location"),
+        Want("" if position.end else "Yes", ("currentlyWorkHere",), r"i currently work here"),
+        Want(month_year(position.start), ("startDate",), r"from$"),
+        Want(month_year(position.end), ("endDate",), r"to$"),
+        Want(position.description, ("roleDescription", "description"), r"role description"),
+    ]
+
+
+def month_year(value: str) -> str:
+    """A YYYY-MM or YYYY date as Workday writes it, MM/YYYY or YYYY. Other dates are left out."""
+    found = re.fullmatch(r"(\d{4})(?:-(\d{1,2}))?", value.strip())
+    if not found:
+        return ""
+    year, month = found.groups()
+    return f"{int(month):02d}/{year}" if month else year
