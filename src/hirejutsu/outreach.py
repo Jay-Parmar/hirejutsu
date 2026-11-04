@@ -12,7 +12,7 @@ from urllib.parse import quote, urlencode
 from .applicant import Applicant
 from .companies import ATSES
 from .config import Config
-from .contacts import Contact
+from .contacts import Contact, search_links
 from .models import Job, Match, Profile
 from .report import source_label, web_link
 from .store import Store
@@ -135,6 +135,8 @@ def markdown(drafts: list[Draft], day: date) -> str:
         lines += [f"## {number}. {job.title} at {job.company}",
                   f"{job.url} | via {source_label(job.source)} | id {job.id}", "", "Who to write to:"]
         lines += [f"- {contact_line(contact)}" for contact in draft.contacts] or ["- Nobody found."]
+        searches = " | ".join(f"[{label}]({url})" for label, url in search_links(job.company))
+        lines += ["", f"Find someone yourself: {searches}"]
         lines += ["", "```", f"Subject: {draft.subject}", "", email_text(draft), "```", ""]
         lines += [f"[Write email]({mailto(draft.to, draft.subject, email_text(draft))})", "",
                   f"After sending it: `{sent_command(draft)}`", ""]
@@ -171,6 +173,8 @@ def _job_html(number: int, draft: Draft) -> str:
     text = email_text(draft)
     contacts = "".join(_contact_html(contact, draft) for contact in draft.contacts) or "<li>Nobody found.</li>"
     command = escape(sent_command(draft))
+    searches = " ".join(f'<a href="{escape(url)}" target="_blank" rel="noopener noreferrer">{label}</a>'
+                        for label, url in search_links(job.company))
     return f"""<li class="job">
 <div class="rank">{number}</div>
 <div>
@@ -179,6 +183,7 @@ def _job_html(number: int, draft: Draft) -> str:
 <p class="facts"><span>via {escape(source_label(job.source))}</span><span>id {job.id}</span></p>
 <h3>Who to write to</h3>
 <ul class="contacts">{contacts}</ul>
+<p class="find">Find someone yourself: {searches}</p>
 <h3>Draft</h3>
 <pre class="draft">Subject: {escape(draft.subject)}
 

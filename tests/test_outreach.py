@@ -176,3 +176,12 @@ def test_drafts_are_saved_next_to_the_daily_reports(tmp_path):
     assert paths == [tmp_path / "reports" / "outreach-2026-11-04.md", tmp_path / "reports" / "outreach-2026-11-04.html"]
     assert paths[0].read_text(encoding="utf-8").startswith("# Recruiter emails for 2026-11-04")
     assert paths[1].read_text(encoding="utf-8").startswith("<!doctype html>")
+
+
+def test_both_pages_link_to_searches_for_finding_someone_yourself():
+    text = outreach.markdown([draft()], DAY)
+    assert "Find someone yourself: [Web search](https://www.google.com/search?q=%22Acme%22%20recruiter" in text
+    assert " | [LinkedIn people search](https://www.linkedin.com/search/results/people/?keywords=Acme%20recruiter)" in text
+    page = outreach.html_page([draft()], DAY)
+    assert ('<a href="https://www.linkedin.com/search/results/people/?keywords=Acme%20recruiter" target="_blank" '
+            'rel="noopener noreferrer">LinkedIn people search</a>') in page

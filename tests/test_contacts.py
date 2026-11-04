@@ -4,7 +4,7 @@ import pytest
 import requests
 from fakes import FakeClient, fixture
 
-from hirejutsu.contacts import SITE_PAGES, Finder, company_domain, post_contacts, site_contacts
+from hirejutsu.contacts import SITE_PAGES, Finder, company_domain, post_contacts, search_links, site_contacts
 from hirejutsu.models import Job
 
 
@@ -142,3 +142,11 @@ def test_no_site_is_read_without_the_company_domain():
     client = FakeClient()
     assert [contact.address for contact in Finder(client).contacts(job("Mail jobs@gmail.com"))] == ["jobs@gmail.com"]
     assert client.calls == []
+
+
+def test_search_links_look_for_recruiters_at_the_company():
+    web, people = search_links("Acme & Co")
+    assert web == ("Web search", "https://www.google.com/search?q=%22Acme%20%26%20Co%22%20recruiter%20OR"
+                                 "%20%22talent%20acquisition%22%20site%3Alinkedin.com%2Fin")
+    assert people == ("LinkedIn people search",
+                      "https://www.linkedin.com/search/results/people/?keywords=Acme%20%26%20Co%20recruiter")

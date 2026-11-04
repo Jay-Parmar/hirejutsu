@@ -4,7 +4,7 @@ import html
 import logging
 import re
 from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import quote, urlencode, urlparse
 
 import requests
 
@@ -122,6 +122,16 @@ def on_domain(address: str, domain: str) -> bool:
 
 def is_hiring(address: str) -> bool:
     return re.split(r"[._+-]", address.split("@")[0])[0] in HIRING_WORDS
+
+
+def search_links(company: str) -> list[tuple[str, str]]:
+    """Searches for finding the right person yourself. They are only links, nothing is fetched."""
+    web = f'"{company}" recruiter OR "talent acquisition" site:linkedin.com/in'
+    return [
+        ("Web search", "https://www.google.com/search?" + urlencode({"q": web}, quote_via=quote)),
+        ("LinkedIn people search", "https://www.linkedin.com/search/results/people/?"
+         + urlencode({"keywords": f"{company} recruiter"}, quote_via=quote)),
+    ]
 
 
 def surest_first(contacts: list[Contact]) -> list[Contact]:
