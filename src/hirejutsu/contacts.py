@@ -39,6 +39,9 @@ HIRING_WORDS = {
     "careers", "career", "jobs", "job", "talent", "recruiting", "recruitment", "recruiter", "recruiters",
     "hr", "people", "hiring", "join", "joinus", "apply",
 }
+RECRUITING = re.compile(r"\b(recruit\w*|talent|sourcer|sourcing|hiring|hr|people partner)\b", re.IGNORECASE)
+PROFILE = re.compile(r"linkedin\.com/in/([^/?#]+)", re.IGNORECASE)
+NAME_WORD = re.compile(r"[^\W\d_]+(?:[.'-][^\W\d_]*)*")
 
 
 @dataclass
@@ -46,6 +49,15 @@ class Contact:
     address: str
     found: str
     confidence: str
+
+
+@dataclass
+class Person:
+    """Someone found by a web search, with the role their profile gives."""
+
+    name: str
+    role: str
+    link: str
 
 
 def post_addresses(job: Job) -> list[str]:
@@ -86,9 +98,46 @@ def registered_domain(host: str) -> str:
 def named_like(domain: str, company: str) -> bool:
     """True when one name holds the other, as acme.com does for Acme Inc and acmehq.com for Acme."""
     label = domain.split(".")[0].replace("-", "")
-    name = "".join(word for word in re.findall(r"[a-z0-9]+", company.lower()) if word not in LEGAL_WORDS)
+    name = company_words(company).replace(" ", "")
     # A name of one or two letters would match far too many sites.
     return len(min(label, name, key=len)) >= 3 and (label in name or name in label)
+
+
+def company_words(company: str) -> str:
+    """The company name in lower case without words like Inc or Ltd."""
+    return " ".join(word for word in re.findall(r"[a-z0-9]+", company.lower()) if word not in LEGAL_WORDS)
+
+
+def people_in(results: list[dict], company: str) -> list[Person]:
+    """Recruiters at the company in LinkedIn results titled like "Jane Doe - Recruiter - Acme | LinkedIn"."""
+    people = {}
+    for result in results:
+        url = result.get("url") or ""
+        profile = PROFILE.search(url)
+        person = person_in(result.get("title") or "", company, url) if profile else None
+        if person:
+            people.setdefault(profile.group(1).lower(), person)
+    return list(people.values())
+
+
+def person_in(title: str, company: str, link: str) -> Person | None:
+    parts = re.split(r"\s+[-|]\s+", re.sub(r"\s*\|\s*LinkedIn\s*$", "", title, flags=re.IGNORECASE))
+    # Credentials come after a comma, as in "Jane Doe, SHRM-CP".
+    name = parts[0].split(",")[0].strip()
+    words = name.split()
+    if not 2 <= len(words) <= 4 or not all(NAME_WORD.fullmatch(word) for word in words):
+        return None
+    rest = " ".join(parts[1:])
+    if not RECRUITING.search(rest) or not mentions(rest, company):
+        return None
+    return Person(name, parts[1], link)
+
+
+def mentions(text: str, company: str) -> bool:
+    """True when text names the whole company, so Acme Logistics is not Acme Robotics."""
+    name = company_words(company)
+    words = " ".join(re.findall(r"[a-z0-9]+", text.lower()))
+    return bool(name) and re.search(rf"\b{re.escape(name)}\b", words) is not None
 
 
 def site_contacts(client, domain: str) -> list[Contact]:

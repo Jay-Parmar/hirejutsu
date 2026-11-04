@@ -1,0 +1,59 @@
+{
+  "query": "Acme recruiter OR \"talent acquisition\"",
+  "follow_up_questions": null,
+  "answer": null,
+  "images": [],
+  "results": [
+    {
+      "url": "https://in.linkedin.com/in/jane-doe-4a1b2c",
+      "title": "Jane Doe - Talent Acquisition Partner - Acme | LinkedIn",
+      "content": "Talent Acquisition Partner at Acme. Bengaluru, Karnataka, India. 500+ connections.",
+      "score": 0.83,
+      "raw_content": null
+    },
+    {
+      "url": "https://www.linkedin.com/in/priya-nair-dev",
+      "title": "Priya Nair - Software Engineer - Acme | LinkedIn",
+      "content": "Software Engineer at Acme. Pune, Maharashtra, India.",
+      "score": 0.71,
+      "raw_content": null
+    },
+    {
+      "url": "https://www.linkedin.com/in/tom-lee-recruits",
+      "title": "Tom Lee - Recruiter - Globex | LinkedIn",
+      "content": "Recruiter at Globex. Formerly at Acme.",
+      "score": 0.69,
+      "raw_content": null
+    },
+    {
+      "url": "https://www.linkedin.com/jobs/view/recruiter-at-acme-3901234567",
+      "title": "Acme hiring Recruiter in Bengaluru | LinkedIn",
+      "content": "Posted 2 days ago. Apply now.",
+      "score": 0.66,
+      "raw_content": null
+    },
+    {
+      "url": "https://es.linkedin.com/in/josemartinez",
+      "title": "Jos\u00e9 Mart\u00ednez, SHRM-CP - Senior Technical Recruiter at Acme Inc. | LinkedIn",
+      "content": "Senior Technical Recruiter at Acme Inc. Madrid.",
+      "score": 0.64,
+      "raw_content": null
+    },
+    {
+      "url": "https://www.linkedin.com/in/jane-doe-4a1b2c",
+      "title": "Jane Doe - Talent Acquisition Partner - Acme | LinkedIn",
+      "content": "Talent Acquisition Partner at Acme.",
+      "score": 0.6,
+      "raw_content": null
+    },
+    {
+      "url": "https://www.linkedin.com/in/acme-talent-team",
+      "title": "Acme Talent Team - Acme | LinkedIn",
+      "content": "We hire for Acme.",
+      "score": 0.52,
+      "raw_content": null
+    }
+  ],
+  "response_time": 1.42,
+  "request_id": "6f1c2d3e-4b5a-6978-8a9b-0c1d2e3f4a5b"
+}

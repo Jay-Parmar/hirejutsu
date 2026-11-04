@@ -4,7 +4,9 @@ import pytest
 import requests
 from fakes import FakeClient, fixture
 
-from hirejutsu.contacts import SITE_PAGES, Finder, company_domain, post_contacts, search_links, site_contacts
+from hirejutsu.contacts import (
+    SITE_PAGES, Finder, Person, company_domain, people_in, post_contacts, search_links, site_contacts,
+)
 from hirejutsu.models import Job
 
 
@@ -150,3 +152,26 @@ def test_search_links_look_for_recruiters_at_the_company():
                                  "%20%22talent%20acquisition%22%20site%3Alinkedin.com%2Fin")
     assert people == ("LinkedIn people search",
                       "https://www.linkedin.com/search/results/people/?keywords=Acme%20%26%20Co%20recruiter")
+
+
+def test_recruiters_are_read_from_linkedin_result_titles():
+    assert people_in(fixture("tavily_people.json")["results"], "Acme") == [
+        Person("Jane Doe", "Talent Acquisition Partner", "https://in.linkedin.com/in/jane-doe-4a1b2c"),
+        Person("Jos\u00e9 Mart\u00ednez", "Senior Technical Recruiter at Acme Inc.",
+               "https://es.linkedin.com/in/josemartinez"),
+    ]
+
+
+@pytest.mark.parametrize("title", [
+    "Jane Doe - Software Engineer - Acme Robotics | LinkedIn",
+    "Jane - Recruiter - Acme Robotics | LinkedIn",
+    "Jane Doe - Recruiter - Acme Logistics | LinkedIn",
+    "Acme Robotics 2026 - Recruiter - Acme Robotics | LinkedIn",
+])
+def test_titles_need_a_name_and_a_recruiting_role_at_the_company(title):
+    assert people_in([{"title": title, "url": "https://www.linkedin.com/in/someone"}], "Acme Robotics Inc") == []
+
+
+def test_the_same_title_with_a_recruiting_role_is_kept():
+    title = "Jane Doe - Recruiter - Acme Robotics | LinkedIn"
+    assert len(people_in([{"title": title, "url": "https://www.linkedin.com/in/someone"}], "Acme Robotics Inc")) == 1
