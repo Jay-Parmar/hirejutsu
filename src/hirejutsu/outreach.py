@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from urllib.parse import quote, urlencode
 
 from .applicant import Applicant
 from .companies import ATSES
@@ -87,3 +88,10 @@ def signature(applicant: Applicant) -> str:
 
 def email_text(draft: Draft) -> str:
     return f"Hi {draft.match.job.company} team,\n\n{draft.body}\n\n{draft.signature}"
+
+
+def mailto(address: str, subject: str, text: str) -> str:
+    """A link that opens a new email in your mail app with the address, subject and text filled in."""
+    # Mail apps read line breaks in a mailto body as CRLF.
+    query = urlencode({"subject": subject, "body": text.replace("\n", "\r\n")}, quote_via=quote)
+    return f"mailto:{quote(address, safe='@')}?{query}"

@@ -86,3 +86,15 @@ def test_a_title_that_already_says_roles_is_not_doubled():
 def test_the_sign_off_has_what_the_applicant_details_have():
     assert draft(applicant=Applicant(first_name="Asha", phone="9876543210")).signature == "Best regards,\nAsha\n9876543210"
     assert draft(applicant=Applicant()).signature == "Best regards,"
+
+
+def test_mailto_link_fills_in_the_address_subject_and_text():
+    link = outreach.mailto("jobs@acme.com", "Backend Engineer role at Acme", "Hi Acme team,\n\nYes & no")
+    assert link == (
+        "mailto:jobs@acme.com?subject=Backend%20Engineer%20role%20at%20Acme"
+        "&body=Hi%20Acme%20team%2C%0D%0A%0D%0AYes%20%26%20no"
+    )
+
+
+def test_mailto_link_without_an_address_leaves_the_to_line_empty():
+    assert outreach.mailto("", "Hello", "Hi") == "mailto:?subject=Hello&body=Hi"
