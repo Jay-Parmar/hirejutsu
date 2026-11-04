@@ -4,6 +4,9 @@
 # Your resume: pdf, docx, txt or md. Run "hirejutsu resume" to see what is read from it.
 resume: resume.pdf
 
+# Your details for forms and emails. Run "hirejutsu applicant --edit" to start them from your resume.
+applicant: applicant.yaml
+
 profile:
   # Roles you want. Leave empty to use the titles found in your resume.
   titles: []

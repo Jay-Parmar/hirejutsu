@@ -93,6 +93,10 @@ def test_template_leaves_years_to_the_resume():
     assert yaml.safe_load(template())["profile"]["years"] is None
 
 
+def test_template_points_to_the_applicant_details():
+    assert yaml.safe_load(template())["applicant"] == "applicant.yaml"
+
+
 def test_template_lists_every_ranking_setting_with_its_default():
     assert yaml.safe_load(template())["ranking"] == RANKING_DEFAULTS
 
