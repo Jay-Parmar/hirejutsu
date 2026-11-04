@@ -185,3 +185,14 @@ def test_both_pages_link_to_searches_for_finding_someone_yourself():
     page = outreach.html_page([draft()], DAY)
     assert ('<a href="https://www.linkedin.com/search/results/people/?keywords=Acme%20recruiter" target="_blank" '
             'rel="noopener noreferrer">LinkedIn people search</a>') in page
+
+
+def test_a_known_person_is_greeted_by_first_name():
+    careers = Contact("careers@acme.com", "https://acme.com/careers", "site")
+    jane = Contact("jane.doe@acme.com", "Jane Doe, Talent Acquisition Partner", "guess", "Jane Doe")
+    assert outreach.email_text(draft(contacts=[jane])).startswith("Hi Jane,\n\nI saw the")
+    email = draft(contacts=[careers, jane])
+    assert outreach.email_text(email).startswith("Hi Acme team,\n")
+    assert outreach.email_text(email, jane).startswith("Hi Jane,\n")
+    page = outreach.html_page([email], DAY)
+    assert 'href="mailto:jane.doe@acme.com?subject=Backend%20Engineer%20role%20at%20Acme&amp;body=Hi%20Jane%2C' in page

@@ -38,9 +38,13 @@ class Draft:
     signature: str
 
     @property
+    def best(self) -> Contact | None:
+        return self.contacts[0] if self.contacts else None
+
+    @property
     def to(self) -> str:
         """The surest address, or "" when none was found."""
-        return self.contacts[0].address if self.contacts else ""
+        return self.best.address if self.best else ""
 
 
 def load_settings(config: Config) -> dict:
@@ -100,8 +104,12 @@ def signature(applicant: Applicant) -> str:
     return "\n".join(line for line in lines if line)
 
 
-def email_text(draft: Draft) -> str:
-    return f"Hi {draft.match.job.company} team,\n\n{draft.body}\n\n{draft.signature}"
+def email_text(draft: Draft, contact: Contact | None = None) -> str:
+    """The whole email to the surest contact, or the one given, greeting a known person by first name."""
+    contact = contact or draft.best
+    first = contact.name.split()[0] if contact and contact.name else ""
+    greeting = f"Hi {first}," if first else f"Hi {draft.match.job.company} team,"
+    return f"{greeting}\n\n{draft.body}\n\n{draft.signature}"
 
 
 def mailto(address: str, subject: str, text: str) -> str:
@@ -195,6 +203,6 @@ def _job_html(number: int, draft: Draft) -> str:
 
 
 def _contact_html(contact: Contact, draft: Draft) -> str:
-    write = escape(mailto(contact.address, draft.subject, email_text(draft)))
+    write = escape(mailto(contact.address, draft.subject, email_text(draft, contact)))
     return (f'<li><a href="{write}">{escape(contact.address)}</a> <span class="sure">{escape(contact.confidence)}</span>'
             f' <span class="found">{escape(contact.found)}</span></li>')
