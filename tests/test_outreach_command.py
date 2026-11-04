@@ -66,6 +66,9 @@ def test_outreach_drafts_emails_about_todays_career_page_picks(home, client, cap
     assert "Globex" not in text
     assert "Hi Acme team," in text
     assert "Asha Rao\n9876543210" in text
+    page = saved(home, today, "html")
+    assert 'href="mailto:jobs@acme.com?subject=Backend%20Engineer%20role%20at%20Acme' in page
+    assert "Globex" not in page
 
 
 def test_outreach_reads_the_company_site(home, client):
