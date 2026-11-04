@@ -3,6 +3,7 @@
 import html
 import logging
 import re
+import unicodedata
 from dataclasses import dataclass
 from urllib.parse import quote, urlencode, urlparse
 
@@ -49,6 +50,8 @@ class Contact:
     address: str
     found: str
     confidence: str
+    # The person behind the address, when it is known.
+    name: str = ""
 
 
 @dataclass
@@ -131,6 +134,25 @@ def person_in(title: str, company: str, link: str) -> Person | None:
     if not RECRUITING.search(rest) or not mentions(rest, company):
         return None
     return Person(name, parts[1], link)
+
+
+def guesses(person: Person, domain: str) -> list[Contact]:
+    """Likely addresses of a person at the company domain, like jane.doe@ and jdoe@."""
+    words = plain_words(person.name)
+    if not domain or len(words) < 2:
+        return []
+    first, last = words[0], words[-1]
+    found = f"{person.name}, {person.role}"
+    return [
+        Contact(f"{local}@{domain}", found, GUESS, person.name)
+        for local in (f"{first}.{last}", first, f"{first}{last}", f"{first[0]}{last}")
+    ]
+
+
+def plain_words(name: str) -> list[str]:
+    """The words of a name in plain lower case letters, without accents, for building addresses."""
+    plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+    return [word for word in (re.sub(r"[^a-z]", "", part) for part in plain.split()) if word]
 
 
 def mentions(text: str, company: str) -> bool:

@@ -5,7 +5,7 @@ import requests
 from fakes import FakeClient, fixture
 
 from hirejutsu.contacts import (
-    SITE_PAGES, Finder, Person, company_domain, people_in, post_contacts, search_links, site_contacts,
+    SITE_PAGES, Finder, Person, company_domain, guesses, people_in, post_contacts, search_links, site_contacts,
 )
 from hirejutsu.models import Job
 
@@ -175,3 +175,29 @@ def test_titles_need_a_name_and_a_recruiting_role_at_the_company(title):
 def test_the_same_title_with_a_recruiting_role_is_kept():
     title = "Jane Doe - Recruiter - Acme Robotics | LinkedIn"
     assert len(people_in([{"title": title, "url": "https://www.linkedin.com/in/someone"}], "Acme Robotics Inc")) == 1
+
+JANE = Person("Jane Doe", "Talent Acquisition Partner", "https://www.linkedin.com/in/jane-doe")
+
+
+def test_a_recruiter_gets_the_usual_address_patterns_as_guesses():
+    found = guesses(JANE, "acme.com")
+    assert [contact.address for contact in found] == [
+        "jane.doe@acme.com", "jane@acme.com", "janedoe@acme.com", "jdoe@acme.com",
+    ]
+    assert {(contact.found, contact.confidence, contact.name) for contact in found} == {
+        ("Jane Doe, Talent Acquisition Partner", "guess", "Jane Doe"),
+    }
+
+
+def test_guesses_use_plain_letters_and_skip_middle_names():
+    found = guesses(Person("Mary-Ann K. O'Neil", "Recruiter", ""), "acme.co.uk")
+    assert found[0].address == "maryann.oneil@acme.co.uk"
+    assert found[3].address == "moneil@acme.co.uk"
+
+
+def test_accented_names_are_spelled_without_accents():
+    assert guesses(Person("Jos\u00e9 Mart\u00ednez", "Recruiter", ""), "acme.es")[0].address == "jose.martinez@acme.es"
+
+
+def test_no_guesses_without_the_company_domain():
+    assert guesses(JANE, "") == []
