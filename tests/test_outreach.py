@@ -69,6 +69,10 @@ def test_the_pitch_gets_a_line_of_its_own():
     assert "which the role asks for.\nLast year I cut our API response times in half.\nCould you" in email.body
 
 
+def test_a_pitch_left_empty_in_the_config_adds_nothing():
+    assert draft(pitch=None).body == draft().body
+
+
 @pytest.mark.parametrize("reasons, years, line", [
     ([SKILLS], 1, "I have 1 year of experience, much of it with Python, Django and PostgreSQL, which"),
     (["Skills: Go (1 of 9)"], 9.7, "I have 9+ years of experience, much of it with Go, which the role asks for."),

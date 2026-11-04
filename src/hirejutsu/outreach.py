@@ -80,7 +80,8 @@ def draft(match: Match, contacts: list[Contact], people: list[Person], profile: 
     lines = [
         f"I saw the {role(job)} at {job.company} ({job.url}) and wanted to write to you directly.",
         fit_line(match, profile.years),
-        settings["pitch"].strip(),
+        # A pitch left empty in the config reads as None.
+        str(settings["pitch"] or "").strip(),
         "Could you pass my profile to the hiring manager, or would you have time for a short call?",
         "Thank you for your time.",
     ]
