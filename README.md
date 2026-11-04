@@ -13,6 +13,7 @@ browser window you control, and you sign in and submit.
 - Optional: LinkedIn, Indeed, Naukri, Glassdoor and ZipRecruiter
 - Reads PDF, DOCX, TXT and MD resumes for skills, titles and years of experience
 - Explains every pick, writes a daily HTML report and tracks what you applied to
+- Finds who to write to at the companies and drafts the emails, for you to send yourself
 - Fills Workday application forms with your details, for you to check and submit
 - Runs by itself every morning and can send the picks by email, Telegram, Discord, Slack or ntfy
 - Optional AI second opinion with Claude, OpenAI or a local Ollama model
@@ -98,7 +99,7 @@ hirejutsu doctor
 ```
 
 `doctor` looks at Python, the config, your resume, the sources, the last fetch, the schedule,
-notifications and AI, and says what to fix.
+notifications, AI and recruiter emails, and says what to fix.
 
 ## Resume
 
@@ -375,6 +376,65 @@ hirejutsu export           # CSV of tracked jobs in the data folder
 `status` takes new, saved, applied, interview, offer, rejected or skipped. Jobs you mark are left
 out of later picks.
 
+## Recruiter emails
+
+Applying through a job site often gets no answer. `outreach` finds who to write to at the
+companies of the day's picks and drafts a short email to each. It never sends anything: you read
+the draft and send it yourself.
+
+```
+hirejutsu outreach                         # today's picks
+hirejutsu outreach --day 2026-11-03 -n 5   # another day, at most 5 emails
+hirejutsu outreach --open                  # open the page when it is done
+hirejutsu outreach sent 42 jane@acme.com   # after you sent one
+```
+
+Picks from job boards are left out, as their listings rarely say who to write to. Picks from
+company career pages and Hacker News are kept. `outreach.sources` in the config changes the list.
+
+For each job it looks for:
+
+- `stated`: addresses written in the job post, leaving out no-reply, privacy, support and the like.
+- `site`: hiring addresses like careers@ or jobs@ on the company's own website. It reads the home,
+  careers, jobs and contact pages, once for each company.
+- `guess`: with the recruiter search below, the usual addresses made from a recruiter's name, like
+  jane.doe@ and jdoe@. These can bounce.
+
+Each job also gets a web search and a LinkedIn people search link, to find someone yourself.
+
+The drafts are saved in `reports/outreach-YYYY-MM-DD.md` and `.html` in the data folder. Each
+email says where you saw the role, the skills it shares with your resume and your years of
+experience, and asks to pass your profile to the hiring manager or for a short call. It is signed
+with the name, phone and links in `applicant.yaml`. Set `outreach.pitch` to add one line about you
+to every email. In the HTML page, click an address to open the email in your mail app with
+everything filled in.
+
+Once you have sent an email, record it with `hirejutsu outreach sent <id> <address>`. It is saved as
+a note on the job, shown by `hirejutsu show <id>`, and the job is not drafted again.
+
+### Recruiter search (optional)
+
+hirejutsu can look for recruiters at each company with the [Tavily](https://tavily.com) search API.
+Its free plan has 1,000 searches a month and needs no credit card. Each company takes one or two
+searches. hirejutsu only reads the titles of the results, like
+"Jane Doe - Talent Acquisition - Acme | LinkedIn", and never opens LinkedIn itself.
+
+Sign up at https://tavily.com, copy your API key and save it on Windows, then open a new terminal:
+
+```
+setx TAVILY_API_KEY "tvly-your-key"
+```
+
+On macOS or Linux add `export TAVILY_API_KEY="tvly-your-key"` to your shell profile. Then turn the
+search on in the config and check it with `hirejutsu doctor`:
+
+```yaml
+outreach:
+  search: tavily
+```
+
+With `outreach.ai: true`, the AI from the `ai` section also rewrites each email for its job.
+
 ## Notifications
 
 `run` can send the day's picks to you by email, Telegram, Discord, Slack or ntfy. Nothing is sent
@@ -511,6 +571,7 @@ ai:
 | `report` | rebuild a day's report files |
 | `review`, `applied`, `skip`, `save`, `status`, `note` | record what you did with a job |
 | `show`, `open`, `list`, `stats`, `export` | look back at tracked jobs |
+| `outreach`, `outreach sent <id> <address>` | draft emails to recruiters about the day's picks, note who you emailed |
 | `notify` | send the picks again or test your channels |
 | `schedule install`, `schedule status`, `schedule remove` | the daily run |
 | `ai test`, `ai explain <id>` | the optional AI second opinion |
@@ -521,12 +582,18 @@ Every command takes `--home <folder>` for another data folder and `-v` for debug
 ## Privacy
 
 Your resume, the jobs, your picks and your application history live in the data folder and nowhere
-else. hirejutsu sends nothing anywhere unless you turn on notifications or the AI second opinion,
-and it only reads job listings: it never logs in to a job site or applies for you.
+else. hirejutsu only reads job listings and, for `outreach`, a few pages of each company's
+website. It never logs in to a job site, applies for you or writes to anyone in your name.
 
-The one exception is `hirejutsu workday`, which types your details into a Workday form in a browser
-window you control. They only go to the Workday site you apply on, and you sign in and submit
-yourself. That window's browser profile, with your Workday sign ins, lives in the data folder.
+Nothing is sent anywhere unless you turn it on:
+
+- Notifications send your picks to the channels you set up.
+- The AI second opinion (`ai.enabled`) sends your resume text and the jobs to the AI provider.
+- The recruiter search (`outreach.search`) sends company names to Tavily in its search queries.
+- AI drafts (`outreach.ai`) send your resume text and the job to the AI provider.
+- `hirejutsu workday` types your details into a Workday form in a browser window you control, so
+  they only go to the Workday site you apply on. You sign in and submit yourself. That window's
+  browser profile, with your Workday sign ins, lives in the data folder.
 
 ## Development
 
