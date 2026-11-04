@@ -226,3 +226,11 @@ def test_the_ai_is_not_asked_by_default(home, client, monkeypatch):
     save_picks(home, DAY, ACME)
     assert run(home, "--day", "2026-11-04") == 0
     assert ai_client.calls == []
+
+
+def test_the_table_shows_whole_addresses_in_a_narrow_terminal(home, client, capsys):
+    long = Job("greenhouse", "4", "Senior Staff Backend Platform Engineer, Payments Infrastructure", "BrowserStack",
+               "https://www.browserstack.com/careers/4", description="Mail talent.acquisition@browserstack.com")
+    save_picks(home, DAY, long)
+    assert run(home, "--day", "2026-11-04") == 0
+    assert "talent.acquisition@browserstack.com" in capsys.readouterr().out

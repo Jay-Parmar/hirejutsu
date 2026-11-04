@@ -3,7 +3,7 @@
 from datetime import date, datetime
 
 from rich.style import Style
-from rich.table import Table
+from rich.table import Column, Table
 from rich.text import Text
 
 from .. import ai, outreach
@@ -95,12 +95,14 @@ def rewrite_with_ai(app, drafts: list[outreach.Draft], profile: Profile) -> None
 
 
 def print_drafts(console, drafts: list[outreach.Draft], day: date) -> None:
-    table = Table("ID", "Job", "Company", "Write to", "How sure", "Contacts", title=f"Recruiter emails for {day}")
+    # Addresses cannot wrap, so the job and company columns get narrower instead.
+    table = Table("ID", "Job", "Company", Column("Write to", no_wrap=True), "How sure",
+                  title=f"Recruiter emails for {day}")
     for draft in drafts:
         job = draft.match.job
-        sure = draft.contacts[0].confidence if draft.contacts else ""
+        sure = draft.best.confidence if draft.best else ""
         table.add_row(str(job.id), Text(job.title, style=Style(link=job.url)), Text(job.company),
-                      Text(draft.to or "nobody found"), sure, str(len(draft.contacts)))
+                      Text(draft.to or "nobody found"), sure)
     console.print(table)
 
 
