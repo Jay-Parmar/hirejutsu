@@ -233,10 +233,11 @@ class Finder:
         self.search_key = search_key
         self.sites: dict[str, list[Contact]] = {}
         self.people: dict[str, list[Person]] = {}
+        self.domains: dict[str, str] = {}
 
     def contacts(self, job: Job) -> list[Contact]:
         found = post_contacts(job)
-        domain = company_domain(job)
+        domain = company_domain(job) or self.searched_domain(job.company)
         if domain:
             if domain not in self.sites:
                 self.sites[domain] = site_contacts(self.client, domain)
@@ -244,6 +245,15 @@ class Finder:
             for person in self.recruiters(job.company):
                 found += guesses(person, domain)
         return surest_first(found)
+
+    def searched_domain(self, company: str) -> str:
+        """The company's own domain from a web search, for jobs that do not give it."""
+        key = company.lower()
+        if key not in self.domains:
+            results = self.search(f"{company} official website", max_results=5)
+            domains = (site_domain(result.get("url") or "", company) for result in results)
+            self.domains[key] = next((domain for domain in domains if domain), "")
+        return self.domains[key]
 
     def recruiters(self, company: str) -> list[Person]:
         """Recruiters at the company found by a web search, when there is a search key."""

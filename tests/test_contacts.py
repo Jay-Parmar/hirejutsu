@@ -259,3 +259,19 @@ def test_a_failed_search_is_reported_once_and_not_tried_again(caplog):
         finder.contacts(job(company="Initech", url="https://initech.com/jobs/1"))
     assert len(searches(client)) == 1
     assert "HTTP 401" in caplog.text
+
+
+def site_search(payload):
+    return fixture("tavily_site.json") if "official website" in payload["query"] else {"results": []}
+
+
+def test_the_company_site_is_searched_for_when_the_job_does_not_link_to_it():
+    client = FakeClient({TAVILY: site_search, "https://initech.io/careers": "Write to jobs@initech.io"})
+    finder = Finder(client, "tvly-test")
+    initech = job(company="Initech", url="https://jobs.lever.co/initech/1")
+    assert [(contact.address, contact.confidence) for contact in finder.contacts(initech)] == [("jobs@initech.io", "site")]
+    finder.contacts(initech)
+    assert [query["query"] for query in searches(client)] == [
+        "Initech official website", 'Initech recruiter OR "talent acquisition"',
+    ]
+    assert searches(client)[0] == {"query": "Initech official website", "max_results": 5}
