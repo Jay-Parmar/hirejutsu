@@ -7,7 +7,7 @@ Everything here works on a small page object, so it runs the same against the br
 import re
 from dataclasses import dataclass, field, replace
 
-from .applicant import Applicant, Position
+from .applicant import Applicant, Position, School
 
 # The steps hirejutsu knows, found in the progress bar label or, on older pages, the step's data-automation-id.
 STEPS = {
@@ -21,6 +21,7 @@ STEPS = {
 STEP_NUMBER = re.compile(r"(current )?step \d+ of \d+", re.IGNORECASE)
 # Headings of the repeating sections on My Experience. Some companies say Professional Experience.
 WORK = r"experience|employment"
+EDUCATION = r"education"
 
 
 @dataclass
@@ -103,6 +104,7 @@ def fill_step(page, step: str, details: Applicant) -> Report:
         fill_values(page, information(details), report)
     elif step == "My Experience":
         fill_entries(page, WORK, [job(position) for position in details.work], report)
+        fill_entries(page, EDUCATION, [education(school) for school in details.education], report)
     report.left = [item for item in page.fields() if not item.value]
     return report
 
@@ -210,6 +212,18 @@ def job(position: Position) -> list[Want]:
         Want(month_year(position.start), ("startDate",), r"from$"),
         Want(month_year(position.end), ("endDate",), r"to$"),
         Want(position.description, ("roleDescription", "description"), r"role description"),
+    ]
+
+
+def education(school: School) -> list[Want]:
+    """Where one school goes in an Education entry. The school comes first, as it tells schools apart."""
+    return [
+        Want(school.school, ("schoolName", "schoolItem", "school"), r"school"),
+        Want(school.degree, ("degree",), r"degree"),
+        Want(school.field_of_study, ("fieldOfStudy", "field-of-study"), r"field of study"),
+        Want(school.grade, ("gradeAverage", "gpa"), r"overall result|grade|gpa"),
+        Want(month_year(school.start), ("firstYearAttended", "startDate"), r"from$|first year"),
+        Want(month_year(school.end), ("lastYearAttended", "endDate"), r"to$|last year"),
     ]
 
 

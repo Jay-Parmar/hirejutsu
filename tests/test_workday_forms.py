@@ -195,3 +195,26 @@ def test_jobs_need_a_section_to_go_in():
     page = FakePage([Field(1, ("other",), "Other")])
     report = fill_step(page, "My Experience", DETAILS)
     assert report.filled == []
+
+
+def school_entry():
+    """The fields of one Education entry."""
+    return [
+        Field(0, ("schoolName",), "School or University", required=True),
+        Field(0, ("degree",), "Degree", "select", options=("Bachelor of Arts", "BE", "Master's Degree")),
+        Field(0, ("fieldOfStudy",), "Field of Study", "prompt"),
+        Field(0, ("gradeAverage",), "Overall Result (GPA)"),
+        Field(0, ("firstYearAttended", "dateSectionYear-input"), "From", "date"),
+        Field(0, ("lastYearAttended", "dateSectionYear-input"), "To", "date"),
+    ]
+
+
+def test_each_school_gets_an_education_entry():
+    page = FakePage(entries={"Work Experience": work_entry(), "Education": school_entry()})
+    fill_step(page, "My Experience", DETAILS)
+    assert page.entry_values("Education") == {
+        1: {
+            "School or University": "Pune University", "Degree": "BE", "Field of Study": "Computer Engineering",
+            "Overall Result (GPA)": "8.1", "From": "2014", "To": "2018",
+        },
+    }
