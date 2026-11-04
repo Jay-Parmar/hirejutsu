@@ -260,3 +260,30 @@ def test_only_the_resume_box_gets_the_resume(tmp_path):
     page = FakePage([resume_box(section="Cover Letter")])
     fill_step(page, "My Experience", DETAILS, resume=tmp_path / "resume.pdf")
     assert page.value(1) == ""
+
+
+def website_entry():
+    return [Field(0, ("url",), "URL", required=True)]
+
+
+def test_links_go_in_the_linkedin_box_and_websites():
+    page = FakePage([Field(1, ("linkedInAccount",), "LinkedIn", section="Social Network URLs")], {"Websites": website_entry()})
+    fill_step(page, "My Experience", DETAILS)
+    assert page.value(1) == "https://www.linkedin.com/in/asha"
+    assert page.entry_values("Websites") == {1: {"URL": "https://github.com/asha"}}
+
+
+def test_without_a_linkedin_box_every_link_is_a_website():
+    page = FakePage(entries={"Websites": website_entry()})
+    fill_step(page, "My Experience", DETAILS)
+    assert page.entry_values("Websites") == {
+        1: {"URL": "https://www.linkedin.com/in/asha"},
+        2: {"URL": "https://github.com/asha"},
+    }
+
+
+def test_websites_already_listed_are_not_added_again():
+    listed = Field(1, ("url",), "URL", value="github.com/asha", section="Websites", entry=1)
+    page = FakePage([listed], {"Websites": website_entry()})
+    fill_step(page, "My Experience", DETAILS)
+    assert page.entry_values("Websites") == {1: {"URL": "github.com/asha"}, 2: {"URL": "https://www.linkedin.com/in/asha"}}

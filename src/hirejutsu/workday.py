@@ -23,6 +23,7 @@ STEP_NUMBER = re.compile(r"(current )?step \d+ of \d+", re.IGNORECASE)
 # Headings of the repeating sections on My Experience. Some companies say Professional Experience.
 WORK = r"experience|employment"
 EDUCATION = r"education"
+WEBSITES = r"website|portfolio"
 RESUME = r"resume|cv"
 # Workday reads these resumes. Other files are left for you to upload.
 UPLOADS = (".pdf", ".docx")
@@ -113,12 +114,13 @@ def fill_step(page, step: str, details: Applicant, skills: list[str] = (), resum
 
 
 def fill_experience(page, details: Applicant, skills: list[str], resume: Path | None, report: Report) -> None:
-    """Jobs, schools, skills and the resume on the My Experience step."""
+    """Jobs, schools, skills, the resume and links on the My Experience step."""
     fill_entries(page, WORK, [job(position) for position in details.work], report)
     fill_entries(page, EDUCATION, [education(school) for school in details.education], report)
     fill_skills(page, skills, report)
     upload = str(resume) if resume and resume.suffix.lower() in UPLOADS else ""
     fill_values(page, [Want(upload, ("file-upload-input-ref",), r"upload|resume|cv", RESUME)], report)
+    fill_links(page, details.links, report)
 
 
 def fill_values(page, wants: list[Want], report: Report) -> None:
@@ -145,6 +147,15 @@ def fill_skills(page, skills: list[str], report: Report) -> None:
             added.append(skill)
     if added:
         report.filled.append((found.label, ", ".join(added)))
+
+
+def fill_links(page, links: dict, report: Report) -> None:
+    """LinkedIn goes in its own box when there is one. The other links become websites."""
+    linkedin = Want(links.get("linkedin", ""), ("linkedInAccount", "linkedinQuestion"), r"linkedin")
+    has_box = find(page.fields(), linkedin) is not None
+    fill_values(page, [linkedin], report)
+    urls = [url for name, url in links.items() if not (has_box and name == "linkedin")]
+    fill_entries(page, WEBSITES, [[Want(url, ("url", "website"), r"url|website|link")] for url in urls], report)
 
 
 def information(details: Applicant) -> list[Want]:
