@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date
 from html import escape
 from importlib import resources
+from pathlib import Path
 from string import Template
 from urllib.parse import quote, urlencode
 
@@ -126,6 +127,18 @@ def markdown(drafts: list[Draft], day: date) -> str:
         lines += [f"[Write email]({mailto(draft.to, draft.subject, email_text(draft))})", "",
                   f"After sending it: `{sent_command(draft)}`", ""]
     return "\n".join(lines)
+
+
+def save_drafts(drafts: list[Draft], config: Config, day: date) -> list[Path]:
+    """Write the drafts to outreach-YYYY-MM-DD.md and .html in the reports folder. Returns the files."""
+    folder = config.reports_dir
+    folder.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for suffix, render in (("md", markdown), ("html", html_page)):
+        path = folder / f"outreach-{day.isoformat()}.{suffix}"
+        path.write_text(render(drafts, day), encoding="utf-8")
+        paths.append(path)
+    return paths
 
 
 def html_page(drafts: list[Draft], day: date) -> str:

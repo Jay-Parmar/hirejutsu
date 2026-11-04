@@ -169,3 +169,10 @@ def test_html_page_loads_nothing_from_the_internet():
 
 def test_html_page_links_jobs_only_to_web_addresses():
     assert 'href="javascript:' not in outreach.html_page([draft(pick(url="javascript:alert(1)"))], DAY)
+
+
+def test_drafts_are_saved_next_to_the_daily_reports(tmp_path):
+    paths = outreach.save_drafts([draft()], Config({}, tmp_path), DAY)
+    assert paths == [tmp_path / "reports" / "outreach-2026-11-04.md", tmp_path / "reports" / "outreach-2026-11-04.html"]
+    assert paths[0].read_text(encoding="utf-8").startswith("# Recruiter emails for 2026-11-04")
+    assert paths[1].read_text(encoding="utf-8").startswith("<!doctype html>")
