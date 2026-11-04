@@ -1,0 +1,49 @@
+# Your details for job applications. hirejutsu fills application forms and signs the
+# emails it drafts with them. This file stays on your computer.
+
+first_name:
+last_name:
+email:
+# Without the country code.
+phone:
+phone_code: "+91"
+
+address:
+  line1:
+  city:
+  state:
+  postal_code:
+  country: India
+
+links:
+  linkedin:
+  github:
+  portfolio:
+
+# Newest first. Dates as YYYY-MM, leave end empty for your current job.
+work:
+  - title:
+    company:
+    location:
+    start:
+    end:
+    description:
+
+# Newest first. Years are enough for the dates.
+education:
+  - school:
+    degree:
+    field_of_study:
+    start:
+    end:
+    grade:
+
+# Answers to questions many forms ask. Questions left empty here are left for you.
+answers:
+  how_did_you_hear:
+  notice_period:
+  current_salary:
+  expected_salary:
+  authorized_to_work:
+  needs_sponsorship:
+  willing_to_relocate:
