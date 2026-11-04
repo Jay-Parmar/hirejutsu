@@ -4,7 +4,8 @@ Finds the best job openings for your resume every morning, so you can apply to t
 
 hirejutsu reads jobs from company career pages and job boards, scores them against your resume and
 shows you the 10 best each day. Everything stays on your computer, and it never logs in or applies
-anywhere for you.
+anywhere for you. On Workday career sites it can type your details into the application form in a
+browser window you control, and you sign in and submit.
 
 - 448 company career pages on Greenhouse, Lever, Ashby, Workday and 7 more applicant tracking
   systems, plus any company you add
@@ -12,6 +13,7 @@ anywhere for you.
 - Optional: LinkedIn, Indeed, Naukri, Glassdoor and ZipRecruiter
 - Reads PDF, DOCX, TXT and MD resumes for skills, titles and years of experience
 - Explains every pick, writes a daily HTML report and tracks what you applied to
+- Fills Workday application forms with your details, so you only check them and submit
 - Runs by itself every morning and can send the picks by email, Telegram, Discord, Slack or ntfy
 - Optional AI second opinion with Claude, OpenAI or a local Ollama model
 
@@ -521,6 +523,10 @@ Every command takes `--home <folder>` for another data folder and `-v` for debug
 Your resume, the jobs, your picks and your application history live in the data folder and nowhere
 else. hirejutsu sends nothing anywhere unless you turn on notifications or the AI second opinion,
 and it only reads job listings: it never logs in to a job site or applies for you.
+
+The one exception is `hirejutsu workday`, which types your details into a Workday form in a browser
+window you control. They only go to the Workday site you apply on, and you sign in and submit
+yourself. That window's browser profile, with your Workday sign ins, lives in the data folder.
 
 ## Development
 
