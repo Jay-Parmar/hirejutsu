@@ -135,7 +135,7 @@ def html_page(matches: list[Match], day: date) -> str:
 
 def _pick_html(number: int, match: Match, day: date) -> str:
     job = match.job
-    link = escape(_web_link(job.url))
+    link = escape(web_link(job.url))
     reasons = "".join(f"<li>{escape(reason)}</li>" for reason in match.reasons)
     command = f"hirejutsu applied {job.id}"
     return f"""<li class="pick">
@@ -168,7 +168,7 @@ def _facts_html(job: Job, day: date) -> str:
     return "".join(facts)
 
 
-def _web_link(url: str) -> str:
+def web_link(url: str) -> str:
     """The job link, or "#" for anything that is not http(s), like a javascript: link from a bad listing."""
     return url if url.lower().startswith(("http://", "https://")) else "#"
 
