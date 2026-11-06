@@ -63,6 +63,17 @@ Keep each reason to one short line: what fits and what is missing."""
 EXPLAIN_REQUEST = """How well does this job fit my resume? Give a score from 0 to 10, then a few short lines on
 what fits, what is missing and whether I should apply. Plain text, no Markdown."""
 
+EMAIL_SYSTEM = "You help a job seeker write short, honest emails to recruiters, in their own voice."
+
+EMAIL_REQUEST = """Below is a short email I want to send to someone at {company} about the job above.
+Rewrite it so it fits this job and my resume better. Keep it to 3 to 5 short lines of plain text, friendly
+but professional, and keep the link to the job. Leave out the greeting and the sign off, and do not claim
+anything my resume does not show.
+
+<email>
+{body}
+</email>"""
+
 
 def load_settings(config: Config) -> dict:
     """The ai section, with a blank model, base_url or api_key_env taken from the provider."""
@@ -189,6 +200,14 @@ def explain(job: Job, profile: Profile, settings: dict, client: http.Client) -> 
     resume = profile.text[: settings["max_resume_chars"]]
     prompt = _build_prompt(resume, [job], EXPLAIN_REQUEST, settings["max_description_chars"])
     return ask(SYSTEM, prompt, settings, client).strip()
+
+
+def rewrite_email(job: Job, profile: Profile, body: str, settings: dict, client: http.Client) -> str:
+    """The AI's version of an email body about one job. An empty answer keeps the body as it was."""
+    resume = profile.text[: settings["max_resume_chars"]]
+    request = EMAIL_REQUEST.format(company=job.company, body=body)
+    prompt = _build_prompt(resume, [job], request, settings["max_description_chars"])
+    return ask(EMAIL_SYSTEM, prompt, settings, client).strip() or body
 
 
 def parse_scores(reply: str, job_ids: set[int]) -> dict[int, tuple[float, str]]:

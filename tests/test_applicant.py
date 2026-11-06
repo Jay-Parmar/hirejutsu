@@ -37,6 +37,13 @@ def test_template_is_valid_yaml_with_every_section():
     assert SECTIONS <= set(yaml.safe_load(template()))
 
 
+def test_template_has_empty_answers_for_workday_forms():
+    answers = yaml.safe_load(template())["answers"]
+    for key in ("worked_here_before", "gender", "ethnicity", "veteran_status", "disability"):
+        assert key in answers
+        assert answers[key] is None
+
+
 def test_no_file_means_no_details(tmp_path):
     assert load_applicant(config(tmp_path)) == Applicant()
 
