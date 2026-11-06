@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My Information on an older page</title>
+</head>
+<body>
+<!-- My Information as older Workday pages had it: the ids sit on the controls, like
+     legalNameSection_firstName, and the step shows in the id of its container. The names of the
+     field boxes here are made up. -->
+<div data-automation-id="contactInformationPage">
+
+<div data-automation-id="formField-sourceArea">
+  <label for="input-1"><span>How Did You Hear About Us?<abbr aria-hidden="true">*</abbr></span></label>
+  <div><div data-automation-id="multiSelectContainer" data-single="true" data-options="Job Board|LinkedIn|Referral">
+    <div data-automation-id="multiselectInputContainer"><input data-automation-id="searchBox" id="input-1" placeholder="Search" value=""></div>
+    <ul role="listbox" data-automation-id="selectedItemList"></ul>
+  </div></div>
+</div>
+
+<div data-automation-id="formField-previousWorkerArea">
+  <fieldset><legend><label><span>Have you worked for Acme before?<abbr aria-hidden="true">*</abbr></span></label></legend>
+    <div data-automation-id="previousWorker">
+      <div><input id="1" name="previousWorker" type="radio" value="true"><label for="1">Yes</label></div>
+      <div><input id="2" name="previousWorker" type="radio" value="false"><label for="2">No</label></div>
+    </div>
+  </fieldset>
+</div>
+
+<div data-automation-id="legalNameSection">
+  <div data-automation-id="formField-firstNameArea">
+    <label for="input-2"><span>First Name<abbr aria-hidden="true">*</abbr></span></label>
+    <div><input type="text" id="input-2" data-automation-id="legalNameSection_firstName" aria-required="true" value=""></div>
+  </div>
+  <div data-automation-id="formField-lastNameArea">
+    <label for="input-3"><span>Last Name<abbr aria-hidden="true">*</abbr></span></label>
+    <div><input type="text" id="input-3" data-automation-id="legalNameSection_lastName" aria-required="true" value=""></div>
+  </div>
+</div>
+
+<div data-automation-id="addressSection">
+  <div data-automation-id="formField-lineArea">
+    <label for="input-4">Address Line 1</label>
+    <div><input type="text" id="input-4" data-automation-id="addressSection_addressLine1" value=""></div>
+  </div>
+  <div data-automation-id="formField-cityArea">
+    <label for="input-5">City</label>
+    <div><input type="text" id="input-5" data-automation-id="addressSection_city" value=""></div>
+  </div>
+  <div data-automation-id="formField-regionArea">
+    <label for="input-6">State</label>
+    <div><button aria-haspopup="listbox" type="button" id="input-6" data-automation-id="addressSection_countryRegion"
+      data-options="Gujarat|Maharashtra">Select One</button></div>
+  </div>
+  <div data-automation-id="formField-postalArea">
+    <label for="input-7">Postal Code</label>
+    <div><input type="text" id="input-7" data-automation-id="addressSection_postalCode" value=""></div>
+  </div>
+</div>
+
+<div data-automation-id="formField-emailArea">
+  <label for="input-8">Email Address</label>
+  <div><input type="text" id="input-8" data-automation-id="email" value=""></div>
+</div>
+
+<div data-automation-id="formField-deviceArea">
+  <label for="input-9"><span>Phone Device Type<abbr aria-hidden="true">*</abbr></span></label>
+  <div><button aria-haspopup="listbox" type="button" id="input-9" data-automation-id="phone-device-type"
+    data-options="Landline|Mobile">Select One</button></div>
+</div>
+
+<div data-automation-id="formField-numberArea">
+  <label for="input-10"><span>Phone Number<abbr aria-hidden="true">*</abbr></span></label>
+  <div><input type="text" id="input-10" data-automation-id="phone-number" aria-required="true" value=""></div>
+</div>
+
+</div>
+<button data-automation-id="bottom-navigation-next-button">Save and Continue</button>
+<script src="widgets.js"></script>
+</body>
+</html>

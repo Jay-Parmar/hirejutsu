@@ -250,3 +250,21 @@ def test_rerank_keeps_usual_scores_for_jobs_the_ai_skipped(store, caplog):
         Match(second.job, 0.75, ["AI: Fit 10", "Skills: python"]),
     ]
     assert "1 of 2" in caplog.text
+
+
+def test_rewrite_email_sends_the_resume_the_job_and_the_draft():
+    client = FakeClient({CLAUDE_URL: claude_reply("  I saw your Backend Engineer role.\nIt fits my Django work.  ")})
+    job = Job("demo", "1", "Backend Engineer", "Acme", "https://x/1", description="Python and Django", id=1)
+    body = ai.rewrite_email(job, PROFILE, "I saw the Backend Engineer role at Acme.", settings(), client)
+    assert body == "I saw your Backend Engineer role.\nIt fits my Django work."
+    prompt = client.calls[0][3]["messages"][0]["content"]
+    assert "<resume>\nPython developer with five years of Django\n</resume>" in prompt
+    assert "Company: Acme" in prompt and "Python and Django" in prompt
+    assert "<email>\nI saw the Backend Engineer role at Acme.\n</email>" in prompt
+    assert client.calls[0][3]["system"] == ai.EMAIL_SYSTEM
+
+
+def test_an_empty_rewrite_keeps_the_draft():
+    client = FakeClient({CLAUDE_URL: claude_reply(" ")})
+    job = Job("demo", "1", "Backend Engineer", "Acme", "https://x/1", id=1)
+    assert ai.rewrite_email(job, PROFILE, "The draft.", settings(), client) == "The draft."

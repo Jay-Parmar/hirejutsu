@@ -14,6 +14,7 @@ from hirejutsu.config import (
     template,
 )
 from hirejutsu.ranking import RANKING_DEFAULTS
+from hirejutsu.workday import WORKDAY_DEFAULTS
 
 
 def test_resolve_home_prefers_flag_over_env(tmp_path, monkeypatch):
@@ -93,8 +94,22 @@ def test_template_leaves_years_to_the_resume():
     assert yaml.safe_load(template())["profile"]["years"] is None
 
 
+def test_template_points_to_the_applicant_details():
+    assert yaml.safe_load(template())["applicant"] == "applicant.yaml"
+
+
 def test_template_lists_every_ranking_setting_with_its_default():
     assert yaml.safe_load(template())["ranking"] == RANKING_DEFAULTS
+
+
+def test_template_shows_the_workday_settings_with_their_defaults():
+    lines = template().splitlines()
+    block = []
+    for line in lines[lines.index("# workday:"):]:
+        if not line.startswith("#"):
+            break
+        block.append(line[2:])
+    assert yaml.safe_load("\n".join(block)) == {"workday": WORKDAY_DEFAULTS}
 
 
 def test_init_home_creates_files(tmp_path):

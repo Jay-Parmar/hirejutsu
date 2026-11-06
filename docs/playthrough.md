@@ -88,14 +88,16 @@ profile:
 ok    python      Python 3.13
 ok    config      C:\Users\you\.hirejutsu\config.yaml
 ok    resume      27 skills, Senior Software Engineer, Software Engineer, 6 years
+warn  applicant   no details for forms and emails, run 'hirejutsu applicant --edit'
 ok    sources     19 on: ashby, bamboohr, breezy, fourdayweek, greenhouse, hackernews, himalayas, jobicy, lever, personio, recruitee, remoteok, remotive, smartrecruiters, teamtailor, weworkremotely, workable, workday, workingnomads
 warn  last fetch  never, run 'hirejutsu run'
 warn  schedule    not scheduled, run 'hirejutsu schedule install'
 ok    notify      off
 ok    ai          off
+ok    outreach    drafts from the template, no search
 ```
 
-Fix any `fail` line. The two warnings go away after the first run and step 8.
+Fix any `fail` line. The warnings go away after the first run, step 8 and step 10.
 
 ## 5. First run
 
@@ -221,7 +223,81 @@ Added a note to job 678: Senior Software Engineer at Northwind
 
 A job is only ever picked once, so tomorrow's 10 are ones you have not seen yet.
 
-## 8. Let it run every morning
+## 8. Write to recruiters
+
+Job sites often give no answer, so write to someone at the company as well. The emails are signed
+with your applicant details, so start those once:
+
+```
+hirejutsu applicant --edit
+```
+
+It creates `applicant.yaml` with the name, email, phone and links found in your resume. Then:
+
+```
+> hirejutsu outreach --open
+Left out 3 of 10 picks because they come from job boards. Add their sources to outreach.sources to write about them too.
+                       Recruiter emails for 2026-11-04
++-------+-------------------------+---------+-------------------+----------+
+| ID    | Job                     | Company | Write to          | How sure |
++-------+-------------------------+---------+-------------------+----------+
+| 1784  | Senior Backend Engineer | Hooli   | careers@hooli.com | site     |
+| 7802  | Staff Software Engineer | Initech | nobody found      |          |
+| ...   |                         |         |                   |          |
++-------+-------------------------+---------+-------------------+----------+
+```
+
+The page that opens has a draft for each job:
+
+```
+Subject: Senior Backend Engineer role at Hooli
+
+Hi Hooli team,
+
+I saw the Senior Backend Engineer role at Hooli (https://...) and wanted to write to you directly.
+I have 6 years of experience, much of it with MySQL, Docker and REST, which the role asks for.
+Could you pass my profile to the hiring manager, or would you have time for a short call?
+Thank you for your time.
+
+Best regards,
+Priya Sharma
++91 9876543210
+```
+
+Click an address to open the draft in your mail app, attach your resume and send it. Then note it,
+so the job is not drafted again:
+
+```
+hirejutsu outreach sent 1784 careers@hooli.com
+```
+
+Without a search key, an address only shows up when the job post or the company's site lists one,
+which big companies rarely do, so many jobs say "nobody found" and give two links to look someone
+up yourself. With a free Tavily key (see Recruiter emails in the README) it also finds recruiters by
+name and suggests their likely addresses, marked as guesses since they can bounce.
+
+## 9. Fill Workday forms
+
+Many big companies take applications on Workday, with job links on myworkdayjobs.com, and the forms
+are long. Install the extra once:
+
+```
+pip install -e ".[workday]"
+```
+
+Then for each job:
+
+```
+hirejutsu workday <job link>
+```
+
+An Edge window opens on the job. Click Apply and sign in. On each step hirejutsu fills what it knows
+from `applicant.yaml`, prints what it filled and what it left for you, and waits. Check the step and
+click Save and Continue yourself. At the Review step it stops: check the application and submit it.
+If a field stays empty that you expected filled, run it again with `--dump`. The file it saves in
+the `logs` folder shows what to fix.
+
+## 10. Let it run every morning
 
 ```
 hirejutsu schedule install
@@ -243,7 +319,7 @@ day picks a fresh list, without the jobs you already marked, so the pick numbers
 
 To get the picks by email, Telegram, Discord, Slack or ntfy, see Notifications in the README.
 
-## 9. Look back
+## 11. Look back
 
 ```
 > hirejutsu stats
@@ -278,7 +354,7 @@ hirejutsu show 678                # one job with its notes and history
 hirejutsu export                  # every tracked job to a CSV in the data folder
 ```
 
-## 10. Make the picks better
+## 12. Make the picks better
 
 - Too senior or too junior: set `profile.years`.
 - Wrong kind of job: add words to `ranking.exclude_title_words`, like `[sales, intern]`.
@@ -288,7 +364,7 @@ hirejutsu export                  # every tracked job to a CSV in the data folde
 - Naukri, LinkedIn and Indeed are optional and off by default. See the README before turning
   them on.
 
-## 11. Update and fix things
+## 13. Update and fix things
 
 - Update: `git pull`, then `setup.bat`. If you move the folder or delete `.venv`, run
   `hirejutsu schedule install` again.

@@ -103,3 +103,57 @@ def test_doctor_command_exit_code(tmp_path, capsys):
     assert "hirejutsu init" in capsys.readouterr().out
     write_home(tmp_path)
     assert main(["--home", str(tmp_path), "doctor"]) == 0
+
+
+def test_no_applicant_details_is_a_warning(tmp_path):
+    write_home(tmp_path)
+    status, detail = statuses(tmp_path)["applicant"]
+    assert status == WARN
+    assert "hirejutsu applicant --edit" in detail
+
+
+def test_applicant_details_list_what_is_missing(tmp_path):
+    write_home(tmp_path)
+    (tmp_path / "applicant.yaml").write_text("first_name: Asha\nemail: asha@example.com\n", encoding="utf-8")
+    assert statuses(tmp_path)["applicant"] == (WARN, "missing last_name, phone, see 'hirejutsu applicant'")
+
+
+def test_complete_applicant_details_pass(tmp_path):
+    write_home(tmp_path)
+    details = "first_name: Asha\nlast_name: Rao\nemail: a@example.com\nphone: 9876543210\nwork:\n  - {title: Dev, company: Acme}\n"
+    (tmp_path / "applicant.yaml").write_text(details, encoding="utf-8")
+    assert statuses(tmp_path)["applicant"] == (OK, "Asha Rao, 1 job, 0 schools")
+
+
+def test_broken_applicant_details_fail(tmp_path):
+    write_home(tmp_path)
+    (tmp_path / "applicant.yaml").write_text("work: Acme\n", encoding="utf-8")
+    assert statuses(tmp_path)["applicant"][0] == FAIL
+
+
+def test_outreach_drafts_from_the_template_by_default(tmp_path):
+    write_home(tmp_path)
+    assert statuses(tmp_path)["outreach"] == (OK, "drafts from the template, no search")
+
+
+def test_outreach_search_without_its_key_fails(tmp_path, monkeypatch):
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    write_home(tmp_path, "outreach:\n  search: tavily\n")
+    assert statuses(tmp_path)["outreach"] == (FAIL, "search is tavily, but TAVILY_API_KEY is not set")
+
+
+def test_outreach_search_with_its_key_passes(tmp_path, monkeypatch):
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test")
+    write_home(tmp_path, "outreach:\n  search: tavily\n")
+    assert statuses(tmp_path)["outreach"] == (OK, "tavily search")
+
+
+def test_outreach_ai_without_a_key_fails(tmp_path, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    write_home(tmp_path, "outreach:\n  ai: true\n")
+    assert statuses(tmp_path)["outreach"] == (FAIL, "ai is on, but ANTHROPIC_API_KEY is not set")
+
+
+def test_an_unknown_search_api_fails(tmp_path):
+    write_home(tmp_path, "outreach:\n  search: bing\n")
+    assert statuses(tmp_path)["outreach"][0] == FAIL

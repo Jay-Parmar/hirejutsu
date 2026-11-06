@@ -1,13 +1,16 @@
 """Test doubles shared by the test suite."""
 
 import json
+import re
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import requests
 import yaml
 
 from hirejutsu.config import Config
+from hirejutsu.workday import WindowClosed, best_option
 
 FIXTURES = Path(__file__).parent / "fixtures"
 CLAUDE_URL = "https://api.anthropic.com/v1/messages"
@@ -80,6 +83,72 @@ class FakeRun:
         if isinstance(reply, Exception):
             raise reply
         return subprocess.CompletedProcess(args, *reply)
+
+
+class FakePage:
+    """Stands in for a Workday tab: holds the fields of a step and records what was filled."""
+
+    def __init__(self, fields=(), entries=None, steps=()):
+        self.items = {item.ref: item for item in fields}
+        # The fields of a new entry for each repeating section with an Add button, as {section: fields}.
+        self.entries = entries or {}
+        # What the progress bar says at each look. The window closes after the last one.
+        self.steps = list(steps)
+        self.filled: list[tuple[str, str]] = []
+        self.waited = 0.0
+        self.url = ""
+
+    def goto(self, url: str) -> None:
+        self.url = url
+
+    def step(self) -> str:
+        if not self.steps:
+            raise WindowClosed
+        return self.steps.pop(0)
+
+    def wait(self, seconds: float) -> None:
+        if not self.steps:
+            raise WindowClosed
+        self.waited += seconds
+
+    def fields(self):
+        return list(self.items.values())
+
+    def add(self, section: str) -> bool:
+        name = next((name for name in self.entries if re.search(section, name, re.IGNORECASE)), None)
+        if name is None:
+            return False
+        number = 1 + max((item.entry for item in self.items.values() if item.section == name), default=0)
+        for item in self.entries[name]:
+            ref = 1 + max(self.items, default=0)
+            self.items[ref] = replace(item, ref=ref, section=name, entry=number)
+        return True
+
+    def entry_values(self, section: str) -> dict:
+        """{entry: {label: value}} for the entries of a repeating section."""
+        found: dict = {}
+        for item in self.items.values():
+            if item.section == section and item.entry:
+                found.setdefault(item.entry, {})[item.label] = item.value
+        return found
+
+    def value(self, ref: int) -> str:
+        return self.items[ref].value
+
+    def fill(self, field, value: str) -> bool:
+        # A field with options only takes one of them, the way the browser picks from a list.
+        if field.options:
+            index = best_option(value, list(field.options))
+            if index is None:
+                return False
+            value = field.options[index]
+        self.filled.append((field.label, value))
+        # A prompt box like Skills can hold more than one pick.
+        current = self.items[field.ref].value
+        if field.kind == "prompt" and current:
+            value = f"{current}, {value}"
+        self.items[field.ref] = replace(field, value=value)
+        return True
 
 
 def claude_reply(text: str) -> dict:
